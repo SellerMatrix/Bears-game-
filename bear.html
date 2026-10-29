@@ -55,6 +55,7 @@ body {
 .left { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pots { display: flex; gap: 4px; }
 .pots svg { width: 26px; height: 26px; }
+#clearPots svg { width: 44px; height: 44px; }
 .hearts { display: flex; gap: 3px; }
 .hearts svg { width: 20px; height: 20px; }
 .tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
@@ -166,7 +167,7 @@ body:not(.touch) .pad { display: none; }
   <div class="card">
     <h1 class="logo">Captain Bear</h1>
     <p class="sub">Honey Tracker</p>
-    <p class="how">Bear can't jump. Spin the little worlds around, find a way up with stairs and ladders, push crates, flip switches and throw turnips at bees. Collect the 3 honey pots, then grab the golden star.</p>
+    <p class="how">Bear can't jump. Spin the little worlds around, find a way up with stairs and ladders, push crates, flip switches and throw pinecones at grumpy bees. Gobble up 3 treats in every world (honey, salmon and berries), then grab the giant golden honeycomb.</p>
     <button class="big" id="bPlay" type="button">Play</button>
   </div>
 </div>
@@ -181,7 +182,7 @@ body:not(.touch) .pad { display: none; }
 
 <div class="screen" id="clear" hidden>
   <div class="card">
-    <h2 class="logo" style="font-size: 44px">Star get!</h2>
+    <h2 class="logo" style="font-size: 44px">Honeycomb get!</h2>
     <div class="pots" id="clearPots" style="justify-content:center"></div>
     <p class="sub" id="clearMsg"></p>
     <div class="row">
@@ -200,15 +201,15 @@ body:not(.touch) .pad { display: none; }
 // =====================================================================
 // LEVELS
 //  H: height of each column ('.' = water)
-//  O: S start, G star, h honey pot, c crate, t turnip sprout, ! switch,
-//     A red block (up at start), B blue block (down at start), p/q warp pipe pairs
+//  O: S start, G golden honeycomb, treats: h honey / f salmon / r berries, c crate, t pinecone pile, ! switch,
+//     A red block (up at start), B blue block (down at start), p/q hollow stump pairs
 //  links: stairs or ladders between two neighbouring cells
 //  bees: patrol back and forth along waypoints at height y
 // =====================================================================
 const LEVELS = [
   {
     name: 'Picnic Hill', theme: 'meadow',
-    tip: "Bear can't jump! Walk up stairs, climb ladders, and hop down ledges. Get 3 honey pots, then the star.",
+    tip: "Bear can't jump! Walk up stairs, climb ladders, and hop down ledges. Eat 3 treats, then grab the golden honeycomb.",
     H: ['33....',
         '331111',
         '221111',
@@ -217,13 +218,13 @@ const LEVELS = [
     O: ['Gh....',
         '......',
         '......',
-        '....h.',
-        '..h..S'],
+        '....r.',
+        '..f..S'],
     links: [[1, 3, 1, 2, 'stairs'], [1, 2, 1, 1, 'ladder'], [5, 3, 4, 3, 'ladder']]
   },
   {
     name: 'Bee Bridge', theme: 'meadow',
-    tip: 'Stand on a sprout and press GRAB to pull a turnip. Press GRAB again to throw it at a bee!',
+    tip: 'Stand on a pinecone pile and press GRAB to pick one up. Press GRAB again to throw it at a bee!',
     H: ['111..222',
         '111..222',
         '11111112',
@@ -231,21 +232,21 @@ const LEVELS = [
         '111..222'],
     O: ['.....tG.',
         '........',
-        'S.t.h...',
+        'S.t.f...',
         '........',
-        'h......h'],
+        'r......h'],
     links: [[6, 2, 7, 2, 'stairs']],
     bees: [{ path: [[3, 2], [6, 2]], y: 1 }, { path: [[5, 3], [7, 3]], y: 2 }]
   },
   {
-    name: 'Crate Creek', theme: 'beach',
+    name: 'Salmon Creek', theme: 'beach',
     tip: 'Push crates into the water to make a path. Pushed one the wrong way? Press UNDO.',
     H: ['11111.1.11',
         '11111.1.11',
         '11111.1.11',
         '11111.1.22',
         '11111.1.22'],
-    O: ['h.....h...',
+    O: ['r.....f...',
         '..........',
         'S..c..c..G',
         '..........',
@@ -260,30 +261,30 @@ const LEVELS = [
         '2222222',
         '22.2...',
         '...2222'],
-    O: ['...hB.h',
+    O: ['...hB.f',
         '.......',
         '.SA!B.G',
         '.......',
-        '....A.h'],
+        '....A.r'],
     links: []
   },
   {
-    name: 'Pipe Isles', theme: 'beach',
-    tip: 'Walk into a warp pipe to pop out of its twin. Step off and back on to go back.',
+    name: 'Stump Isles', theme: 'beach',
+    tip: 'Walk into a hollow stump to pop out of its twin. Step off and back on to go back.',
     H: ['.11.33..',
         '.11.3322',
         '......22',
         '11....22',
         '11....1.'],
-    O: ['.h..h...',
-        '..q.p..h',
+    O: ['.f..h...',
+        '..q.p..r',
         '........',
         '.p....q.',
         'S.....G.'],
     links: []
   },
   {
-    name: 'Honey Tower', theme: 'ruins',
+    name: 'Beehive Tower', theme: 'ruins',
     tip: 'Everything you have learned, all in one tower. Take your time!',
     H: ['33.4444',
         '3333333',
@@ -291,12 +292,12 @@ const LEVELS = [
         '111.111',
         '111.111',
         '111.111'],
-    O: ['h..Ah.G',
+    O: ['r..Ah.G',
         '..B...!',
         '.......',
         't......',
         '.c.....',
-        'S.....h'],
+        'S.....f'],
     links: [[5, 3, 5, 2, 'ladder'], [3, 1, 3, 0, 'stairs']],
     bees: [{ path: [[4, 4], [6, 4]], y: 1 }]
   }
@@ -308,7 +309,7 @@ const LEVELS = [
 const K = (x, z) => x + ',' + z;
 function parseLevel(def) {
   const d = def.H.length, w = def.H[0].length;
-  const base = [], kind = [], crates = [], potIndex = {}, pipes = { p: [], q: [] }, partner = {}, links = new Map();
+  const base = [], kind = [], crates = [], treats = [], potIndex = {}, pipes = { p: [], q: [] }, partner = {}, links = new Map();
   let start = [0, 0], goal = null, pots = 0;
   for (let z = 0; z < d; z++) {
     base.push([]); kind.push([]);
@@ -318,7 +319,7 @@ function parseLevel(def) {
       let k = '';
       if (oc === 'S') start = [x, z];
       else if (oc === 'G') { k = 'G'; goal = [x, z]; }
-      else if (oc === 'h') { k = 'h'; potIndex[K(x, z)] = pots++; }
+      else if (oc === 'h' || oc === 'f' || oc === 'r') { k = 'h'; treats.push(oc); potIndex[K(x, z)] = pots++; }
       else if (oc === 'c') crates.push([x, z]);
       else if (oc === 't') k = 't';
       else if (oc === '!') k = '!';
@@ -329,7 +330,7 @@ function parseLevel(def) {
   }
   for (const pr of Object.values(pipes)) if (pr.length === 2) { partner[K(...pr[0])] = pr[1]; partner[K(...pr[1])] = pr[0]; }
   for (const [x1, z1, x2, z2, type] of def.links || []) { links.set(K(x1, z1) + '>' + K(x2, z2), type); links.set(K(x2, z2) + '>' + K(x1, z1), type); }
-  return { def, w, d, base, kind, crates, potIndex, pots, partner, links, start, goal, bees: def.bees || [] };
+  return { def, w, d, base, kind, crates, treats, potIndex, pots, partner, links, start, goal, bees: def.bees || [] };
 }
 function initState(lv) { return { x: lv.start[0], z: lv.start[1], mode: 0, crates: lv.crates.map(c => c.slice()), add: {}, pots: 0 }; }
 function cloneState(s) { return { x: s.x, z: s.z, mode: s.mode, crates: s.crates.map(c => c.slice()), add: Object.assign({}, s.add), pots: s.pots }; }
@@ -531,9 +532,15 @@ const MAT = {
   star: new THREE.MeshPhongMaterial({ color: 0xffd23a, emissive: 0xffa200, emissiveIntensity: 0.55, shininess: 120 }),
   leaf: new THREE.MeshLambertMaterial({ color: 0x3fae3a }),
   leafLight: new THREE.MeshLambertMaterial({ color: 0x6fdc52 }),
-  turnip: new THREE.MeshLambertMaterial({ color: 0xfaf6f0 }),
-  turnipTop: new THREE.MeshLambertMaterial({ color: 0xc957b8 }),
-  pipe: new THREE.MeshPhongMaterial({ color: 0x2ebd4e, shininess: 60 }),
+  bark: new THREE.MeshLambertMaterial({ color: 0x7a4b26 }),
+  cone: new THREE.MeshLambertMaterial({ color: 0x7b4a22 }),
+  coneLight: new THREE.MeshLambertMaterial({ color: 0xa8692f }),
+  salmon: new THREE.MeshPhongMaterial({ color: 0xf47a5a, shininess: 70 }),
+  salmonBelly: new THREE.MeshPhongMaterial({ color: 0xf6d6c8, shininess: 70 }),
+  salmonBack: new THREE.MeshPhongMaterial({ color: 0x8a5a6a, shininess: 70 }),
+  berry: new THREE.MeshPhongMaterial({ color: 0x4a4fd0, shininess: 90 }),
+  berryLight: new THREE.MeshPhongMaterial({ color: 0x7a5ae0, shininess: 90 }),
+  honeyDeep: new THREE.MeshPhongMaterial({ color: 0xd88a00, emissive: 0x6a3a00, emissiveIntensity: 0.4 }),
   pipeDark: new THREE.MeshLambertMaterial({ color: 0x0c3d16 }),
   wood: new THREE.MeshLambertMaterial({ color: 0x9c6530 }),
   woodLight: new THREE.MeshLambertMaterial({ color: 0xc98b4a }),
@@ -598,43 +605,67 @@ function makePot() {
   const label = cyl(0.172, 0.172, 0.07, MAT.honey, 0, 0.13, 0); g.add(label);
   return g;
 }
-function makeStar() {
-  const s = new THREE.Shape();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 ? 0.14 : 0.32, a = i / 10 * Math.PI * 2 + Math.PI / 2;
-    const x = Math.cos(a) * r, y = Math.sin(a) * r;
-    i ? s.lineTo(x, y) : s.moveTo(x, y);
-  }
-  const geo = new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2 });
-  geo.center();
-  const m = new THREE.Mesh(geo, MAT.star); m.castShadow = true;
-  const g = new THREE.Group(); g.add(m);
-  m.add(sph(0.025, MAT.black, -0.06, 0.04, 0.09)); m.add(sph(0.025, MAT.black, 0.06, 0.04, 0.09));
+function makeSalmon() {
+  const g = new THREE.Group();
+  const fish = new THREE.Group(); g.add(fish);
+  fish.add(sph(0.1, MAT.salmon, 0, 0.12, 0, 0.75, 0.95, 2.1));
+  fish.add(sph(0.08, MAT.salmonBelly, 0, 0.09, 0.02, 0.6, 0.6, 1.8));
+  fish.add(sph(0.06, MAT.salmonBack, 0, 0.18, -0.02, 0.5, 0.45, 1.9));
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.14, 4), MAT.salmon);
+  tail.rotation.x = Math.PI / 2; tail.scale.set(0.3, 1, 1); tail.position.set(0, 0.12, -0.25); fish.add(tail);
+  const fin = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.09, 4), MAT.salmonBack);
+  fin.scale.set(0.3, 1, 1); fin.position.set(0, 0.24, 0); fish.add(fin);
+  fish.add(sph(0.022, MAT.white, -0.06, 0.15, 0.13)); fish.add(sph(0.022, MAT.white, 0.06, 0.15, 0.13));
+  fish.add(sph(0.012, MAT.black, -0.07, 0.15, 0.145)); fish.add(sph(0.012, MAT.black, 0.07, 0.15, 0.145));
+  g.userData.fish = fish;
   return g;
 }
-function makeTurnip() {
+function makeBerries() {
   const g = new THREE.Group();
-  g.add(sph(0.13, MAT.turnip, 0, 0.13, 0, 1, 0.9, 1));
-  g.add(sph(0.1, MAT.turnipTop, 0, 0.2, 0, 1, 0.5, 1));
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.1, 8), MAT.turnip); tail.rotation.x = Math.PI; tail.position.y = 0.0; g.add(tail);
-  for (let i = 0; i < 3; i++) {
-    const l = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.2, 8), i % 2 ? MAT.leaf : MAT.leafLight);
-    l.position.set(Math.cos(i * 2.1) * 0.04, 0.33, Math.sin(i * 2.1) * 0.04);
-    l.rotation.set(Math.sin(i * 2.1) * 0.5, 0, -Math.cos(i * 2.1) * 0.5);
-    g.add(l);
+  const spots = [[0, 0.07, 0], [0.08, 0.07, 0.03], [-0.07, 0.07, 0.04], [0.02, 0.07, -0.08], [0.01, 0.15, 0.01], [-0.05, 0.14, -0.04], [0.06, 0.14, -0.02]];
+  spots.forEach(([x, y, z], i) => g.add(sph(0.06, i % 3 ? MAT.berry : MAT.berryLight, x, y, z)));
+  for (let i = 0; i < 2; i++) {
+    const l = sph(0.07, MAT.leafLight, i ? 0.08 : -0.08, 0.2, 0, 1, 0.25, 0.55);
+    l.rotation.z = i ? -0.5 : 0.5; g.add(l);
   }
+  g.add(box(0.015, 0.08, 0.015, MAT.wood, 0, 0.21, 0));
   return g;
 }
-function makeSprout() {
+function makeHoneycomb() {
+  // the big golden honeycomb that ends each world
   const g = new THREE.Group();
-  g.add(sph(0.09, MAT.turnip, 0, 0.0, 0, 1, 0.5, 1));
-  for (let i = 0; i < 3; i++) {
-    const l = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.22, 8), i % 2 ? MAT.leaf : MAT.leafLight);
-    l.position.set(Math.cos(i * 2.1) * 0.05, 0.11, Math.sin(i * 2.1) * 0.05);
-    l.rotation.set(Math.sin(i * 2.1) * 0.6, 0, -Math.cos(i * 2.1) * 0.6);
-    l.castShadow = true;
-    g.add(l);
+  const comb = new THREE.Group(); g.add(comb);
+  const r = 0.12, hexes = [[0, 0]];
+  for (let i = 0; i < 6; i++) hexes.push([Math.cos(i * Math.PI / 3 + Math.PI / 6) * r * 1.75, Math.sin(i * Math.PI / 3 + Math.PI / 6) * r * 1.75]);
+  for (const [x, y] of hexes) {
+    const c = cyl(r, r, 0.14, MAT.star, x, y, 0, 6);
+    c.rotation.x = Math.PI / 2; c.rotation.y = Math.PI / 6; comb.add(c);
+    const cell = cyl(r * 0.72, r * 0.72, 0.15, MAT.honeyDeep, x, y, 0, 6);
+    cell.rotation.x = Math.PI / 2; cell.rotation.y = Math.PI / 6; comb.add(cell);
   }
+  comb.add(sph(0.05, MAT.honey, 0.05, -0.33, 0.04, 0.8, 1.3, 0.8));
+  comb.add(sph(0.035, MAT.honey, -0.12, -0.28, 0.04, 0.8, 1.3, 0.8));
+  return g;
+}
+function makePinecone() {
+  const g = new THREE.Group();
+  for (let i = 0; i < 5; i++) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 - i * 0.018, 0.1, 8), i % 2 ? MAT.cone : MAT.coneLight);
+    c.position.y = 0.06 + i * 0.055; c.rotation.y = i * 0.4; c.castShadow = true;
+    g.add(c);
+  }
+  const tip = sph(0.03, MAT.cone, 0, 0.32, 0); g.add(tip);
+  g.rotation.x = Math.PI; g.position.y = 0;
+  const holder = new THREE.Group(); holder.add(g); g.position.y = 0.36;
+  return holder;
+}
+function makeConePile() {
+  const g = new THREE.Group();
+  [[-0.12, 0.05, 1.2], [0.1, -0.08, 2.4], [0.02, 0.13, 0.3]].forEach(([x, z, ry]) => {
+    const c = makePinecone(); c.scale.setScalar(0.75); c.rotation.set(Math.PI / 2, ry, 0); c.position.set(x, 0.1, z);
+    g.add(c);
+  });
+  const needles = sph(0.28, MAT.leaf, 0, 0, 0, 1, 0.12, 1); needles.castShadow = false; g.add(needles);
   return g;
 }
 function makeBee() {
@@ -656,12 +687,18 @@ function makeBee() {
   g.userData = { body, wl, wr };
   return g;
 }
-function makePipe() {
+function makeStump() {
+  // hollow tree stump: walk in, pop out of its twin
   const g = new THREE.Group();
-  g.add(cyl(0.34, 0.34, 0.3, MAT.pipe, 0, 0.15, 0));
-  g.add(cyl(0.4, 0.4, 0.14, MAT.pipe, 0, 0.32, 0));
-  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.31, 20), MAT.pipeDark);
-  hole.rotation.x = -Math.PI / 2; hole.position.y = 0.395; g.add(hole);
+  g.add(cyl(0.36, 0.42, 0.42, MAT.bark, 0, 0.21, 0, 12));
+  g.add(cyl(0.37, 0.37, 0.03, MAT.woodLight, 0, 0.42, 0, 12));
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.26, 16), MAT.pipeDark);
+  hole.rotation.x = -Math.PI / 2; hole.position.y = 0.44; g.add(hole);
+  for (let i = 0; i < 4; i++) {
+    const root = box(0.1, 0.08, 0.22, MAT.bark, Math.cos(i * 1.57 + 0.4) * 0.4, 0.04, Math.sin(i * 1.57 + 0.4) * 0.4);
+    root.rotation.y = -(i * 1.57 + 0.4) + Math.PI / 2; g.add(root);
+  }
+  g.add(sph(0.06, MAT.leafLight, 0.2, 0.47, 0.18, 1, 0.4, 1));
   return g;
 }
 function makeSwitch() {
@@ -719,7 +756,7 @@ let progress = loadProgress();
 const posOf = (x, z, y) => new THREE.Vector3(x, y, z);
 function standY(x, z, s = ST) {
   const h = heightAt(LV, s, x, z);
-  return h + (LV.kind[z][x] === 'pipe' ? 0.39 : 0) + (LV.kind[z][x] === '!' ? 0.12 : 0);
+  return h + (LV.kind[z][x] === 'pipe' ? 0.44 : 0) + (LV.kind[z][x] === '!' ? 0.12 : 0);
 }
 
 function buildLevel(i) {
@@ -794,11 +831,11 @@ function buildLevel(i) {
   // objects
   for (let z = 0; z < LV.d; z++) for (let x = 0; x < LV.w; x++) {
     const k = LV.kind[z][x], h = LV.base[z][x];
-    if (k === 'h') { const p = makePot(); p.position.set(x, h + 0.08, z); p.userData.idx = LV.potIndex[K(x, z)]; world.add(p); potMeshes.push(p); }
-    if (k === 'G') { starMesh = makeStar(); starMesh.position.set(x, h + 0.55, z); world.add(starMesh); }
-    if (k === 't') { const s = makeSprout(); s.position.set(x, h + 0.03, z); world.add(s); }
+    if (k === 'h') { const t = LV.treats[LV.potIndex[K(x, z)]]; const p = t === 'f' ? makeSalmon() : t === 'r' ? makeBerries() : makePot(); p.scale.setScalar(t === 'f' ? 1.9 : t === 'r' ? 1.8 : 1.15); p.position.set(x, h + 0.08, z); p.userData.idx = LV.potIndex[K(x, z)]; p.userData.baseY = h + 0.08; p.userData.s0 = p.scale.x; world.add(p); potMeshes.push(p); }
+    if (k === 'G') { starMesh = makeHoneycomb(); starMesh.scale.setScalar(1.3); starMesh.position.set(x, h + 0.6, z); world.add(starMesh); }
+    if (k === 't') { const s = makeConePile(); s.position.set(x, h + 0.03, z); world.add(s); }
     if (k === '!') { const s = makeSwitch(); s.position.set(x, h, z); world.add(s); switchMeshes.push(s); }
-    if (k === 'pipe') { const p = makePipe(); p.position.set(x, h, z); world.add(p); }
+    if (k === 'pipe') { const p = makeStump(); p.position.set(x, h, z); world.add(p); }
     if (k === '' && h > 0 && !LV.crates.some(c => c[0] === x && c[1] === z) && !(x === LV.start[0] && z === LV.start[1]) && ((x * 7 + z * 13 + i) % 11 === 0)) {
       // a little decoration that never blocks anything: flowers / pebbles
       const f = sph(0.05, (x + z) % 2 ? MAT.redTop : MAT.lamp, x + 0.3, h + 0.04, z - 0.3);
@@ -877,11 +914,17 @@ function syncToggles(instant) {
 }
 
 // ---- HUD ----
-const potSVG = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v2c3 2 3 9 0 12H6C3 17 3 10 6 8z" fill="${on ? '#ffb81c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><rect x="5" y="3" width="14" height="4" rx="1.5" fill="${on ? '#fff' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"/></svg>`;
+const TREAT_SVG = {
+  h: on => `<svg viewBox="0 0 24 24" aria-label="honey"><path d="M6 6h12v2c3 2 3 9 0 12H6C3 17 3 10 6 8z" fill="${on ? '#ffb81c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><rect x="5" y="3" width="14" height="4" rx="1.5" fill="${on ? '#fff' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"/></svg>`,
+  f: on => `<svg viewBox="0 0 24 24" aria-label="salmon"><path d="M2 12c4-6 11-6 15 0-4 6-11 6-15 0z" fill="${on ? '#f47a5a' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><path d="M17 12l5-4v8z" fill="${on ? '#f47a5a' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="11" r="1.3" fill="#3b2412"/></svg>`,
+  r: on => `<svg viewBox="0 0 24 24" aria-label="berries"><g fill="${on ? '#5a5ad6' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"><circle cx="8" cy="15" r="4"/><circle cx="16" cy="15" r="4"/><circle cx="12" cy="9" r="4"/></g><path d="M12 5l3-3" stroke="#3b2412" stroke-width="2" stroke-linecap="round"/></svg>`
+};
+const treatSVG = (t, on) => (TREAT_SVG[t] || TREAT_SVG.h)(on);
+const TREAT_NAME = { h: 'Honey', f: 'Salmon', r: 'Berries' };
 const heartSVG = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${on ? '#e8453c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/></svg>`;
 function updateHUD() {
   let p = '';
-  for (let i = 0; i < LV.pots; i++) p += potSVG(ST.pots & (1 << i));
+  for (let i = 0; i < LV.pots; i++) p += treatSVG(LV.treats[i], ST.pots & (1 << i));
   document.getElementById('pots').innerHTML = p;
   let h = '';
   for (let i = 0; i < 3; i++) h += heartSVG(i < hearts);
@@ -921,8 +964,7 @@ function tryStep(dx, dz) {
   faceDir(dx, dz);
   const r = step(LV, ST, dx, dz);
   if (!r) { sfx('bump'); queue({ pts: [bearObj.position.clone(), bearObj.position.clone().add(new THREE.Vector3(dx * 0.12, 0, dz * 0.12)), bearObj.position.clone()], dur: 0.14 }); return false; }
-  if (holding && r.ev.pipe) { /* turnip comes along */ }
-  undoStack.push({ st: ST, holding });
+    undoStack.push({ st: ST, holding });
   if (undoStack.length > 300) undoStack.shift();
   const prev = ST;
   ST = r.s;
@@ -932,7 +974,7 @@ function tryStep(dx, dz) {
 function animateStep(prev, ev) {
   const [ax, az] = ev.from, [bx, bz] = ev.to, dx = ev.dx, dz = ev.dz;
   const ya = bearObj.position.y;
-  const yb = heightAt(LV, ST, bx, bz) + (LV.kind[bz][bx] === 'pipe' ? 0.39 : 0) + (LV.kind[bz][bx] === '!' ? 0.12 : 0) - (ev.push && ev.push.fill && ev.push.to[0] === bx && ev.push.to[1] === bz ? 0 : 0);
+  const yb = heightAt(LV, ST, bx, bz) + (LV.kind[bz][bx] === 'pipe' ? 0.44 : 0) + (LV.kind[bz][bx] === '!' ? 0.12 : 0) - (ev.push && ev.push.fill && ev.push.to[0] === bx && ev.push.to[1] === bz ? 0 : 0);
   const A = posOf(ax, az, ya), B = posOf(bx, bz, yb);
   const P = (f, y) => posOf(ax + dx * f, az + dz * f, y);
   if (ev.kind === 'walk' || ev.kind === 'push') {
@@ -996,7 +1038,7 @@ function collectPot(i) {
   sfx('pot');
   updateHUD();
   const got = ST.pots.toString(2).split('1').length - 1;
-  toast(got === LV.pots ? 'All the honey! Now get the star.' : 'Honey pot ' + got + ' of ' + LV.pots + '!', 1600);
+  toast(got === LV.pots ? 'Yum! All the treats! Now get the golden honeycomb.' : 'Yum, ' + TREAT_NAME[LV.treats[i]].toLowerCase() + '! ' + got + ' of ' + LV.pots + ' treats.', 1700);
 }
 function winLevel() {
   won = true;
@@ -1010,8 +1052,8 @@ function winLevel() {
   saveProgress(progress);
   clearTimeout(winTimer);
   winTimer = setTimeout(() => {
-    document.getElementById('clearPots').innerHTML = Array.from({ length: LV.pots }, (_, i) => potSVG(i < got)).join('');
-    document.getElementById('clearMsg').textContent = got === LV.pots ? 'You found every honey pot!' : 'You found ' + got + ' of ' + LV.pots + ' honey pots. Can you find them all?';
+    document.getElementById('clearPots').innerHTML = LV.treats.map((t, i) => treatSVG(t, ST.pots & (1 << i))).join('');
+    document.getElementById('clearMsg').textContent = got === LV.pots ? 'Bear found every treat. What a full tummy!' : 'You found ' + got + ' of ' + LV.pots + ' treats. Can you find them all?';
     document.getElementById('bNext').hidden = levelIndex >= LEVELS.length - 1;
     document.getElementById('clearMsg').textContent += levelIndex >= LEVELS.length - 1 ? ' That was the last world. Great job, Captain!' : '';
     show('clear');
@@ -1043,7 +1085,7 @@ function rebuildFromState() {
   }
   for (const p of potMeshes) {
     const taken = ST.pots & (1 << p.userData.idx);
-    p.visible = !taken; p.userData.taken = 0; p.scale.setScalar(1);
+    p.visible = !taken; p.userData.taken = 0; p.scale.setScalar(p.userData.s0 || 1);
   }
   syncToggles(false);
   placeBear(); bearObj.scale.setScalar(1);
@@ -1051,21 +1093,21 @@ function rebuildFromState() {
 }
 function restart() { if (!playing) return; buildLevel(levelIndex); sfx('undo'); }
 
-// ---- turnips & bees ----
+// ---- pinecones & bees ----
 function grab() {
   if (!playing || won || busy()) return;
-  if (holding) { throwTurnip(); return; }
+  if (holding) { throwCone(); return; }
   if (LV.kind[ST.z][ST.x] === 't') {
-    holding = makeTurnip();
+    holding = makePinecone();
     world.add(holding);
     sfx('pluck');
     queue({ dur: 0.35, onTick: k => { bearObj.userData.body.position.y = -Math.sin(k * Math.PI) * 0.1; } });
     return;
   }
-  toast('Find a sprout to pull up a turnip.', 1500);
+  toast('Find a pinecone pile to pick up a pinecone.', 1500);
   sfx('bump');
 }
-function throwTurnip() {
+function throwCone() {
   const [dx, dz] = facing;
   const h0 = heightAt(LV, ST, ST.x, ST.z);
   let x = ST.x, z = ST.z, hit = null, n = 0;
@@ -1343,8 +1385,8 @@ function renderSelect() {
     b.className = 'lv'; b.type = 'button'; b.id = 'lv' + i;
     const unlocked = i <= (progress.unlocked || 0);
     b.disabled = !unlocked;
-    const got = progress[i] || 0, total = (L.O.join('').match(/h/g) || []).length;
-    b.innerHTML = `<b>${i + 1}</b>${L.name}<span class="mini pots">${Array.from({ length: total }, (_, k) => potSVG(k < got)).join('')}</span>${unlocked ? '' : '<small>Locked</small>'}`;
+    const got = progress[i] || 0, kinds = L.O.join('').match(/[hfr]/g) || [];
+    b.innerHTML = `<b>${i + 1}</b>${L.name}<span class="mini pots">${kinds.map((t, k) => treatSVG(t, k < got)).join('')}</span>${unlocked ? '' : '<small>Locked</small>'}`;
     b.addEventListener('click', () => { initAudio(); startLevel(i); });
     grid.appendChild(b);
   });
@@ -1404,14 +1446,14 @@ function frame(now) {
     for (const p of potMeshes) {
       if (p.userData.taken) {
         p.userData.taken += dt;
-        p.position.y += dt * 2; p.scale.setScalar(Math.max(0.01, 1 - p.userData.taken * 2));
+        p.position.y += dt * 2; p.scale.setScalar(Math.max(0.01, (p.userData.s0 || 1) * (1 - p.userData.taken * 2)));
         if (p.userData.taken > 0.5) p.visible = false;
-      } else { p.rotation.y += dt * 1.5; }
+      } else if (p.userData.fish) { p.userData.fish.rotation.z = Math.sin(T * 6 + p.position.x) * 0.5; p.rotation.y += dt * 0.6; p.position.y = p.userData.baseY + Math.abs(Math.sin(T * 3 + p.position.z)) * 0.12; } else { p.rotation.y += dt * 1.5; }
     }
     if (starMesh) {
       starMesh.rotation.y += dt * (starMesh.userData.fly ? 12 : 2);
       if (starMesh.userData.fly) starMesh.position.y += dt * 2;
-      else starMesh.position.y = LV.base[LV.goal[1]][LV.goal[0]] + 0.55 + Math.sin(T * 2) * 0.08;
+      else starMesh.position.y = LV.base[LV.goal[1]][LV.goal[0]] + 0.6 + Math.sin(T * 2) * 0.08;
     }
     for (const t of toggleMeshes) t.position.y += (t.userData.targetY - t.position.y) * Math.min(1, dt * 10);
     clouds.forEach((c, i) => { c.position.x += dt * 0.2; if (c.position.x > LV.w + 10) c.position.x = -10; });

@@ -24,10 +24,10 @@ Three levels: Mushroom Meadow, Crystal Caves, and King Croak's Castle (boss: onl
 
 - Spin each little diorama world to find the way (Q / E, drag, or the spin buttons).
 - Climb stairs and ladders, hop down ledges, push crates into water to make bridges.
-- Step on switches to swap red and blue blocks, ride warp pipes.
-- Pull up turnips and throw them at bees.
-- Collect 3 honey pots, then grab the golden star. Undo (Z) and Restart (R) are always available.
+- Step on switches to swap red and blue blocks, hop through hollow stumps.
+- Pick up pinecones and throw them at grumpy bees. Hollow tree stumps work as warps.
+- Eat 3 treats per world (honey, salmon and berries), then grab the giant golden honeycomb. Undo (Z) and Restart (R) are always available.
 
 On tablets: on-screen buttons, or tap a tile and the bear walks there.
 
-Six worlds: Picnic Hill, Bee Bridge, Crate Creek, Switch Ruins, Pipe Isles, Honey Tower. Each one has been checked with a built-in solver (`solve()` in the script) to make sure it can be finished with all honey pots.
+Six worlds: Picnic Hill, Bee Bridge, Salmon Creek, Switch Ruins, Stump Isles, Beehive Tower. Each one has been checked with a built-in solver (`solve()` in the script) to make sure it can be finished with all treats.
