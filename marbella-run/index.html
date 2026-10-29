@@ -1426,8 +1426,32 @@ const Audio = (() => {
     { name: 'STRAIT LINE', fm: '101.5', bpm: 140, chords: [['D3', 1], ['Bb2', 0], ['C3', 0], ['A2', 0]], bass: [0, 12, 0, 12, 0, 12, 0, 12], wave: 'square',
       lead: parse('D5 . D5 F5 A5 . G5 F5 | D5 - - F5 Bb5 - A5 G5 | E5 . E5 G5 C6 . Bb5 A5 | C#6 - A5 - E5 - C#5 E5 | A5 . A5 G5 F5 . E5 D5 | F5 - D5 - Bb4 - D5 F5 | G5 . G5 A5 Bb5 . A5 G5 | A5 - - - E5 - C#5 -') },
   ];
+  // A few seconds of silence as a WAV data URI. Playing it through an <audio> element inside a tap
+  // switches iOS to "playback" audio, so the ring/silent switch no longer mutes the game.
+  function silentWav() {
+    const n = 8000, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+    const str = (o, t) => [...t].forEach((ch, i) => b[o + i] = ch.charCodeAt(0));
+    str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); str(36, 'data'); v.setUint32(40, n, true);
+    b.fill(128, 44);
+    let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+    return 'data:audio/wav;base64,' + btoa(bin);
+  }
+  let keepAlive = null;
+  // Called from every tap/click/key: browsers only allow sound to start inside a real user gesture
+  // (on iPhones that means the finger lifting, not touching down).
+  function unlock() {
+    init(); if (!ctx) return;
+    if (ctx.state !== 'running') {
+      ctx.resume().catch(() => {});
+      const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(0);
+    }
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { }
+    if (!keepAlive) { keepAlive = document.createElement('audio'); keepAlive.src = silentWav(); keepAlive.loop = true; keepAlive.setAttribute('playsinline', ''); }
+    if (keepAlive.paused) keepAlive.play().catch(() => {});
+  }
   function init() {
-    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    if (ctx) { if (ctx.state !== 'running') ctx.resume().catch(() => {}); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC();
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.8; master.connect(ctx.destination);
@@ -1481,7 +1505,8 @@ const Audio = (() => {
     }
   }
   return {
-    SONGS, init,
+    SONGS, init, unlock,
+    state() { return { ctx: ctx ? ctx.state : 'none', step, muted }; },
     play(i) { if (!ctx) return; song = i; step = 0; nextT = ctx.currentTime + 0.05; clearInterval(timer); timer = setInterval(schedule, 25); },
     stopMusic() { clearInterval(timer); timer = null; },
     engine(v, boost, screech, on) {
@@ -1518,6 +1543,8 @@ addEventListener('keydown', e => {
   if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = true; e.preventDefault(); }
   if (!e.repeat) onPress(e.code);
 });
+for (const ev of ['touchend', 'click', 'keydown', 'pointerup', 'mousedown']) addEventListener(ev, () => Audio.unlock(), { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) Audio.init(); });
 addEventListener('keyup', e => { if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = false; });
 document.querySelectorAll('.pad button').forEach(b => {
   const k = b.dataset.k;
