@@ -1,0 +1,1448 @@
+<title>Captain Bear</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: full-screen 3D diorama; HUD chips float top, touch controls float bottom corners. */
+:root {
+  --sky: #8fd3ff;
+  --sky-deep: #3a8fd6;
+  --honey: #ffb81c;
+  --honey-deep: #c97a00;
+  --bear: #8a5a33;
+  --ink: #3b2412;
+  --paper: #fff8ea;
+  --red: #e8453c;
+  --blue: #3c7ae8;
+  --font-ui: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  box-sizing: border-box;
+}
+#view { position: fixed; inset: 0; }
+#view canvas { display: block; width: 100%; height: 100%; }
+.hud {
+  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px));
+  left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+}
+.chip {
+  pointer-events: auto;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0;
+}
+.chip .lvl { font-size: 13px; color: var(--honey-deep); letter-spacing: 0.04em; text-transform: uppercase; }
+.chip .name { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.left { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pots { display: flex; gap: 4px; }
+.pots svg { width: 26px; height: 26px; }
+.hearts { display: flex; gap: 3px; }
+.hearts svg { width: 20px; height: 20px; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+button {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  touch-action: none;
+}
+button:active, button.on { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+button:focus-visible { outline: 3px solid var(--honey); outline-offset: 2px; }
+.tool { font-size: 14px; padding: 7px 11px; pointer-events: auto; }
+.pad {
+  position: fixed; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: grid; gap: 6px; pointer-events: none;
+}
+.pad button { pointer-events: auto; width: 58px; height: 58px; font-size: 22px; padding: 0; }
+#dpad { left: max(16px, env(safe-area-inset-left, 0px)); grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(3, 58px); }
+#dpad [data-d="up"] { grid-column: 2; grid-row: 1; }
+#dpad [data-d="left"] { grid-column: 1; grid-row: 2; }
+#dpad [data-d="right"] { grid-column: 3; grid-row: 2; }
+#dpad [data-d="down"] { grid-column: 2; grid-row: 3; }
+#acts { right: max(16px, env(safe-area-inset-right, 0px)); grid-template-columns: repeat(2, auto); align-items: end; }
+#acts .grab { width: 84px; height: 84px; border-radius: 50%; background: var(--honey); font-size: 17px; grid-row: span 2; }
+#acts .rot { font-size: 20px; }
+.keys {
+  position: fixed; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  background: rgba(255, 248, 234, 0.85); border: 2px solid var(--ink); border-radius: 12px;
+  padding: 6px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; pointer-events: none;
+}
+body.touch .keys { display: none; }
+body:not(.touch) .pad { display: none; }
+#toast {
+  position: fixed; left: 50%; top: 92px; transform: translateX(-50%);
+  width: min(460px, calc(100% - 40px));
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 5px 0 var(--ink);
+  padding: 10px 16px; font-size: 16px; font-weight: 500; text-align: center; line-height: 1.35;
+  transition: opacity 0.4s; pointer-events: none; text-wrap: balance;
+}
+#toast.hide { opacity: 0; }
+.screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(58, 143, 214, 0.55);
+  overflow-y: auto;
+}
+.card {
+  background: var(--paper); border: 4px solid var(--ink); border-radius: 24px; box-shadow: 0 8px 0 var(--ink);
+  padding: 22px 24px; width: min(560px, 100%); text-align: center; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 14px; align-items: center;
+}
+.logo { font-size: clamp(40px, 9vw, 64px); font-weight: 700; line-height: 0.95; color: var(--honey); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); margin: 0; text-wrap: balance; }
+.sub { font-size: 18px; font-weight: 500; margin: 0; }
+.big { font-size: 22px; padding: 12px 30px; background: var(--honey); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+@media (max-width: 460px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+.lv { padding: 10px 6px; display: flex; flex-direction: column; gap: 4px; align-items: center; font-size: 15px; }
+.lv b { font-size: 26px; }
+.lv small { font-size: 12px; font-weight: 500; }
+.lv[disabled] { opacity: 0.45; cursor: not-allowed; }
+.lv .mini svg { width: 16px; height: 16px; }
+.how { font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0; text-align: left; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 520px) {
+  .chip .name { font-size: 15px; }
+  .tool { font-size: 12px; padding: 6px 8px; }
+  .pad button { width: 50px; height: 50px; }
+  #dpad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
+  #acts .grab { width: 72px; height: 72px; }
+}
+</style>
+
+<div id="view"></div>
+
+<div class="hud" id="hud" hidden>
+  <div class="left">
+    <div class="chip"><span class="lvl" id="lvlNum">Level 1</span><span class="name" id="lvlName">Picnic Hill</span></div>
+    <div class="chip"><div class="pots" id="pots"></div><div class="hearts" id="hearts"></div></div>
+  </div>
+  <div class="tools">
+    <button class="tool" id="bUndo" type="button">Undo</button>
+    <button class="tool" id="bRestart" type="button">Restart</button>
+    <button class="tool" id="bMenu" type="button">Levels</button>
+    <button class="tool" id="bSound" type="button">Sound on</button>
+  </div>
+</div>
+
+<div id="toast" class="hide"></div>
+
+<div class="pad" id="dpad" hidden>
+  <button data-d="up" type="button" aria-label="Walk away from camera">&#9650;</button>
+  <button data-d="left" type="button" aria-label="Walk left">&#9664;</button>
+  <button data-d="right" type="button" aria-label="Walk right">&#9654;</button>
+  <button data-d="down" type="button" aria-label="Walk toward camera">&#9660;</button>
+</div>
+<div class="pad" id="acts" hidden>
+  <button class="rot" data-r="-1" type="button" aria-label="Spin world left">&#10226;</button>
+  <button class="grab" id="bGrab" type="button">GRAB</button>
+  <button class="rot" data-r="1" type="button" aria-label="Spin world right">&#10227;</button>
+</div>
+<div class="keys" id="keys" hidden>Arrows walk &middot; Space grabs / throws &middot; Q / E spin &middot; Drag to look &middot; Z undo &middot; R restart</div>
+
+<div class="screen" id="title">
+  <div class="card">
+    <h1 class="logo">Captain Bear</h1>
+    <p class="sub">Honey Tracker</p>
+    <p class="how">Bear can't jump. Spin the little worlds around, find a way up with stairs and ladders, push crates, flip switches and throw turnips at bees. Collect the 3 honey pots, then grab the golden star.</p>
+    <button class="big" id="bPlay" type="button">Play</button>
+  </div>
+</div>
+
+<div class="screen" id="select" hidden>
+  <div class="card">
+    <h2 class="logo" style="font-size: 40px">Pick a world</h2>
+    <div class="grid" id="levelGrid"></div>
+    <button class="tool" id="bTitle" type="button">Back</button>
+  </div>
+</div>
+
+<div class="screen" id="clear" hidden>
+  <div class="card">
+    <h2 class="logo" style="font-size: 44px">Star get!</h2>
+    <div class="pots" id="clearPots" style="justify-content:center"></div>
+    <p class="sub" id="clearMsg"></p>
+    <div class="row">
+      <button class="tool" id="bReplay" type="button">Play again</button>
+      <button class="tool" id="bLevels" type="button">Levels</button>
+      <button class="big" id="bNext" type="button">Next world</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+// LEVELS
+//  H: height of each column ('.' = water)
+//  O: S start, G star, h honey pot, c crate, t turnip sprout, ! switch,
+//     A red block (up at start), B blue block (down at start), p/q warp pipe pairs
+//  links: stairs or ladders between two neighbouring cells
+//  bees: patrol back and forth along waypoints at height y
+// =====================================================================
+const LEVELS = [
+  {
+    name: 'Picnic Hill', theme: 'meadow',
+    tip: "Bear can't jump! Walk up stairs, climb ladders, and hop down ledges. Get 3 honey pots, then the star.",
+    H: ['33....',
+        '331111',
+        '221111',
+        '.11221',
+        '.11221'],
+    O: ['Gh....',
+        '......',
+        '......',
+        '....h.',
+        '..h..S'],
+    links: [[1, 3, 1, 2, 'stairs'], [1, 2, 1, 1, 'ladder'], [5, 3, 4, 3, 'ladder']]
+  },
+  {
+    name: 'Bee Bridge', theme: 'meadow',
+    tip: 'Stand on a sprout and press GRAB to pull a turnip. Press GRAB again to throw it at a bee!',
+    H: ['111..222',
+        '111..222',
+        '11111112',
+        '111..222',
+        '111..222'],
+    O: ['.....tG.',
+        '........',
+        'S.t.h...',
+        '........',
+        'h......h'],
+    links: [[6, 2, 7, 2, 'stairs']],
+    bees: [{ path: [[3, 2], [6, 2]], y: 1 }, { path: [[5, 3], [7, 3]], y: 2 }]
+  },
+  {
+    name: 'Crate Creek', theme: 'beach',
+    tip: 'Push crates into the water to make a path. Pushed one the wrong way? Press UNDO.',
+    H: ['11111.1.11',
+        '11111.1.11',
+        '11111.1.11',
+        '11111.1.22',
+        '11111.1.22'],
+    O: ['h.....h...',
+        '..........',
+        'S..c..c..G',
+        '..........',
+        '..c......h'],
+    links: [[8, 2, 8, 3, 'ladder']]
+  },
+  {
+    name: 'Switch Ruins', theme: 'ruins',
+    tip: 'Step on the switch to swap the red and blue blocks. Plan your route!',
+    H: ['...2222',
+        '22.2...',
+        '2222222',
+        '22.2...',
+        '...2222'],
+    O: ['...hB.h',
+        '.......',
+        '.SA!B.G',
+        '.......',
+        '....A.h'],
+    links: []
+  },
+  {
+    name: 'Pipe Isles', theme: 'beach',
+    tip: 'Walk into a warp pipe to pop out of its twin. Step off and back on to go back.',
+    H: ['.11.33..',
+        '.11.3322',
+        '......22',
+        '11....22',
+        '11....1.'],
+    O: ['.h..h...',
+        '..q.p..h',
+        '........',
+        '.p....q.',
+        'S.....G.'],
+    links: []
+  },
+  {
+    name: 'Honey Tower', theme: 'ruins',
+    tip: 'Everything you have learned, all in one tower. Take your time!',
+    H: ['33.4444',
+        '3333333',
+        '1113333',
+        '111.111',
+        '111.111',
+        '111.111'],
+    O: ['h..Ah.G',
+        '..B...!',
+        '.......',
+        't......',
+        '.c.....',
+        'S.....h'],
+    links: [[5, 3, 5, 2, 'ladder'], [3, 1, 3, 0, 'stairs']],
+    bees: [{ path: [[4, 4], [6, 4]], y: 1 }]
+  }
+];
+
+// =====================================================================
+// PUZZLE RULES (pure functions, shared by the game and the solver)
+// =====================================================================
+const K = (x, z) => x + ',' + z;
+function parseLevel(def) {
+  const d = def.H.length, w = def.H[0].length;
+  const base = [], kind = [], crates = [], potIndex = {}, pipes = { p: [], q: [] }, partner = {}, links = new Map();
+  let start = [0, 0], goal = null, pots = 0;
+  for (let z = 0; z < d; z++) {
+    base.push([]); kind.push([]);
+    for (let x = 0; x < w; x++) {
+      const hc = def.H[z][x], oc = (def.O[z] || '')[x] || '.';
+      base[z].push(hc === '.' ? 0 : +hc);
+      let k = '';
+      if (oc === 'S') start = [x, z];
+      else if (oc === 'G') { k = 'G'; goal = [x, z]; }
+      else if (oc === 'h') { k = 'h'; potIndex[K(x, z)] = pots++; }
+      else if (oc === 'c') crates.push([x, z]);
+      else if (oc === 't') k = 't';
+      else if (oc === '!') k = '!';
+      else if (oc === 'A' || oc === 'B') k = oc;
+      else if (oc === 'p' || oc === 'q') { k = 'pipe'; pipes[oc].push([x, z]); }
+      kind[z].push(k);
+    }
+  }
+  for (const pr of Object.values(pipes)) if (pr.length === 2) { partner[K(...pr[0])] = pr[1]; partner[K(...pr[1])] = pr[0]; }
+  for (const [x1, z1, x2, z2, type] of def.links || []) { links.set(K(x1, z1) + '>' + K(x2, z2), type); links.set(K(x2, z2) + '>' + K(x1, z1), type); }
+  return { def, w, d, base, kind, crates, potIndex, pots, partner, links, start, goal, bees: def.bees || [] };
+}
+function initState(lv) { return { x: lv.start[0], z: lv.start[1], mode: 0, crates: lv.crates.map(c => c.slice()), add: {}, pots: 0 }; }
+function cloneState(s) { return { x: s.x, z: s.z, mode: s.mode, crates: s.crates.map(c => c.slice()), add: Object.assign({}, s.add), pots: s.pots }; }
+const inb = (lv, x, z) => x >= 0 && z >= 0 && x < lv.w && z < lv.d;
+function heightAt(lv, s, x, z) {
+  if (!inb(lv, x, z)) return 0;
+  const k = lv.kind[z][x];
+  let b = lv.base[z][x];
+  if (k === 'A' && s.mode !== 0) b = 0;
+  if (k === 'B' && s.mode !== 1) b = 0;
+  return b + (s.add[K(x, z)] || 0);
+}
+function step(lv, s0, dx, dz) {
+  const ax = s0.x, az = s0.z, bx = ax + dx, bz = az + dz;
+  if (!inb(lv, bx, bz)) return null;
+  const ha = heightAt(lv, s0, ax, az), hb = heightAt(lv, s0, bx, bz);
+  if (hb <= 0) return null;
+  const link = lv.links.get(K(ax, az) + '>' + K(bx, bz)) || null;
+  const s = cloneState(s0);
+  const ev = { dx, dz, from: [ax, az], to: [bx, bz], ha, hb, kind: 'walk' };
+  const ci = s.crates.findIndex(c => c[0] === bx && c[1] === bz);
+  if (ci >= 0) {
+    if (hb !== ha) return null;
+    const cx = bx + dx, cz = bz + dz;
+    if (!inb(lv, cx, cz) || lv.kind[cz][cx] !== '') return null;
+    if (s.crates.some(c => c[0] === cx && c[1] === cz)) return null;
+    const hc = heightAt(lv, s, cx, cz);
+    if (hc === hb) { s.crates[ci] = [cx, cz]; ev.push = { from: [bx, bz], to: [cx, cz], fill: false, y: hb }; }
+    else if (hc < hb) { s.crates.splice(ci, 1); s.add[K(cx, cz)] = (s.add[K(cx, cz)] || 0) + 1; ev.push = { from: [bx, bz], to: [cx, cz], fill: true, y: hb, land: hc }; }
+    else return null;
+    ev.kind = 'push';
+  } else if (link) ev.kind = link;
+  else if (hb < ha) ev.kind = 'drop';
+  else if (hb !== ha) return null;
+  s.x = bx; s.z = bz;
+  const k = lv.kind[bz][bx];
+  if (k === '!') { s.mode ^= 1; ev.sw = true; }
+  else if (k === 'h') { const i = lv.potIndex[K(bx, bz)]; if (!(s.pots & (1 << i))) { s.pots |= 1 << i; ev.pot = i; } }
+  else if (k === 'G') ev.goal = true;
+  else if (k === 'pipe') { const p = lv.partner[K(bx, bz)]; if (p) { s.x = p[0]; s.z = p[1]; ev.pipe = p; } }
+  return { s, ev };
+}
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+function stateKey(s) {
+  return s.x + ',' + s.z + '|' + s.mode + '|' + s.pots + '|' + s.crates.map(c => c.join(',')).sort().join(';') + '|' + Object.keys(s.add).sort().map(k => k + ':' + s.add[k]).join(';');
+}
+// Breadth-first search over every puzzle state: proves a level can be finished with all pots.
+function solve(i) {
+  const lv = parseLevel(LEVELS[i]);
+  const all = (1 << lv.pots) - 1;
+  const s0 = initState(lv);
+  const seen = new Set([stateKey(s0)]);
+  let frontier = [s0], depth = 0, anyGoal = -1, bestPots = 0;
+  while (frontier.length && depth < 400) {
+    depth++;
+    const next = [];
+    for (const s of frontier) for (const [dx, dz] of DIRS) {
+      const r = step(lv, s, dx, dz);
+      if (!r) continue;
+      const pc = r.s.pots.toString(2).split('1').length - 1;
+      if (pc > bestPots) bestPots = pc;
+      if (r.ev.goal) { if (anyGoal < 0) anyGoal = depth; if (r.s.pots === all) return { full: depth, anyGoal, pots: lv.pots, states: seen.size }; continue; }
+      const key = stateKey(r.s);
+      if (seen.has(key)) continue;
+      seen.add(key); next.push(r.s);
+    }
+    frontier = next;
+  }
+  return { full: -1, anyGoal, pots: lv.pots, bestPots, states: seen.size };
+}
+
+// =====================================================================
+// AUDIO
+// =====================================================================
+let actx = null, muted = false;
+function initAudio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function tone(f0, f1, dur, type = 'triangle', vol = 0.12, delay = 0) {
+  if (!actx || muted) return;
+  const t0 = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+const seq = (fs, st = 0.08, type = 'triangle', vol = 0.12) => fs.forEach((f, i) => tone(f, f, st * 1.1, type, vol, i * st));
+const SFX = {
+  step: () => tone(220 + Math.random() * 40, 180, 0.06, 'sine', 0.08),
+  climb: () => seq([300, 360, 420], 0.06, 'sine', 0.08),
+  drop: () => tone(500, 150, 0.25, 'sine', 0.1),
+  bump: () => tone(110, 90, 0.08, 'square', 0.05),
+  push: () => tone(90, 70, 0.18, 'sawtooth', 0.06),
+  splash: () => { tone(800, 120, 0.35, 'sine', 0.12); tone(300, 60, 0.3, 'triangle', 0.08, 0.05); },
+  sw: () => seq([392, 523], 0.07, 'square', 0.06),
+  pipe: () => tone(900, 120, 0.4, 'square', 0.05),
+  pot: () => seq([784, 988, 1175, 1568], 0.07),
+  pluck: () => tone(200, 800, 0.15, 'triangle', 0.12),
+  throw: () => tone(700, 200, 0.2, 'triangle', 0.1),
+  poof: () => { tone(1200, 300, 0.2, 'square', 0.05); seq([660, 880], 0.06); },
+  hurt: () => tone(400, 90, 0.35, 'sawtooth', 0.08),
+  undo: () => tone(500, 300, 0.12, 'sine', 0.08),
+  star: () => seq([523, 659, 784, 1046, 784, 1046, 1318], 0.1, 'triangle', 0.13)
+};
+const sfx = n => SFX[n] && SFX[n]();
+
+// =====================================================================
+// THREE.JS SCENE
+// =====================================================================
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x7a5a3a, 0.75));
+const sun = new THREE.DirectionalLight(0xfff1d6, 0.85);
+sun.position.set(6, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
+scene.add(sun); scene.add(sun.target);
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+
+// --- canvas textures ---
+function canvasTex(size, draw) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+const THEMES = {
+  meadow: { top: ['#7ed957', '#6fcb4a'], side: '#a8703f', sideDark: '#8e5c31', lip: '#5fb43c', sky: 0x8fd3ff, fog: 0xbfe6ff, water: 0x3fa9f5 },
+  beach: { top: ['#f6dc8a', '#efd27a'], side: '#d9a35c', sideDark: '#c48d48', lip: '#e8c96c', sky: 0x7fd8f0, fog: 0xc8f2ff, water: 0x23c4d8 },
+  ruins: { top: ['#c9c3b2', '#bdb6a4'], side: '#8d8778', sideDark: '#7a7466', lip: '#7ec26a', sky: 0xb7a6ff, fog: 0xe0d8ff, water: 0x4a7fe0 }
+};
+const texCache = {};
+function sideTex(theme, h) {
+  const key = theme + h;
+  if (texCache[key]) return texCache[key];
+  const th = THEMES[theme];
+  const t = canvasTex(32, (g, s) => {
+    g.fillStyle = th.side; g.fillRect(0, 0, s, s);
+    g.fillStyle = th.sideDark;
+    for (let i = 0; i < 9; i++) g.fillRect((i * 13) % 28, (i * 7) % 28 + 2, 4, 3);
+    g.fillRect(0, s - 2, s, 2);
+  });
+  t.repeat.set(1, h + 1);
+  return (texCache[key] = t);
+}
+const topTex = {};
+function topMat(theme, alt) {
+  const key = theme + alt;
+  if (topTex[key]) return topTex[key];
+  const th = THEMES[theme];
+  const t = canvasTex(32, (g, s) => {
+    g.fillStyle = th.top[alt]; g.fillRect(0, 0, s, s);
+    g.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let i = 0; i < 6; i++) g.fillRect((i * 11) % 30, (i * 17) % 30, 2, 2);
+    g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(0, 0, s, 2); g.fillRect(0, 0, 2, s);
+  });
+  return (topTex[key] = new THREE.MeshLambertMaterial({ map: t }));
+}
+const crateTex = canvasTex(32, (g, s) => {
+  g.fillStyle = '#c98b4a'; g.fillRect(0, 0, s, s);
+  g.fillStyle = '#9c6530'; g.fillRect(0, 0, s, 4); g.fillRect(0, s - 4, s, 4); g.fillRect(0, 0, 4, s); g.fillRect(s - 4, 0, 4, s);
+  g.save(); g.translate(s / 2, s / 2); g.rotate(Math.PI / 4); g.fillRect(-2, -22, 4, 44); g.restore();
+  g.fillStyle = '#e0a764'; g.fillRect(5, 6, 22, 1); g.fillRect(5, 25, 22, 1);
+});
+const MAT = {
+  crate: new THREE.MeshLambertMaterial({ map: crateTex }),
+  white: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+  black: new THREE.MeshPhongMaterial({ color: 0x1a1008, shininess: 80 }),
+  bear: new THREE.MeshLambertMaterial({ color: 0xa0652f }),
+  bearLight: new THREE.MeshLambertMaterial({ color: 0xe8c08a }),
+  bearDark: new THREE.MeshLambertMaterial({ color: 0x6e3f1c }),
+  pack: new THREE.MeshLambertMaterial({ color: 0xd8432f }),
+  lamp: new THREE.MeshLambertMaterial({ color: 0xffe066, emissive: 0xffc400, emissiveIntensity: 0.6 }),
+  honey: new THREE.MeshPhongMaterial({ color: 0xffb81c, emissive: 0x7a4a00, emissiveIntensity: 0.35, shininess: 90 }),
+  pot: new THREE.MeshPhongMaterial({ color: 0xc8732e, shininess: 40 }),
+  cloth: new THREE.MeshLambertMaterial({ color: 0xf2f2f2 }),
+  star: new THREE.MeshPhongMaterial({ color: 0xffd23a, emissive: 0xffa200, emissiveIntensity: 0.55, shininess: 120 }),
+  leaf: new THREE.MeshLambertMaterial({ color: 0x3fae3a }),
+  leafLight: new THREE.MeshLambertMaterial({ color: 0x6fdc52 }),
+  turnip: new THREE.MeshLambertMaterial({ color: 0xfaf6f0 }),
+  turnipTop: new THREE.MeshLambertMaterial({ color: 0xc957b8 }),
+  pipe: new THREE.MeshPhongMaterial({ color: 0x2ebd4e, shininess: 60 }),
+  pipeDark: new THREE.MeshLambertMaterial({ color: 0x0c3d16 }),
+  wood: new THREE.MeshLambertMaterial({ color: 0x9c6530 }),
+  woodLight: new THREE.MeshLambertMaterial({ color: 0xc98b4a }),
+  red: new THREE.MeshLambertMaterial({ color: 0xe8453c }),
+  blue: new THREE.MeshLambertMaterial({ color: 0x3c7ae8 }),
+  redTop: new THREE.MeshLambertMaterial({ color: 0xff6f63 }),
+  blueTop: new THREE.MeshLambertMaterial({ color: 0x6fa0ff }),
+  grey: new THREE.MeshLambertMaterial({ color: 0x8c8c8c }),
+  bee: new THREE.MeshLambertMaterial({ color: 0xffcf1f }),
+  wing: new THREE.MeshLambertMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.75, side: THREE.DoubleSide }),
+  cloud: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+  shadow: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false })
+};
+const sph = (r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => {
+  const o = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), m);
+  o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.castShadow = true; return o;
+};
+const box = (w, h, d, m, x = 0, y = 0, z = 0) => {
+  const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; return o;
+};
+const cyl = (rt, rb, h, m, x = 0, y = 0, z = 0, seg = 20) => {
+  const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
+  o.position.set(x, y, z); o.castShadow = true; return o;
+};
+
+// --- models ---
+function makeBear() {
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(0.2, MAT.bear, 0, 0.3, 0, 1, 1.1, 0.95));
+  body.add(sph(0.13, MAT.bearLight, 0, 0.29, 0.1, 1, 1.1, 0.6));
+  const head = new THREE.Group(); head.position.y = 0.6; body.add(head);
+  head.add(sph(0.19, MAT.bear, 0, 0, 0, 1, 0.95, 0.95));
+  head.add(sph(0.075, MAT.bear, -0.14, 0.15, -0.02)); head.add(sph(0.075, MAT.bear, 0.14, 0.15, -0.02));
+  head.add(sph(0.04, MAT.bearDark, -0.14, 0.15, 0.03)); head.add(sph(0.04, MAT.bearDark, 0.14, 0.15, 0.03));
+  head.add(sph(0.085, MAT.bearLight, 0, -0.05, 0.15, 1.1, 0.85, 0.8));
+  head.add(sph(0.035, MAT.black, 0, -0.01, 0.22, 1.2, 0.9, 1));
+  head.add(sph(0.026, MAT.black, -0.075, 0.05, 0.16)); head.add(sph(0.026, MAT.black, 0.075, 0.05, 0.16));
+  // headlamp, like a treasure tracker
+  const band = cyl(0.195, 0.195, 0.04, MAT.pack, 0, 0.08, 0); band.scale.z = 0.98; head.add(band);
+  const lamp = cyl(0.05, 0.05, 0.05, MAT.lamp, 0, 0.1, 0.18); lamp.rotation.x = Math.PI / 2; head.add(lamp);
+  // backpack
+  body.add(box(0.26, 0.28, 0.13, MAT.pack, 0, 0.36, -0.2));
+  body.add(box(0.27, 0.07, 0.14, MAT.lamp, 0, 0.47, -0.2));
+  const armL = sph(0.07, MAT.bear, -0.2, 0.33, 0.03, 1, 1.4, 1), armR = sph(0.07, MAT.bear, 0.2, 0.33, 0.03, 1, 1.4, 1);
+  body.add(armL, armR);
+  const legL = sph(0.08, MAT.bear, -0.09, 0.08, 0.02, 1, 0.9, 1.2), legR = sph(0.08, MAT.bear, 0.09, 0.08, 0.02, 1, 0.9, 1.2);
+  g.add(legL, legR);
+  g.userData = { body, head, armL, armR, legL, legR };
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 20), MAT.shadow);
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.01;
+  g.add(shadow);
+  return g;
+}
+function makePot() {
+  const g = new THREE.Group();
+  const pts = [[0, 0], [0.12, 0], [0.16, 0.06], [0.17, 0.14], [0.14, 0.22], [0.1, 0.25], [0.11, 0.28], [0, 0.28]].map(p => new THREE.Vector2(p[0], p[1]));
+  const pot = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), MAT.pot); pot.castShadow = true; g.add(pot);
+  g.add(cyl(0.13, 0.13, 0.04, MAT.cloth, 0, 0.28, 0));
+  g.add(sph(0.07, MAT.honey, 0.09, 0.22, 0.09, 0.6, 1, 0.6));
+  const label = cyl(0.172, 0.172, 0.07, MAT.honey, 0, 0.13, 0); g.add(label);
+  return g;
+}
+function makeStar() {
+  const s = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 0.14 : 0.32, a = i / 10 * Math.PI * 2 + Math.PI / 2;
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+    i ? s.lineTo(x, y) : s.moveTo(x, y);
+  }
+  const geo = new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2 });
+  geo.center();
+  const m = new THREE.Mesh(geo, MAT.star); m.castShadow = true;
+  const g = new THREE.Group(); g.add(m);
+  m.add(sph(0.025, MAT.black, -0.06, 0.04, 0.09)); m.add(sph(0.025, MAT.black, 0.06, 0.04, 0.09));
+  return g;
+}
+function makeTurnip() {
+  const g = new THREE.Group();
+  g.add(sph(0.13, MAT.turnip, 0, 0.13, 0, 1, 0.9, 1));
+  g.add(sph(0.1, MAT.turnipTop, 0, 0.2, 0, 1, 0.5, 1));
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.1, 8), MAT.turnip); tail.rotation.x = Math.PI; tail.position.y = 0.0; g.add(tail);
+  for (let i = 0; i < 3; i++) {
+    const l = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.2, 8), i % 2 ? MAT.leaf : MAT.leafLight);
+    l.position.set(Math.cos(i * 2.1) * 0.04, 0.33, Math.sin(i * 2.1) * 0.04);
+    l.rotation.set(Math.sin(i * 2.1) * 0.5, 0, -Math.cos(i * 2.1) * 0.5);
+    g.add(l);
+  }
+  return g;
+}
+function makeSprout() {
+  const g = new THREE.Group();
+  g.add(sph(0.09, MAT.turnip, 0, 0.0, 0, 1, 0.5, 1));
+  for (let i = 0; i < 3; i++) {
+    const l = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.22, 8), i % 2 ? MAT.leaf : MAT.leafLight);
+    l.position.set(Math.cos(i * 2.1) * 0.05, 0.11, Math.sin(i * 2.1) * 0.05);
+    l.rotation.set(Math.sin(i * 2.1) * 0.6, 0, -Math.cos(i * 2.1) * 0.6);
+    l.castShadow = true;
+    g.add(l);
+  }
+  return g;
+}
+function makeBee() {
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(0.16, MAT.bee, 0, 0, 0, 1, 0.95, 1.25));
+  const s1 = cyl(0.158, 0.158, 0.05, MAT.black, 0, 0, -0.03); s1.rotation.x = Math.PI / 2; body.add(s1);
+  const s2 = cyl(0.13, 0.13, 0.05, MAT.black, 0, 0, -0.13); s2.rotation.x = Math.PI / 2; body.add(s2);
+  const st = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 8), MAT.black); st.rotation.x = -Math.PI / 2; st.position.z = -0.22; body.add(st);
+  body.add(sph(0.035, MAT.white, -0.07, 0.05, 0.16)); body.add(sph(0.035, MAT.white, 0.07, 0.05, 0.16));
+  body.add(sph(0.018, MAT.black, -0.07, 0.05, 0.19)); body.add(sph(0.018, MAT.black, 0.07, 0.05, 0.19));
+  const brow1 = box(0.07, 0.015, 0.02, MAT.black, -0.07, 0.1, 0.18); brow1.rotation.z = -0.4; body.add(brow1);
+  const brow2 = box(0.07, 0.015, 0.02, MAT.black, 0.07, 0.1, 0.18); brow2.rotation.z = 0.4; body.add(brow2);
+  const wingGeo = new THREE.CircleGeometry(0.13, 14);
+  const wl = new THREE.Mesh(wingGeo, MAT.wing), wr = new THREE.Mesh(wingGeo, MAT.wing);
+  wl.position.set(-0.1, 0.16, -0.02); wr.position.set(0.1, 0.16, -0.02);
+  wl.rotation.x = wr.rotation.x = -Math.PI / 2;
+  body.add(wl, wr);
+  g.userData = { body, wl, wr };
+  return g;
+}
+function makePipe() {
+  const g = new THREE.Group();
+  g.add(cyl(0.34, 0.34, 0.3, MAT.pipe, 0, 0.15, 0));
+  g.add(cyl(0.4, 0.4, 0.14, MAT.pipe, 0, 0.32, 0));
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.31, 20), MAT.pipeDark);
+  hole.rotation.x = -Math.PI / 2; hole.position.y = 0.395; g.add(hole);
+  return g;
+}
+function makeSwitch() {
+  const g = new THREE.Group();
+  g.add(cyl(0.36, 0.4, 0.08, MAT.grey, 0, 0.04, 0));
+  const btn = cyl(0.26, 0.28, 0.1, MAT.red, 0, 0.12, 0); g.add(btn);
+  g.userData.btn = btn;
+  return g;
+}
+function makeStairs(dx, dz) {
+  const g = new THREE.Group();
+  for (let i = 0; i < 4; i++) {
+    const s = box(0.9, (i + 1) * 0.25, 0.22, MAT.woodLight, 0, (i + 1) * 0.125, -0.33 + i * 0.22);
+    g.add(s);
+  }
+  g.rotation.y = Math.atan2(dx, dz);
+  return g;
+}
+function makeLadder(height) {
+  const g = new THREE.Group();
+  g.add(box(0.05, height, 0.05, MAT.wood, -0.22, height / 2, 0));
+  g.add(box(0.05, height, 0.05, MAT.wood, 0.22, height / 2, 0));
+  for (let y = 0.2; y < height; y += 0.25) g.add(box(0.44, 0.04, 0.04, MAT.woodLight, 0, y, 0));
+  return g;
+}
+function makeTree(theme) {
+  const g = new THREE.Group();
+  if (theme === 'beach') {
+    g.add(cyl(0.05, 0.07, 0.9, MAT.wood, 0, 0.45, 0));
+    for (let i = 0; i < 5; i++) {
+      const l = box(0.5, 0.03, 0.14, MAT.leaf, Math.cos(i * 1.26) * 0.22, 0.88, Math.sin(i * 1.26) * 0.22);
+      l.rotation.y = -i * 1.26; l.rotation.z = -0.35; g.add(l);
+    }
+  } else {
+    g.add(cyl(0.06, 0.08, 0.4, MAT.wood, 0, 0.2, 0));
+    g.add(sph(0.26, MAT.leaf, 0, 0.55, 0));
+    g.add(sph(0.18, MAT.leafLight, 0.1, 0.68, 0.08));
+  }
+  return g;
+}
+
+// =====================================================================
+// GAME
+// =====================================================================
+let LV = null, ST = null, undoStack = [];
+let world = null, bearObj = null, cells = {}, crateMeshes = [], toggleMeshes = [], switchMeshes = [], potMeshes = [], starMesh = null, bees = [], clouds = [];
+let anim = [], animCur = null, holding = null, hearts = 3, inv = 0, levelIndex = 0, playing = false, won = false, facing = [0, 1];
+let flying = [], particles = [], winTimer = 0;
+const cam = { yaw: 0, yawT: 0, pitch: 0.72, pitchT: 0.72, dist: 12, distT: 12, target: new THREE.Vector3() };
+
+function loadProgress() { try { return JSON.parse(localStorage.getItem('captain-bear') || '{}'); } catch (e) { return {}; } }
+function saveProgress(p) { try { localStorage.setItem('captain-bear', JSON.stringify(p)); } catch (e) { /* storage blocked */ } }
+let progress = loadProgress();
+
+const posOf = (x, z, y) => new THREE.Vector3(x, y, z);
+function standY(x, z, s = ST) {
+  const h = heightAt(LV, s, x, z);
+  return h + (LV.kind[z][x] === 'pipe' ? 0.39 : 0) + (LV.kind[z][x] === '!' ? 0.12 : 0);
+}
+
+function buildLevel(i) {
+  levelIndex = i;
+  clearTimeout(winTimer);
+  if (world) scene.remove(world);
+  world = new THREE.Group(); scene.add(world);
+  LV = parseLevel(LEVELS[i]);
+  ST = initState(LV);
+  undoStack = []; anim = []; animCur = null; holding = null; hearts = 3; inv = 0; won = false; flying = []; particles = [];
+  cells = {}; crateMeshes = []; toggleMeshes = []; switchMeshes = []; potMeshes = []; bees = []; clouds = [];
+  const th = THEMES[LV.def.theme];
+  scene.background = new THREE.Color(th.sky);
+  scene.fog = new THREE.Fog(th.fog, 25, 60);
+
+  // terrain
+  for (let z = 0; z < LV.d; z++) for (let x = 0; x < LV.w; x++) {
+    const h = LV.base[z][x], k = LV.kind[z][x];
+    if (k === 'A' || k === 'B') {
+      const g = new THREE.Group();
+      const m = box(0.96, h + 1, 0.96, k === 'A' ? MAT.red : MAT.blue, 0, (h - 1) / 2, 0);
+      const top = box(0.9, 0.04, 0.9, k === 'A' ? MAT.redTop : MAT.blueTop, 0, h + 0.01, 0);
+      g.add(m, top); g.position.set(x, 0, z);
+      g.userData = { cell: [x, z], kind: k, h };
+      world.add(g); toggleMeshes.push(g);
+      cells[K(x, z)] = g;
+      continue;
+    }
+    if (h === 0) {
+      const dirt = box(1, 1, 1, new THREE.MeshLambertMaterial({ map: sideTex(LV.def.theme, 0) }), x, -0.5, z);
+      world.add(dirt);
+      const water = new THREE.Mesh(new THREE.BoxGeometry(1, 0.55, 1), new THREE.MeshPhongMaterial({ color: th.water, transparent: true, opacity: 0.8, shininess: 100 }));
+      water.position.set(x, 0.27, z); water.userData.water = true; water.receiveShadow = true;
+      world.add(water);
+      cells[K(x, z)] = water; water.userData.cell = [x, z];
+      continue;
+    }
+    const side = new THREE.MeshLambertMaterial({ map: sideTex(LV.def.theme, h) });
+    const tm = topMat(LV.def.theme, (x + z) % 2);
+    const col = new THREE.Mesh(new THREE.BoxGeometry(1, h + 1, 1), [side, side, tm, side, side, side]);
+    col.position.set(x, (h - 1) / 2, z);
+    col.castShadow = true; col.receiveShadow = true;
+    col.userData.cell = [x, z];
+    world.add(col); cells[K(x, z)] = col;
+    // grassy lip
+    const lip = box(1.02, 0.08, 1.02, new THREE.MeshLambertMaterial({ color: th.lip }), x, h - 0.04, z);
+    lip.castShadow = false; world.add(lip);
+  }
+  // underside rock to make it feel like a floating diorama
+  const under = new THREE.Mesh(new THREE.CylinderGeometry(Math.max(LV.w, LV.d) * 0.5, 0.6, 2.4, 7), new THREE.MeshLambertMaterial({ color: new THREE.Color(th.sideDark) }));
+  under.position.set((LV.w - 1) / 2, -2.2, (LV.d - 1) / 2);
+  world.add(under);
+
+  // links
+  for (const [x1, z1, x2, z2, type] of LV.def.links || []) {
+    const h1 = LV.base[z1][x1], h2 = LV.base[z2][x2];
+    const [lx, lz, hx, hz, lh, hh] = h1 < h2 ? [x1, z1, x2, z2, h1, h2] : [x2, z2, x1, z1, h2, h1];
+    const dx = hx - lx, dz = hz - lz;
+    if (type === 'stairs') {
+      const s = makeStairs(dx, dz);
+      s.position.set(lx + dx * 0.0, lh, lz + dz * 0.0);
+      s.scale.y = (hh - lh);
+      world.add(s);
+    } else {
+      const l = makeLadder(hh - lh + 0.1);
+      l.position.set(hx - dx * 0.53, lh, hz - dz * 0.53);
+      l.rotation.y = Math.atan2(dx, dz);
+      world.add(l);
+    }
+  }
+
+  // objects
+  for (let z = 0; z < LV.d; z++) for (let x = 0; x < LV.w; x++) {
+    const k = LV.kind[z][x], h = LV.base[z][x];
+    if (k === 'h') { const p = makePot(); p.position.set(x, h + 0.08, z); p.userData.idx = LV.potIndex[K(x, z)]; world.add(p); potMeshes.push(p); }
+    if (k === 'G') { starMesh = makeStar(); starMesh.position.set(x, h + 0.55, z); world.add(starMesh); }
+    if (k === 't') { const s = makeSprout(); s.position.set(x, h + 0.03, z); world.add(s); }
+    if (k === '!') { const s = makeSwitch(); s.position.set(x, h, z); world.add(s); switchMeshes.push(s); }
+    if (k === 'pipe') { const p = makePipe(); p.position.set(x, h, z); world.add(p); }
+    if (k === '' && h > 0 && !LV.crates.some(c => c[0] === x && c[1] === z) && !(x === LV.start[0] && z === LV.start[1]) && ((x * 7 + z * 13 + i) % 11 === 0)) {
+      // a little decoration that never blocks anything: flowers / pebbles
+      const f = sph(0.05, (x + z) % 2 ? MAT.redTop : MAT.lamp, x + 0.3, h + 0.04, z - 0.3);
+      world.add(f);
+    }
+  }
+  for (const c of LV.crates) {
+    const m = box(0.92, 0.92, 0.92, MAT.crate, c[0], LV.base[c[1]][c[0]] + 0.46, c[1]);
+    m.userData.cell = c.slice();
+    world.add(m); crateMeshes.push({ mesh: m, x: c[0], z: c[1], filled: false });
+  }
+  // scenery trees just outside the grid
+  for (let n = 0; n < 4; n++) {
+    const tx = n % 2 ? -1.1 : LV.w + 0.1, tz = (n * 3 + i) % LV.d;
+    const t = makeTree(LV.def.theme);
+    const holder = new THREE.Group();
+    holder.add(box(0.8, 1.6, 0.8, new THREE.MeshLambertMaterial({ map: sideTex(LV.def.theme, 1) }), 0, -0.8, 0));
+    holder.add(box(0.82, 0.08, 0.82, new THREE.MeshLambertMaterial({ color: th.lip }), 0, -0.04, 0));
+    holder.add(t);
+    holder.position.set(tx, 0.4 + (n % 3) * 0.4, tz);
+    world.add(holder);
+  }
+  // clouds
+  for (let n = 0; n < 5; n++) {
+    const c = new THREE.Group();
+    c.add(sph(0.6, MAT.cloud, 0, 0, 0, 1.4, 0.7, 1), sph(0.45, MAT.cloud, 0.6, 0.15, 0, 1.3, 0.8, 1), sph(0.4, MAT.cloud, -0.6, 0.05, 0.1));
+    c.children.forEach(o => { o.castShadow = false; });
+    c.position.set(-8 + n * 6, 6 + (n % 3), -6 - (n % 2) * 6);
+    world.add(c); clouds.push(c);
+  }
+
+  // bees
+  for (const bd of LV.bees) {
+    const cellsPath = [];
+    for (let j = 0; j < bd.path.length - 1; j++) {
+      const [ax, az] = bd.path[j], [bx, bz] = bd.path[j + 1];
+      const n = Math.max(Math.abs(bx - ax), Math.abs(bz - az));
+      for (let s = 0; s < n; s++) cellsPath.push([ax + Math.sign(bx - ax) * s, az + Math.sign(bz - az) * s]);
+    }
+    cellsPath.push(bd.path[bd.path.length - 1]);
+    const m = makeBee();
+    world.add(m);
+    bees.push({ mesh: m, path: cellsPath, y: bd.y + 0.45, pos: 0, dir: 1, alive: true, t: Math.random() * 6 });
+  }
+
+  bearObj = makeBear();
+  world.add(bearObj);
+  placeBear();
+  facing = [0, 1];
+  bearObj.rotation.y = 0;
+
+  cam.target.set((LV.w - 1) / 2, 1, (LV.d - 1) / 2);
+  cam.distT = Math.max(LV.w, LV.d) * 1.25 + 5;
+  cam.dist = cam.distT + 6;
+  cam.yawT = cam.yaw = Math.round(cam.yaw / (Math.PI / 4)) * (Math.PI / 4);
+  cam.pitchT = 0.72;
+  sun.target.position.copy(cam.target);
+  sun.position.set(cam.target.x + 6, 14, cam.target.z + 8);
+
+  syncToggles(true);
+  updateHUD();
+  document.getElementById('lvlNum').textContent = 'World ' + (i + 1);
+  document.getElementById('lvlName').textContent = LV.def.name;
+  toast(LV.def.tip, 6000);
+}
+function placeBear() {
+  bearObj.position.set(ST.x, standY(ST.x, ST.z), ST.z);
+}
+function syncToggles(instant) {
+  for (const t of toggleMeshes) {
+    const up = (t.userData.kind === 'A') === (ST.mode === 0);
+    t.userData.targetY = up ? 0 : -t.userData.h + 0.06;
+    if (instant) t.position.y = t.userData.targetY;
+  }
+  for (const s of switchMeshes) s.userData.btn.material = ST.mode === 0 ? MAT.red : MAT.blue;
+}
+
+// ---- HUD ----
+const potSVG = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v2c3 2 3 9 0 12H6C3 17 3 10 6 8z" fill="${on ? '#ffb81c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><rect x="5" y="3" width="14" height="4" rx="1.5" fill="${on ? '#fff' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"/></svg>`;
+const heartSVG = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${on ? '#e8453c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/></svg>`;
+function updateHUD() {
+  let p = '';
+  for (let i = 0; i < LV.pots; i++) p += potSVG(ST.pots & (1 << i));
+  document.getElementById('pots').innerHTML = p;
+  let h = '';
+  for (let i = 0; i < 3; i++) h += heartSVG(i < hearts);
+  document.getElementById('hearts').innerHTML = h;
+}
+let toastTimer = 0;
+const toastEl = document.getElementById('toast');
+function toast(msg, ms = 2500) {
+  toastEl.textContent = msg; toastEl.classList.remove('hide');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.add('hide'), ms);
+}
+
+// ---- animation queue ----
+// each segment: { pts:[Vector3...], dur, onStart, onEnd, hop }
+function queue(seg) { anim.push(seg); }
+function busy() { return !!animCur || anim.length > 0; }
+function tickAnim(dt) {
+  if (!animCur && anim.length) { animCur = anim.shift(); animCur.t = 0; animCur.onStart && animCur.onStart(); }
+  if (!animCur) return;
+  const a = animCur;
+  a.t += dt;
+  const k = Math.min(1, a.t / a.dur);
+  if (a.pts) {
+    const n = a.pts.length - 1, f = k * n, i = Math.min(n - 1, Math.floor(f)), r = f - i;
+    const p = a.pts[i].clone().lerp(a.pts[i + 1], r);
+    if (a.hop) p.y += Math.sin(k * Math.PI) * a.hop;
+    bearObj.position.copy(p);
+  }
+  a.onTick && a.onTick(k);
+  if (k >= 1) { animCur = null; a.onEnd && a.onEnd(); }
+}
+
+function faceDir(dx, dz) { facing = [dx, dz]; bearObj.userData.faceT = Math.atan2(dx, dz); }
+
+function tryStep(dx, dz) {
+  if (!playing || won || busy()) return false;
+  faceDir(dx, dz);
+  const r = step(LV, ST, dx, dz);
+  if (!r) { sfx('bump'); queue({ pts: [bearObj.position.clone(), bearObj.position.clone().add(new THREE.Vector3(dx * 0.12, 0, dz * 0.12)), bearObj.position.clone()], dur: 0.14 }); return false; }
+  if (holding && r.ev.pipe) { /* turnip comes along */ }
+  undoStack.push({ st: ST, holding });
+  if (undoStack.length > 300) undoStack.shift();
+  const prev = ST;
+  ST = r.s;
+  animateStep(prev, r.ev);
+  return true;
+}
+function animateStep(prev, ev) {
+  const [ax, az] = ev.from, [bx, bz] = ev.to, dx = ev.dx, dz = ev.dz;
+  const ya = bearObj.position.y;
+  const yb = heightAt(LV, ST, bx, bz) + (LV.kind[bz][bx] === 'pipe' ? 0.39 : 0) + (LV.kind[bz][bx] === '!' ? 0.12 : 0) - (ev.push && ev.push.fill && ev.push.to[0] === bx && ev.push.to[1] === bz ? 0 : 0);
+  const A = posOf(ax, az, ya), B = posOf(bx, bz, yb);
+  const P = (f, y) => posOf(ax + dx * f, az + dz * f, y);
+  if (ev.kind === 'walk' || ev.kind === 'push') {
+    queue({ pts: [A, B], dur: ev.kind === 'push' ? 0.3 : 0.2, onStart: () => sfx(ev.kind === 'push' ? 'push' : 'step') });
+    if (ev.push) animateCrate(ev.push, dx, dz);
+  } else if (ev.kind === 'stairs') {
+    queue({ pts: [A, P(0.5, (ya + yb) / 2), B], dur: 0.32, onStart: () => sfx('climb') });
+  } else if (ev.kind === 'ladder') {
+    if (yb > ya) queue({ pts: [A, P(0.3, ya), P(0.3, yb), P(0.6, yb + 0.05), B], dur: 0.25 + 0.18 * (yb - ya), onStart: () => sfx('climb') });
+    else queue({ pts: [A, P(0.45, ya + 0.05), P(0.7, ya), P(0.7, yb), B], dur: 0.25 + 0.18 * (ya - yb), onStart: () => sfx('climb') });
+  } else if (ev.kind === 'drop') {
+    queue({ pts: [A, P(0.55, ya + 0.25), P(0.85, yb + 0.3), B], dur: 0.3 + 0.06 * (ya - yb), onStart: () => sfx('drop') });
+  }
+  // landing events
+  queue({ dur: 0.001, onEnd: () => {
+    if (ev.sw) { sfx('sw'); syncToggles(false); toast(ST.mode === 0 ? 'Red blocks up!' : 'Blue blocks up!', 1500); }
+    if (ev.pot !== undefined) collectPot(ev.pot);
+    if (ev.goal) winLevel();
+  } });
+  if (ev.pipe) {
+    const [px, pz] = ev.pipe;
+    const top = standY(px, pz);
+    queue({ dur: 0.3, onStart: () => sfx('pipe'), onTick: k => { bearObj.position.y = yb - k * 0.8; bearObj.scale.setScalar(1 - k * 0.5); } });
+    queue({ dur: 0.35, onStart: () => { bearObj.position.set(px, top - 0.8, pz); }, onTick: k => { bearObj.position.y = top - 0.8 + k * 0.8 + Math.sin(k * Math.PI) * 0.4; bearObj.scale.setScalar(0.5 + k * 0.5); } });
+    queue({ dur: 0.001, onEnd: () => { bearObj.scale.setScalar(1); bearObj.position.set(px, top, pz); } });
+  }
+}
+function animateCrate(push, dx, dz) {
+  const c = crateMeshes.find(o => !o.filled && o.x === push.from[0] && o.z === push.from[1]);
+  if (!c) return;
+  c.x = push.to[0]; c.z = push.to[1];
+  const from = c.mesh.position.clone();
+  const to = new THREE.Vector3(push.to[0], push.y + 0.46, push.to[1]);
+  c.anim = { t: 0, dur: 0.3, from, to, fill: push.fill, land: push.fill ? push.land + 0.5 : null };
+  c.mesh.userData.cell = push.to.slice();
+  if (push.fill) c.filled = true;
+}
+function tickCrates(dt) {
+  for (const c of crateMeshes) {
+    const a = c.anim;
+    if (!a) continue;
+    a.t += dt;
+    if (a.t <= a.dur) c.mesh.position.lerpVectors(a.from, a.to, a.t / a.dur);
+    else if (a.fill) {
+      // drop into the gap and become ground
+      const ft = Math.min(1, (a.t - a.dur) / 0.25);
+      c.mesh.position.set(a.to.x, a.to.y + (a.land - a.to.y) * ft * ft, a.to.z);
+      c.mesh.scale.set(1.087, 1.087, 1.087);
+      if (ft >= 1) {
+        c.anim = null;
+        sfx('splash');
+        burst(new THREE.Vector3(a.to.x, a.land + 0.5, a.to.z), 0x9ee8ff, 14);
+        cells[K(a.to.x, a.to.z)] = c.mesh;
+      }
+    } else { c.mesh.position.copy(a.to); c.anim = null; }
+  }
+}
+function collectPot(i) {
+  const m = potMeshes.find(p => p.userData.idx === i);
+  if (m) { m.userData.taken = 0.001; burst(m.position.clone().add(new THREE.Vector3(0, 0.3, 0)), 0xffb81c, 16); }
+  sfx('pot');
+  updateHUD();
+  const got = ST.pots.toString(2).split('1').length - 1;
+  toast(got === LV.pots ? 'All the honey! Now get the star.' : 'Honey pot ' + got + ' of ' + LV.pots + '!', 1600);
+}
+function winLevel() {
+  won = true;
+  sfx('star');
+  burst(starMesh.position.clone(), 0xffd23a, 30);
+  starMesh.userData.fly = 0.001;
+  const got = ST.pots.toString(2).split('1').length - 1;
+  const p = progress[levelIndex] || 0;
+  progress[levelIndex] = Math.max(p, got);
+  progress.unlocked = Math.max(progress.unlocked || 0, levelIndex + 1);
+  saveProgress(progress);
+  clearTimeout(winTimer);
+  winTimer = setTimeout(() => {
+    document.getElementById('clearPots').innerHTML = Array.from({ length: LV.pots }, (_, i) => potSVG(i < got)).join('');
+    document.getElementById('clearMsg').textContent = got === LV.pots ? 'You found every honey pot!' : 'You found ' + got + ' of ' + LV.pots + ' honey pots. Can you find them all?';
+    document.getElementById('bNext').hidden = levelIndex >= LEVELS.length - 1;
+    document.getElementById('clearMsg').textContent += levelIndex >= LEVELS.length - 1 ? ' That was the last world. Great job, Captain!' : '';
+    show('clear');
+  }, 1600);
+}
+
+function undo() {
+  if (!playing || won || busy() || !undoStack.length) return;
+  const u = undoStack.pop();
+  ST = u.st; holding = u.holding;
+  rebuildFromState();
+  sfx('undo');
+}
+function rebuildFromState() {
+  // put crates, pots, toggles and bear back to match ST
+  for (const c of crateMeshes) world.remove(c.mesh);
+  crateMeshes = [];
+  for (const c of ST.crates) {
+    const m = box(0.92, 0.92, 0.92, MAT.crate, c[0], heightAt(LV, ST, c[0], c[1]) + 0.46, c[1]);
+    m.userData.cell = c.slice(); world.add(m); crateMeshes.push({ mesh: m, x: c[0], z: c[1], filled: false });
+  }
+  for (const k of Object.keys(ST.add)) {
+    const [x, z] = k.split(',').map(Number);
+    for (let n = 0; n < ST.add[k]; n++) {
+      const m = box(1, 1, 1, MAT.crate, x, LV.base[z][x] + n + 0.5, z);
+      m.userData.cell = [x, z]; world.add(m); crateMeshes.push({ mesh: m, x, z, filled: true });
+      cells[k] = m;
+    }
+  }
+  for (const p of potMeshes) {
+    const taken = ST.pots & (1 << p.userData.idx);
+    p.visible = !taken; p.userData.taken = 0; p.scale.setScalar(1);
+  }
+  syncToggles(false);
+  placeBear(); bearObj.scale.setScalar(1);
+  updateHUD();
+}
+function restart() { if (!playing) return; buildLevel(levelIndex); sfx('undo'); }
+
+// ---- turnips & bees ----
+function grab() {
+  if (!playing || won || busy()) return;
+  if (holding) { throwTurnip(); return; }
+  if (LV.kind[ST.z][ST.x] === 't') {
+    holding = makeTurnip();
+    world.add(holding);
+    sfx('pluck');
+    queue({ dur: 0.35, onTick: k => { bearObj.userData.body.position.y = -Math.sin(k * Math.PI) * 0.1; } });
+    return;
+  }
+  toast('Find a sprout to pull up a turnip.', 1500);
+  sfx('bump');
+}
+function throwTurnip() {
+  const [dx, dz] = facing;
+  const h0 = heightAt(LV, ST, ST.x, ST.z);
+  let x = ST.x, z = ST.z, hit = null, n = 0;
+  for (n = 1; n <= 7; n++) {
+    const nx = ST.x + dx * n, nz = ST.z + dz * n;
+    if (inb(LV, nx, nz) && heightAt(LV, ST, nx, nz) > h0 + 0.5) { n--; break; }
+    x = nx; z = nz;
+    hit = bees.find(b => b.alive && beeCell(b)[0] === nx && beeCell(b)[1] === nz && Math.abs(b.y - (h0 + 0.8)) < 1.3);
+    if (hit) break;
+  }
+  if (n > 7) n = 7;
+  const t = holding; holding = null;
+  const from = t.position.clone();
+  const to = new THREE.Vector3(ST.x + dx * Math.max(n, 0.6), hit ? hit.y : h0 + 0.2, ST.z + dz * Math.max(n, 0.6));
+  flying.push({ mesh: t, from, to, t: 0, dur: 0.12 + 0.06 * n, hit });
+  sfx('throw');
+}
+function beeCell(b) {
+  const i = Math.round(b.pos);
+  return b.path[Math.max(0, Math.min(b.path.length - 1, i))];
+}
+function beeWorld(b) {
+  const i = Math.floor(b.pos), f = b.pos - i;
+  const a = b.path[Math.max(0, Math.min(b.path.length - 1, i))], c = b.path[Math.max(0, Math.min(b.path.length - 1, i + 1))];
+  return new THREE.Vector3(a[0] + (c[0] - a[0]) * f, b.y, a[1] + (c[1] - a[1]) * f);
+}
+function tickBees(dt) {
+  for (const b of bees) {
+    if (!b.alive) {
+      if (b.mesh.visible) { b.mesh.position.y -= dt * 3; b.mesh.rotation.z += dt * 10; if (b.mesh.position.y < -3) b.mesh.visible = false; }
+      continue;
+    }
+    b.t += dt;
+    if (b.path.length > 1) {
+      b.pos += b.dir * dt * 1.1;
+      if (b.pos >= b.path.length - 1) { b.pos = b.path.length - 1; b.dir = -1; }
+      if (b.pos <= 0) { b.pos = 0; b.dir = 1; }
+    }
+    const p = beeWorld(b);
+    b.mesh.position.set(p.x, p.y + Math.sin(b.t * 4) * 0.08, p.z);
+    const i = Math.floor(b.pos), c0 = b.path[i], c1 = b.path[Math.min(b.path.length - 1, i + 1)];
+    const ddx = (c1[0] - c0[0]) * b.dir, ddz = (c1[1] - c0[1]) * b.dir;
+    if (ddx || ddz) b.mesh.rotation.y = Math.atan2(ddx, ddz);
+    const flap = Math.sin(b.t * 40) * 0.6;
+    b.mesh.userData.wl.rotation.y = flap; b.mesh.userData.wr.rotation.y = -flap;
+    // bump into the bear?
+    if (playing && !won && inv <= 0) {
+      const bp = bearObj.position;
+      if (Math.hypot(bp.x - p.x, bp.z - p.z) < 0.55 && Math.abs(bp.y + 0.4 - p.y) < 0.6) hurtBear();
+    }
+  }
+}
+function hurtBear() {
+  hearts--; inv = 1.6; sfx('hurt');
+  updateHUD();
+  burst(bearObj.position.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xff6f63, 10);
+  if (hearts <= 0) {
+    toast('Ouch! The bees got you. Try again!', 2500);
+    playing = false;
+    setTimeout(() => { playing = true; buildLevel(levelIndex); }, 1200);
+    return;
+  }
+  toast('Ouch! Watch out for bees.', 1500);
+  // step back to where we came from
+  if (animCur) { animCur = null; anim = []; }
+  if (undoStack.length) {
+    const u = undoStack.pop();
+    ST = u.st; holding = holding || u.holding;
+    rebuildFromState();
+  }
+}
+function tickFlying(dt) {
+  for (const f of flying) {
+    f.t += dt;
+    const k = Math.min(1, f.t / f.dur);
+    f.mesh.position.lerpVectors(f.from, f.to, k);
+    f.mesh.position.y += Math.sin(k * Math.PI) * 0.4;
+    f.mesh.rotation.x += dt * 14;
+    if (k >= 1 && !f.done) {
+      f.done = true;
+      world.remove(f.mesh);
+      burst(f.to.clone(), 0xffffff, 10);
+      if (f.hit && f.hit.alive) { f.hit.alive = false; sfx('poof'); burst(f.to.clone(), 0xffcf1f, 16); toast('Bonk! Bee knocked out.', 1300); }
+      else sfx('bump');
+    }
+  }
+  flying = flying.filter(f => !f.done);
+}
+
+// ---- particles ----
+const partGeo = new THREE.SphereGeometry(0.05, 6, 5);
+function burst(at, color, n) {
+  const m = new THREE.MeshBasicMaterial({ color });
+  for (let i = 0; i < n; i++) {
+    const p = new THREE.Mesh(partGeo, m);
+    p.position.copy(at);
+    const a = Math.random() * Math.PI * 2, s = 1 + Math.random() * 2;
+    p.userData.v = new THREE.Vector3(Math.cos(a) * s, 2 + Math.random() * 2, Math.sin(a) * s);
+    p.userData.life = 0.6 + Math.random() * 0.4;
+    world.add(p); particles.push(p);
+  }
+}
+function tickParticles(dt) {
+  for (const p of particles) {
+    p.userData.v.y -= 9 * dt;
+    p.position.addScaledVector(p.userData.v, dt);
+    p.userData.life -= dt;
+    p.scale.setScalar(Math.max(0.01, p.userData.life));
+    if (p.userData.life <= 0) world.remove(p);
+  }
+  particles = particles.filter(p => p.userData.life > 0);
+}
+
+// =====================================================================
+// CAMERA & INPUT
+// =====================================================================
+function camDirs() {
+  // forward on the ground = from camera toward the target
+  const fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
+  return { f: [fx, fz], r: [-fz, fx] };
+}
+function snap(v) { return Math.abs(v[0]) > Math.abs(v[1]) ? [Math.sign(v[0]), 0] : [0, Math.sign(v[1])]; }
+function inputDir(name) {
+  const { f, r } = camDirs();
+  const v = name === 'up' ? f : name === 'down' ? [-f[0], -f[1]] : name === 'right' ? r : [-r[0], -r[1]];
+  return snap(v);
+}
+const heldDirs = [];
+const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+addEventListener('keydown', e => {
+  initAudio();
+  if (KEYS[e.code]) {
+    e.preventDefault();
+    const d = KEYS[e.code];
+    if (!heldDirs.includes(d)) heldDirs.push(d);
+    return;
+  }
+  if (e.repeat) return;
+  if (e.code === 'Space' || e.code === 'KeyX' || e.code === 'Enter') { e.preventDefault(); if (playing) grab(); }
+  else if (e.code === 'KeyQ') rotateCam(-1);
+  else if (e.code === 'KeyE') rotateCam(1);
+  else if (e.code === 'KeyZ' || e.code === 'Backspace') undo();
+  else if (e.code === 'KeyR') restart();
+  else if (e.code === 'KeyM') toggleSound();
+  else if (e.code === 'Equal' || e.code === 'NumpadAdd') cam.distT = Math.max(6, cam.distT - 1.5);
+  else if (e.code === 'Minus' || e.code === 'NumpadSubtract') cam.distT = Math.min(30, cam.distT + 1.5);
+});
+addEventListener('keyup', e => { const d = KEYS[e.code]; if (d) { const i = heldDirs.indexOf(d); if (i >= 0) heldDirs.splice(i, 1); } });
+addEventListener('blur', () => { heldDirs.length = 0; });
+function rotateCam(s) { cam.yawT += s * Math.PI / 4; }
+
+// touch buttons
+function enableTouch() { document.body.classList.add('touch'); }
+if (matchMedia('(pointer: coarse)').matches) enableTouch();
+addEventListener('touchstart', enableTouch, { passive: true });
+document.querySelectorAll('#dpad button').forEach(b => {
+  const d = b.dataset.d;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); b.classList.add('on'); if (!heldDirs.includes(d)) heldDirs.push(d); });
+  const up = () => { b.classList.remove('on'); const i = heldDirs.indexOf(d); if (i >= 0) heldDirs.splice(i, 1); };
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => b.addEventListener(t, up));
+});
+document.querySelectorAll('#acts .rot').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); rotateCam(+b.dataset.r); }));
+document.getElementById('bGrab').addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); grab(); });
+
+// drag to look, pinch / wheel to zoom, tap a tile to walk there
+const pointers = new Map();
+let dragInfo = null, pinch0 = 0;
+const cvs = renderer.domElement;
+cvs.addEventListener('pointerdown', e => {
+  initAudio();
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  cvs.setPointerCapture(e.pointerId);
+  if (pointers.size === 1) dragInfo = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false };
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); dragInfo = null; }
+});
+cvs.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch0) cam.distT = Math.max(6, Math.min(30, cam.distT * pinch0 / d));
+    pinch0 = d;
+    return;
+  }
+  if (!dragInfo) return;
+  const dx = e.clientX - dragInfo.x, dy = e.clientY - dragInfo.y;
+  if (Math.hypot(e.clientX - dragInfo.sx, e.clientY - dragInfo.sy) > 8) dragInfo.moved = true;
+  if (dragInfo.moved) {
+    cam.yawT -= dx * 0.008; cam.yaw = cam.yawT;
+    cam.pitchT = Math.max(0.25, Math.min(1.35, cam.pitchT + dy * 0.006)); cam.pitch = cam.pitchT;
+  }
+  dragInfo.x = e.clientX; dragInfo.y = e.clientY;
+});
+function endPointer(e) {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if (dragInfo && !dragInfo.moved && performance.now() - dragInfo.t < 500 && pointers.size === 0) tapAt(e.clientX, e.clientY);
+  if (dragInfo && dragInfo.moved) cam.yawT = Math.round(cam.yawT / (Math.PI / 4)) * (Math.PI / 4);
+  dragInfo = null;
+  if (pointers.size < 2) pinch0 = 0;
+}
+cvs.addEventListener('pointerup', endPointer);
+cvs.addEventListener('pointercancel', endPointer);
+cvs.addEventListener('wheel', e => { e.preventDefault(); cam.distT = Math.max(6, Math.min(30, cam.distT + e.deltaY * 0.01)); }, { passive: false });
+
+const ray = new THREE.Raycaster();
+let pathQueue = [];
+function tapAt(cx, cy) {
+  if (!playing || won) return;
+  const rect = cvs.getBoundingClientRect();
+  const v = new THREE.Vector2((cx - rect.left) / rect.width * 2 - 1, -(cy - rect.top) / rect.height * 2 + 1);
+  ray.setFromCamera(v, camera);
+  const hits = ray.intersectObjects(world.children, true);
+  for (const h of hits) {
+    let o = h.object;
+    if (bearObj && isChildOf(o, bearObj)) { grab(); return; }
+    while (o && !(o.userData && o.userData.cell)) o = o.parent;
+    if (!o) continue;
+    const [tx, tz] = o.userData.cell;
+    if (tx === ST.x && tz === ST.z) { grab(); return; }
+    // tapping a neighbouring crate pushes it
+    if (Math.abs(tx - ST.x) + Math.abs(tz - ST.z) === 1) { pathQueue = [[tx - ST.x, tz - ST.z]]; return; }
+    const path = findPath(tx, tz);
+    if (path) pathQueue = path; else { sfx('bump'); toast("Bear can't get there from here.", 1300); }
+    return;
+  }
+}
+function isChildOf(o, p) { while (o) { if (o === p) return true; o = o.parent; } return false; }
+function findPath(tx, tz) {
+  const startK = K(ST.x, ST.z);
+  const prev = new Map([[startK, null]]);
+  let frontier = [ST];
+  while (frontier.length) {
+    const next = [];
+    for (const s of frontier) for (const [dx, dz] of DIRS) {
+      const r = step(LV, s, dx, dz);
+      if (!r) continue;
+      const k = K(r.s.x, r.s.z);
+      if (prev.has(k)) continue;
+      const isDest = r.ev.to[0] === tx && r.ev.to[1] === tz;
+      prev.set(k, { from: K(s.x, s.z), d: [dx, dz] });
+      if (isDest || (r.s.x === tx && r.s.z === tz)) {
+        const out = []; let c = k;
+        while (prev.get(c)) { out.unshift(prev.get(c).d); c = prev.get(c).from; }
+        return out;
+      }
+      if (r.ev.push || r.ev.sw || r.ev.pipe || r.ev.goal) continue; // only walk plain routes
+      next.push(r.s);
+    }
+    frontier = next;
+  }
+  return null;
+}
+
+// =====================================================================
+// SCREENS
+// =====================================================================
+const screens = ['title', 'select', 'clear'];
+function show(id) {
+  screens.forEach(s => { document.getElementById(s).hidden = s !== id; });
+  const inGame = id === null;
+  document.getElementById('hud').hidden = !inGame;
+  document.getElementById('dpad').hidden = !inGame;
+  document.getElementById('acts').hidden = !inGame;
+  document.getElementById('keys').hidden = !inGame;
+  playing = inGame;
+  if (!inGame) toastEl.classList.add('hide');
+}
+function renderSelect() {
+  const grid = document.getElementById('levelGrid');
+  grid.innerHTML = '';
+  LEVELS.forEach((L, i) => {
+    const b = document.createElement('button');
+    b.className = 'lv'; b.type = 'button'; b.id = 'lv' + i;
+    const unlocked = i <= (progress.unlocked || 0);
+    b.disabled = !unlocked;
+    const got = progress[i] || 0, total = (L.O.join('').match(/h/g) || []).length;
+    b.innerHTML = `<b>${i + 1}</b>${L.name}<span class="mini pots">${Array.from({ length: total }, (_, k) => potSVG(k < got)).join('')}</span>${unlocked ? '' : '<small>Locked</small>'}`;
+    b.addEventListener('click', () => { initAudio(); startLevel(i); });
+    grid.appendChild(b);
+  });
+}
+function startLevel(i) { buildLevel(i); show(null); }
+document.getElementById('bPlay').addEventListener('click', () => { initAudio(); renderSelect(); show('select'); });
+document.getElementById('bTitle').addEventListener('click', () => show('title'));
+document.getElementById('bMenu').addEventListener('click', () => { renderSelect(); show('select'); });
+document.getElementById('bLevels').addEventListener('click', () => { renderSelect(); show('select'); });
+document.getElementById('bReplay').addEventListener('click', () => startLevel(levelIndex));
+document.getElementById('bNext').addEventListener('click', () => startLevel(Math.min(LEVELS.length - 1, levelIndex + 1)));
+document.getElementById('bUndo').addEventListener('click', e => { undo(); e.currentTarget.blur(); });
+document.getElementById('bRestart').addEventListener('click', e => { restart(); e.currentTarget.blur(); });
+const bSound = document.getElementById('bSound');
+function toggleSound() { muted = !muted; bSound.textContent = muted ? 'Sound off' : 'Sound on'; }
+bSound.addEventListener('click', e => { initAudio(); toggleSound(); e.currentTarget.blur(); });
+
+// =====================================================================
+// MAIN LOOP
+// =====================================================================
+let last = performance.now(), T = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  if (inv > 0) inv -= dt;
+
+  if (playing && !won && !busy()) {
+    if (heldDirs.length) { pathQueue = []; const [dx, dz] = inputDir(heldDirs[heldDirs.length - 1]); tryStep(dx, dz); }
+    else if (pathQueue.length) { const [dx, dz] = pathQueue.shift(); if (!tryStep(dx, dz)) pathQueue = []; }
+  }
+  tickAnim(dt);
+  tickCrates(dt);
+  tickBees(dt);
+  tickFlying(dt);
+  tickParticles(dt);
+
+  if (world) {
+    // bear pose
+    const u = bearObj.userData;
+    const cur = bearObj.rotation.y, tgt = u.faceT ?? 0;
+    let d = tgt - cur; d = Math.atan2(Math.sin(d), Math.cos(d));
+    bearObj.rotation.y = cur + d * Math.min(1, dt * 14);
+    const moving = !!(animCur && animCur.pts);
+    const sw = moving ? Math.sin(T * 18) : 0;
+    u.legL.position.z = 0.02 + sw * 0.07; u.legR.position.z = 0.02 - sw * 0.07;
+    u.body.position.y = moving ? Math.abs(sw) * 0.03 : u.body.position.y * 0.8 + Math.sin(T * 2) * 0.004;
+    u.head.rotation.z = Math.sin(T * 1.5) * 0.04;
+    const lift = holding ? 1 : 0;
+    u.armL.position.y = 0.33 + lift * 0.25; u.armR.position.y = 0.33 + lift * 0.25;
+    u.armL.position.x = -0.2 + lift * 0.04; u.armR.position.x = 0.2 - lift * 0.04;
+    bearObj.visible = inv <= 0 || Math.floor(T * 12) % 2 === 0;
+    if (won) { bearObj.rotation.y += dt * 8; }
+    if (holding) {
+      holding.position.copy(bearObj.position).add(new THREE.Vector3(0, 0.82, 0));
+      holding.rotation.y = bearObj.rotation.y;
+    }
+    // collectibles
+    for (const p of potMeshes) {
+      if (p.userData.taken) {
+        p.userData.taken += dt;
+        p.position.y += dt * 2; p.scale.setScalar(Math.max(0.01, 1 - p.userData.taken * 2));
+        if (p.userData.taken > 0.5) p.visible = false;
+      } else { p.rotation.y += dt * 1.5; }
+    }
+    if (starMesh) {
+      starMesh.rotation.y += dt * (starMesh.userData.fly ? 12 : 2);
+      if (starMesh.userData.fly) starMesh.position.y += dt * 2;
+      else starMesh.position.y = LV.base[LV.goal[1]][LV.goal[0]] + 0.55 + Math.sin(T * 2) * 0.08;
+    }
+    for (const t of toggleMeshes) t.position.y += (t.userData.targetY - t.position.y) * Math.min(1, dt * 10);
+    clouds.forEach((c, i) => { c.position.x += dt * 0.2; if (c.position.x > LV.w + 10) c.position.x = -10; });
+  }
+
+  // camera
+  cam.yaw += (cam.yawT - cam.yaw) * Math.min(1, dt * 8);
+  cam.pitch += (cam.pitchT - cam.pitch) * Math.min(1, dt * 8);
+  cam.dist += (cam.distT - cam.dist) * Math.min(1, dt * 4);
+  const tgt = cam.target;
+  if (!world) { cam.yawT += dt * 0.2; }
+  camera.position.set(
+    tgt.x + Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist,
+    tgt.y + Math.sin(cam.pitch) * cam.dist,
+    tgt.z + Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist
+  );
+  camera.lookAt(tgt);
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+// title backdrop: show world 1 spinning slowly behind the menu
+buildLevel(0);
+toastEl.classList.add('hide');
+playing = false;
+show('title');
+const spin = () => { if (!playing) cam.yawT += 0.002; requestAnimationFrame(spin); };
+spin();
+requestAnimationFrame(t => { last = t; frame(t); });
+
+// hooks for automated testing
+window.__bear = { solve, step, parseLevel, initState, stateKey, LEVELS, get ST() { return ST; }, get LV() { return LV; }, startLevel, tryStep, grab, get busy() { return busy(); }, get won() { return won; }, get hearts() { return hearts; }, bees: () => bees };
+})();
+</script>
