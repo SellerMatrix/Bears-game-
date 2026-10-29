@@ -51,9 +51,11 @@ Ten worlds, each about 17x11 tiles: Picnic Meadow, Bee Valley, Crate Canal, Swit
 
 ---
 
-# OutRun 2027: Costa del Sol
+# Marbella Run
 
-`outrun.html` is an OutRun-style arcade racer starring a red rocket-thruster roadster, driving the coast from **Marbella to Tarifa**.
+`marbella-run/` is an arcade racer starring a red rocket-thruster roadster (a wedge-shaped supercar with a glass canopy), driving the coast from **Marbella to Tarifa**.
+
+It is a self-contained folder: the 3D engine (three.js r128) and fonts are bundled, so it works offline. Served over the web it is also an installable app (Add to Home Screen / Install). To publish on itch.io, zip the *contents* of `marbella-run/` (so `index.html` is at the top of the zip) and upload it as an HTML game.
 
 - 5 stages with checkpoints and a countdown timer: Marbella (Golden Mile) → Puerto Banús → Estepona → Sotogrande → Tarifa. The sky drifts from morning to sunset as you go.
 - **Loops and corkscrews**: the roadster can only stay on the road upside down above 270 km/h, which is faster than it goes on wheels alone. Use the rocket boost to get there. Too slow and you fall off.
