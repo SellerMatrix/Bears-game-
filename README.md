@@ -31,3 +31,29 @@ Three levels: Mushroom Meadow, Crystal Caves, and King Croak's Castle (boss: onl
 On tablets: on-screen buttons, or tap a tile and the bear walks there.
 
 Ten worlds, each about 17x11 tiles: Picnic Meadow, Bee Valley, Crate Canal, Switch Ruins, Stump Isles, Honey Hills, Salmon River, Bear Fortress, Pinecone Forest, King Bee's Hive. Every one is checked by the built-in solver (`solve()` in the script), which finds a full route that eats every treat.
+
+---
+
+# OutRun 2027: Costa del Sol
+
+`outrun.html` is an OutRun-style arcade racer starring a red rocket-thruster roadster, driving the coast from **Marbella to Tarifa**.
+
+- 5 stages with checkpoints and a countdown timer: Marbella (Golden Mile) → Puerto Banús → Estepona → Sotogrande → Tarifa. The sky drifts from morning to sunset as you go.
+- **Loops and corkscrews**: the roadster can only stay on the road upside down above 270 km/h, which is faster than it goes on wheels alone. Use the rocket boost to get there. Too slow and you fall off.
+- **Thruster hop** uses the underside jets to jump over traffic.
+- **Secret boat level**: at Sotogrande, look for the MARINA sign and drive off the left side onto the slipway. The roadster switches to boat mode for a run across the Bay of Gibraltar (buoys, yachts, golden rings, dolphins, wave jumps), then rejoins the road for Tarifa.
+- Scenery: palms, white villages, holiday blocks, umbrella pines, beach bars, Osborne bulls, Puerto Banús yachts, the Sotogrande polo field, the Rock of Gibraltar, Tarifa wind farm and kitesurfers, Africa across the Strait, and Tarifa castle at the finish.
+- Pick from three synth radio stations before the race (all music is generated live).
+
+| Key | Action |
+| --- | --- |
+| ↑ / W | Accelerate |
+| ↓ / S | Brake |
+| ← → / A D | Steer |
+| Space / X | Rocket boost |
+| Shift / C | Thruster hop |
+| P / Esc | Pause |
+| M | Mute |
+| R | Restart |
+
+Gamepad and on-screen touch buttons also work.
