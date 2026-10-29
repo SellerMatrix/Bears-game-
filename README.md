@@ -22,12 +22,12 @@ Three levels: Mushroom Meadow, Crystal Caves, and King Croak's Castle (boss: onl
 
 `bear.html` is a 3D puzzle game in the style of Captain Toad: Treasure Tracker, starring a teddy bear who can't jump.
 
-- Spin each little diorama world to find the way (Q / E, drag, or the spin buttons).
+- The camera follows Bear and swings round to look the way he is walking (toggle with the "Camera" button; Q / E or drag to spin by hand).
 - Climb stairs and ladders, hop down ledges, push crates into water to make bridges.
 - Step on switches to swap red and blue blocks, hop through hollow stumps.
-- Pick up pinecones and throw them at grumpy bees. Hollow tree stumps work as warps.
-- Eat 3 treats per world (honey, salmon and berries), then grab the giant golden honeycomb. Undo (Z) and Restart (R) are always available.
+- Pick up pinecones and throw them at grumpy bees.
+- Eat 5 treats per world (honey, salmon and berries), then grab the giant golden honeycomb. Undo (Z) and Restart (R) are always available.
 
 On tablets: on-screen buttons, or tap a tile and the bear walks there.
 
-Six worlds: Picnic Hill, Bee Bridge, Salmon Creek, Switch Ruins, Stump Isles, Beehive Tower. Each one has been checked with a built-in solver (`solve()` in the script) to make sure it can be finished with all treats.
+Ten worlds, each about 17x11 tiles: Picnic Meadow, Bee Valley, Crate Canal, Switch Ruins, Stump Isles, Honey Hills, Salmon River, Bear Fortress, Pinecone Forest, King Bee's Hive. Every one is checked by the built-in solver (`solve()` in the script), which finds a full route that eats every treat.

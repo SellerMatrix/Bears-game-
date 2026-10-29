@@ -144,6 +144,7 @@ body:not(.touch) .pad { display: none; }
     <button class="tool" id="bUndo" type="button">Undo</button>
     <button class="tool" id="bRestart" type="button">Restart</button>
     <button class="tool" id="bMenu" type="button">Levels</button>
+    <button class="tool" id="bCam" type="button">Camera: follow</button>
     <button class="tool" id="bSound" type="button">Sound on</button>
   </div>
 </div>
@@ -161,13 +162,13 @@ body:not(.touch) .pad { display: none; }
   <button class="grab" id="bGrab" type="button">GRAB</button>
   <button class="rot" data-r="1" type="button" aria-label="Spin world right">&#10227;</button>
 </div>
-<div class="keys" id="keys" hidden>Arrows walk &middot; Space grabs / throws &middot; Q / E spin &middot; Drag to look &middot; Z undo &middot; R restart</div>
+<div class="keys" id="keys" hidden>Arrows walk &middot; Space grabs / throws &middot; Q / E spin &middot; Drag to look &middot; Mouse wheel zooms &middot; Z undo &middot; R restart</div>
 
 <div class="screen" id="title">
   <div class="card">
     <h1 class="logo">Captain Bear</h1>
     <p class="sub">Honey Tracker</p>
-    <p class="how">Bear can't jump. Spin the little worlds around, find a way up with stairs and ladders, push crates, flip switches and throw pinecones at grumpy bees. Gobble up 3 treats in every world (honey, salmon and berries), then grab the giant golden honeycomb.</p>
+    <p class="how">Bear can't jump. Spin the little worlds around, find a way up with stairs and ladders, push crates, flip switches and throw pinecones at grumpy bees. Ten big worlds. Gobble up 5 treats in each one (honey, salmon and berries), then grab the giant golden honeycomb.</p>
     <button class="big" id="bPlay" type="button">Play</button>
   </div>
 </div>
@@ -214,98 +215,283 @@ body:not(.touch) .pad { display: none; }
 // =====================================================================
 const LEVELS = [
   {
-    name: 'Picnic Hill', theme: 'meadow',
-    tip: "Bear can't jump! Walk up stairs, climb ladders, and hop down ledges. Eat 3 treats, then grab the golden honeycomb.",
-    H: ['33....',
-        '331111',
-        '221111',
-        '.11221',
-        '.11221'],
-    O: ['Gh....',
-        '......',
-        '......',
-        '....r.',
-        '..f..S'],
-    links: [[1, 3, 1, 2, 'stairs'], [1, 2, 1, 1, 'ladder'], [5, 3, 4, 3, 'ladder']]
+    name: 'Picnic Meadow', theme: 'meadow',
+    tip: "Bear can't jump! Walk up stairs, climb ladders and hop down ledges. The world turns to follow Bear. Eat every treat, then grab the golden honeycomb.",
+    H: ['22222.33333.33333',
+        '22222.33333.33333',
+        '22222333533333333',
+        '22222.33333.33333',
+        '22222.33333.33333',
+        '..............2..',
+        '11111.11222.22222',
+        '11111.11222.22222',
+        '11111111222222222',
+        '11111.11222.22222',
+        '11111.11222.22222'],
+    O: ['G...............r',
+        '.................',
+        '........h........',
+        '.................',
+        '.................',
+        '.................',
+        '..t.......f......',
+        '.................',
+        '.S...............',
+        '.................',
+        'r...............h'],
+    links: [[7, 8, 8, 8, 'stairs'], [14, 5, 14, 4, 'ladder'], [8, 3, 8, 2, 'ladder']],
+    bees: [{ path: [[12, 7], [16, 7]], y: 2 }]
   },
   {
-    name: 'Bee Bridge', theme: 'meadow',
+    name: 'Bee Valley', theme: 'meadow',
     tip: 'Stand on a pinecone pile and press GRAB to pick one up. Press GRAB again to throw it at a bee!',
-    H: ['111..222',
-        '111..222',
-        '11111112',
-        '111..222',
-        '111..222'],
-    O: ['.....tG.',
-        '........',
-        'S.t.f...',
-        '........',
-        'r......h'],
-    links: [[6, 2, 7, 2, 'stairs']],
-    bees: [{ path: [[3, 2], [6, 2]], y: 1 }, { path: [[5, 3], [7, 3]], y: 2 }]
+    H: ['22222.22222.11111',
+        '22222222222.11111',
+        '22222.22222111111',
+        '22222.22222.11111',
+        '22222.22222.11111',
+        '..............1..',
+        '11111.11111.11111',
+        '11111111111.11111',
+        '11111.11111111111',
+        '11111111111.11111',
+        '11111.11111.11111'],
+    O: ['G.....h.........f',
+        '.................',
+        '.................',
+        '.................',
+        '........t........',
+        '.................',
+        '...t.............',
+        '.................',
+        '.S...............',
+        '.................',
+        'r.........h....tf'],
+    links: [[11, 2, 10, 2, 'stairs']],
+    bees: [{ path: [[10, 8], [12, 8]], y: 1 }, { path: [[12, 2], [16, 2]], y: 1 }, { path: [[6, 3], [10, 3]], y: 2 }]
   },
   {
-    name: 'Salmon Creek', theme: 'beach',
-    tip: 'Push crates into the water to make a path. Pushed one the wrong way? Press UNDO.',
-    H: ['11111.1.11',
-        '11111.1.11',
-        '11111.1.11',
-        '11111.1.22',
-        '11111.1.22'],
-    O: ['r.....f...',
-        '..........',
-        'S..c..c..G',
-        '..........',
-        '..c......h'],
-    links: [[8, 2, 8, 3, 'ladder']]
+    name: 'Crate Canal', theme: 'beach',
+    tip: 'Push crates into the water to build bridges. Pushed one the wrong way? Press UNDO.',
+    H: ['11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '.................',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111',
+        '11111.11111.11111'],
+    O: ['G.....h.........f',
+        '........c........',
+        '.............c...',
+        '.................',
+        '.................',
+        '.................',
+        '.................',
+        '.........c....c..',
+        '.S.c.............',
+        '.......c.........',
+        'r.........f.....h'],
+    links: [],
+    bees: [{ path: [[6, 3], [10, 3]], y: 1 }]
   },
   {
     name: 'Switch Ruins', theme: 'ruins',
-    tip: 'Step on the switch to swap the red and blue blocks. Plan your route!',
-    H: ['...2222',
-        '22.2...',
-        '2222222',
-        '22.2...',
-        '...2222'],
-    O: ['...hB.f',
-        '.......',
-        '.SA!B.G',
-        '.......',
-        '....A.r'],
+    tip: 'Each switch swaps the red and blue blocks. Step on it again to swap them back.',
+    H: ['22222.22222.22222',
+        '22222.22222.22222',
+        '22222222222222222',
+        '22222.22222.22222',
+        '22222.22222.22222',
+        '..............2..',
+        '22222.22222.22222',
+        '22222.22222.22222',
+        '22222222222222222',
+        '22222.22222.22222',
+        '22222.22222.22222'],
+    O: ['G.....h.........f',
+        '.................',
+        '.....A..!..B..!..',
+        '.................',
+        '.................',
+        '..............A..',
+        '.................',
+        '.................',
+        '.S...A..!..B..!..',
+        '.................',
+        'r.........f.....h'],
     links: []
   },
   {
     name: 'Stump Isles', theme: 'beach',
     tip: 'Walk into a hollow stump to pop out of its twin. Step off and back on to go back.',
-    H: ['.11.33..',
-        '.11.3322',
-        '......22',
-        '11....22',
-        '11....1.'],
-    O: ['.f..h...',
-        '..q.p..r',
-        '........',
-        '.p....q.',
-        'S.....G.'],
-    links: []
+    H: ['22222.22222.11111',
+        '22222.22222.11111',
+        '22222222222.11111',
+        '22222.22222.11111',
+        '22222.22222.11111',
+        '.................',
+        '11111.11333.22222',
+        '11111.11333.22222',
+        '11111.11333.22222',
+        '11111.11333.22222',
+        '11111.11333.22222'],
+    O: ['G.....r.....v...h',
+        '.................',
+        '..............u..',
+        '.................',
+        '..........v......',
+        '.................',
+        '................u',
+        '.................',
+        '.S.p.....p..q....',
+        '.................',
+        'f.....q...h.....r'],
+    links: [],
+    bees: [{ path: [[12, 3], [16, 3]], y: 1 }]
   },
   {
-    name: 'Beehive Tower', theme: 'ruins',
-    tip: 'Everything you have learned, all in one tower. Take your time!',
-    H: ['33.4444',
-        '3333333',
-        '1113333',
-        '111.111',
-        '111.111',
-        '111.111'],
-    O: ['r..Ah.G',
-        '..B...!',
-        '.......',
-        't......',
-        '.c.....',
-        'S.....f'],
-    links: [[5, 3, 5, 2, 'ladder'], [3, 1, 3, 0, 'stairs']],
-    bees: [{ path: [[4, 4], [6, 4]], y: 1 }]
+    name: 'Honey Hills', theme: 'meadow',
+    tip: 'Climb all the way round the hill to reach the top. Hop down to grab treats you missed.',
+    H: ['111111111111111',
+        '122222222222221',
+        '123333333333321',
+        '123444444444321',
+        '123455555554321',
+        '123456666654321',
+        '123455555554321',
+        '123444444444321',
+        '123333333333321',
+        '122222222222221',
+        '111111111111111'],
+    O: ['r..............',
+        '.............f.',
+        '...............',
+        '...........h...',
+        '...............',
+        '.......G.......',
+        '....r..........',
+        '...............',
+        '..h............',
+        '...............',
+        '.t....S........'],
+    links: [[7, 10, 7, 9, 'stairs'], [13, 5, 12, 5, 'stairs'], [7, 2, 7, 3, 'stairs'], [3, 5, 4, 5, 'ladder'], [9, 6, 9, 5, 'ladder']],
+    bees: [{ path: [[14, 2], [14, 8]], y: 1 }, { path: [[5, 8], [9, 8]], y: 3 }]
+  },
+  {
+    name: 'Salmon River', theme: 'beach',
+    tip: 'Crates, bees and a wide river. Carry a pinecone with you in case a bee blocks the way.',
+    H: ['22222222.11111111',
+        '22222222.11111111',
+        '22....22.11...111',
+        '22....22.11...111',
+        '22222222.11111111',
+        '.................',
+        '11111111.11111111',
+        '11111111.11111111',
+        '11111111.11....11',
+        '11111111.11....11',
+        '11111111.11111111'],
+    O: ['................r',
+        '..........c....t.',
+        '......h..........',
+        'G................',
+        '.......f.........',
+        '.................',
+        '..t.........c..t.',
+        '.................',
+        '.S....c..........',
+        '.................',
+        'f...............h'],
+    links: [[8, 1, 7, 1, 'ladder']],
+    bees: [{ path: [[9, 7], [16, 7]], y: 1 }, { path: [[9, 4], [16, 4]], y: 1 }, { path: [[2, 4], [6, 4]], y: 2 }]
+  },
+  {
+    name: 'Bear Fortress', theme: 'ruins',
+    tip: 'Switches, crates and ladders. Think before you push!',
+    H: ['22222.33333.33333',
+        '22222.33333.33333',
+        '22222333633333333',
+        '22222.33333.33333',
+        '22222.33333.33333',
+        '.................',
+        '11111.22222.22222',
+        '11111.22222.22222',
+        '11111122222222222',
+        '11111.22222.22222',
+        '11111.22222.22222'],
+    O: ['G............!..h',
+        '.................',
+        '........r..A.....',
+        '.................',
+        '.................',
+        '.................',
+        '..........h......',
+        '..............c..',
+        '.S.........B.....',
+        '.................',
+        'r.t.....!.......f'],
+    links: [[5, 8, 6, 8, 'stairs'], [14, 5, 14, 4, 'ladder'], [8, 3, 8, 2, 'ladder']],
+    bees: [{ path: [[0, 3], [4, 3]], y: 2 }, { path: [[12, 9], [16, 9]], y: 2 }]
+  },
+  {
+    name: 'Pinecone Forest', theme: 'meadow',
+    tip: 'Bees everywhere! Keep a pinecone in your paws.',
+    H: ['33333.11111.22222',
+        '33333.11111.22222',
+        '33333111111222222',
+        '33333.11111.22222',
+        '33333.11111.22222',
+        '..............2..',
+        '11111.11111.22222',
+        '11111.11111.22222',
+        '11111111111.22222',
+        '11111.11111.22222',
+        '11111.11111.22222'],
+    O: ['G.....f.........h',
+        '.................',
+        '................t',
+        '.................',
+        '......t..........',
+        '.................',
+        '..t..............',
+        '.................',
+        '.S..............t',
+        '.........p...p...',
+        'r.........h.....f'],
+    links: [[5, 2, 4, 2, 'ladder']],
+    bees: [{ path: [[3, 8], [7, 8]], y: 1 }, { path: [[12, 7], [16, 7]], y: 2 }, { path: [[14, 6], [14, 4]], y: 2 }, { path: [[6, 1], [10, 1]], y: 1 }, { path: [[0, 3], [4, 3]], y: 3 }]
+  },
+  {
+    name: "King Bee's Hive", theme: 'ruins',
+    tip: 'The final world. Crates, switches, stumps, ladders and lots of bees. You can do it, Captain!',
+    H: ['44444.22222.33333',
+        '44444.22222.33333',
+        '44444222222.33333',
+        '44444.22222.33333',
+        '44444.22222.33333',
+        '.................',
+        '11111.22222.11111',
+        '11111.22222.11111',
+        '11111.22222211111',
+        '11111.22222.11111',
+        '11111.22222.11111'],
+    O: ['G......t..!.t...h',
+        '.................',
+        '..r..B...........',
+        '.................',
+        '......p.........p',
+        '.................',
+        '..........h......',
+        '..............c..',
+        '.S.c.......A.....',
+        '.................',
+        'r.t.....t....t..f'],
+    links: [[5, 8, 6, 8, 'ladder'], [14, 5, 14, 4, 'ladder'], [5, 2, 4, 2, 'ladder']],
+    bees: [{ path: [[7, 7], [10, 7]], y: 2 }, { path: [[12, 9], [16, 9]], y: 1 }, { path: [[12, 2], [16, 2]], y: 3 }, { path: [[6, 2], [10, 2]], y: 2 }, { path: [[1, 3], [4, 3]], y: 4 }]
   }
 ];
 
@@ -315,7 +501,7 @@ const LEVELS = [
 const K = (x, z) => x + ',' + z;
 function parseLevel(def) {
   const d = def.H.length, w = def.H[0].length;
-  const base = [], kind = [], crates = [], treats = [], potIndex = {}, pipes = { p: [], q: [] }, partner = {}, links = new Map();
+  const base = [], kind = [], crates = [], treats = [], potIndex = {}, pipes = { p: [], q: [], u: [], v: [] }, partner = {}, links = new Map(), stairs = {};
   let start = [0, 0], goal = null, pots = 0;
   for (let z = 0; z < d; z++) {
     base.push([]); kind.push([]);
@@ -330,13 +516,19 @@ function parseLevel(def) {
       else if (oc === 't') k = 't';
       else if (oc === '!') k = '!';
       else if (oc === 'A' || oc === 'B') k = oc;
-      else if (oc === 'p' || oc === 'q') { k = 'pipe'; pipes[oc].push([x, z]); }
+      else if (oc in pipes) { k = 'pipe'; pipes[oc].push([x, z]); }
       kind[z].push(k);
     }
   }
   for (const pr of Object.values(pipes)) if (pr.length === 2) { partner[K(...pr[0])] = pr[1]; partner[K(...pr[1])] = pr[0]; }
   for (const [x1, z1, x2, z2, type] of def.links || []) { links.set(K(x1, z1) + '>' + K(x2, z2), type); links.set(K(x2, z2) + '>' + K(x1, z1), type); }
-  return { def, w, d, base, kind, crates, treats, potIndex, pots, partner, links, start, goal, bees: def.bees || [] };
+  // stairs sit on the lower cell, so Bear stands halfway up them there
+  for (const [x1, z1, x2, z2, type] of def.links || []) {
+    if (type !== 'stairs') continue;
+    const h1 = base[z1][x1], h2 = base[z2][x2];
+    if (h1 < h2) stairs[K(x1, z1)] = h2 - h1; else stairs[K(x2, z2)] = h1 - h2;
+  }
+  return { def, w, d, base, kind, crates, treats, potIndex, pots, partner, links, stairs, start, goal, bees: def.bees || [] };
 }
 function initState(lv) { return { x: lv.start[0], z: lv.start[1], mode: 0, crates: lv.crates.map(c => c.slice()), add: {}, pots: 0 }; }
 function cloneState(s) { return { x: s.x, z: s.z, mode: s.mode, crates: s.crates.map(c => c.slice()), add: Object.assign({}, s.add), pots: s.pots }; }
@@ -361,7 +553,7 @@ function step(lv, s0, dx, dz) {
   if (ci >= 0) {
     if (hb !== ha) return null;
     const cx = bx + dx, cz = bz + dz;
-    if (!inb(lv, cx, cz) || lv.kind[cz][cx] !== '') return null;
+    if (!inb(lv, cx, cz) || lv.kind[cz][cx] !== '' || lv.stairs[K(cx, cz)]) return null;
     if (s.crates.some(c => c[0] === cx && c[1] === cz)) return null;
     const hc = heightAt(lv, s, cx, cz);
     if (hc === hb) { s.crates[ci] = [cx, cz]; ev.push = { from: [bx, bz], to: [cx, cz], fill: false, y: hb }; }
@@ -383,29 +575,46 @@ const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 function stateKey(s) {
   return s.x + ',' + s.z + '|' + s.mode + '|' + s.pots + '|' + s.crates.map(c => c.join(',')).sort().join(';') + '|' + Object.keys(s.add).sort().map(k => k + ':' + s.add[k]).join(';');
 }
-// Breadth-first search over every puzzle state: proves a level can be finished with all pots.
-function solve(i) {
-  const lv = parseLevel(LEVELS[i]);
-  const all = (1 << lv.pots) - 1;
-  const s0 = initState(lv);
-  const seen = new Set([stateKey(s0)]);
-  let frontier = [s0], depth = 0, anyGoal = -1, bestPots = 0;
-  while (frontier.length && depth < 400) {
-    depth++;
+const stateKeyNP = s => s.x + ',' + s.z + '|' + s.mode + '|' + s.crates.map(c => c.join(',')).sort().join(';') + '|' + Object.keys(s.add).sort().map(k => k + ':' + s.add[k]).join(';');
+// Shortest route from s0 to the step that eats treat `want` (or reaches the honeycomb when want < 0).
+function bfsTo(lv, s0, want, cap = 3e6) {
+  const prev = new Map([[stateKeyNP(s0), null]]);
+  const route = k => { const out = []; while (prev.get(k)) { out.unshift(prev.get(k).d); k = prev.get(k).p; } return out; };
+  let frontier = [s0];
+  while (frontier.length) {
     const next = [];
-    for (const s of frontier) for (const [dx, dz] of DIRS) {
-      const r = step(lv, s, dx, dz);
-      if (!r) continue;
-      const pc = r.s.pots.toString(2).split('1').length - 1;
-      if (pc > bestPots) bestPots = pc;
-      if (r.ev.goal) { if (anyGoal < 0) anyGoal = depth; if (r.s.pots === all) return { full: depth, anyGoal, pots: lv.pots, states: seen.size }; continue; }
-      const key = stateKey(r.s);
-      if (seen.has(key)) continue;
-      seen.add(key); next.push(r.s);
+    for (const s of frontier) {
+      const sk = stateKeyNP(s);
+      for (const d of DIRS) {
+        const r = step(lv, s, d[0], d[1]);
+        if (!r) continue;
+        if (r.ev.goal) { if (want < 0) return { s: r.s, path: route(sk).concat([d]) }; continue; }
+        if (want >= 0 && r.ev.pot === want) return { s: r.s, path: route(sk).concat([d]) };
+        const k = stateKeyNP(r.s);
+        if (prev.has(k)) continue;
+        prev.set(k, { p: sk, d }); next.push(r.s);
+      }
     }
+    if (prev.size > cap) return null;
     frontier = next;
   }
-  return { full: -1, anyGoal, pots: lv.pots, bestPots, states: seen.size };
+  return null;
+}
+// Proves a level can be finished with every treat: tries treat orders (nearest first) and returns a full route.
+function solve(i) {
+  const lv = typeof i === 'number' ? parseLevel(LEVELS[i]) : i;
+  let tries = 0;
+  function go(s, path) {
+    if (++tries > 400) return null;
+    const left = [];
+    for (let t = 0; t < lv.pots; t++) if (!(s.pots & (1 << t))) left.push(t);
+    if (!left.length) { const r = bfsTo(lv, s, -1); return r ? path.concat(r.path) : null; }
+    const legs = left.map(t => bfsTo(lv, s, t)).filter(Boolean).sort((a, b) => a.path.length - b.path.length);
+    for (const leg of legs) { const out = go(leg.s, path.concat(leg.path)); if (out) return out; }
+    return null;
+  }
+  const path = go(initState(lv), []);
+  return { moves: path ? path.length : -1, pots: lv.pots, path };
 }
 
 // =====================================================================
@@ -895,7 +1104,7 @@ function makeSwitch() {
 function makeStairs(dx, dz) {
   const g = new THREE.Group();
   for (let i = 0; i < 4; i++) {
-    const s = box(0.9, (i + 1) * 0.25, 0.22, MAT.woodLight, 0, (i + 1) * 0.125, -0.33 + i * 0.22);
+    const s = rbox(0.88, (i + 1) * 0.25, 0.25, MAT.woodLight, 0, (i + 1) * 0.125, -0.375 + i * 0.25);
     g.add(s);
   }
   g.rotation.y = Math.atan2(dx, dz);
@@ -933,14 +1142,14 @@ let anim = [], animCur = null, holding = null, hearts = 3, inv = 0, levelIndex =
 let flying = [], particles = [], winTimer = 0, waterMeshes = [], pollen = null, combLight = null;
 const cam = { yaw: 0, yawT: 0, pitch: 0.72, pitchT: 0.72, dist: 12, distT: 12, target: new THREE.Vector3() };
 
-function loadProgress() { try { return JSON.parse(localStorage.getItem('captain-bear') || '{}'); } catch (e) { return {}; } }
-function saveProgress(p) { try { localStorage.setItem('captain-bear', JSON.stringify(p)); } catch (e) { /* storage blocked */ } }
+function loadProgress() { try { return JSON.parse(localStorage.getItem('captain-bear-10') || '{}'); } catch (e) { return {}; } }
+function saveProgress(p) { try { localStorage.setItem('captain-bear-10', JSON.stringify(p)); } catch (e) { /* storage blocked */ } }
 let progress = loadProgress();
 
 const posOf = (x, z, y) => new THREE.Vector3(x, y, z);
 function standY(x, z, s = ST) {
   const h = heightAt(LV, s, x, z);
-  return h + (LV.kind[z][x] === 'pipe' ? 0.44 : 0) + (LV.kind[z][x] === '!' ? 0.12 : 0);
+  return h + (LV.kind[z][x] === 'pipe' ? 0.44 : 0) + (LV.kind[z][x] === '!' ? 0.12 : 0) + (LV.stairs[K(x, z)] || 0) * 0.5;
 }
 
 function buildLevel(i) {
@@ -993,7 +1202,7 @@ function buildLevel(i) {
     cap.position.set(x, h - 0.22, z);
     cap.userData.cell = [x, z];
     world.add(cap);
-    if (k !== 'pipe' && k !== '!') grassSpots.push([x, h, z]);
+    if (k !== 'pipe' && k !== '!' && !LV.stairs[K(x, z)]) grassSpots.push([x, h, z]);
   }
   // swaying grass blades (one instanced mesh for the whole world)
   {
@@ -1074,7 +1283,7 @@ function buildLevel(i) {
     if (k === 't') { const s = makeConePile(); s.position.set(x, h + 0.03, z); world.add(s); }
     if (k === '!') { const s = makeSwitch(); s.position.set(x, h, z); world.add(s); switchMeshes.push(s); }
     if (k === 'pipe') { const p = makeStump(); p.position.set(x, h, z); world.add(p); }
-    if (k === '' && h > 0 && !LV.crates.some(c => c[0] === x && c[1] === z) && !(x === LV.start[0] && z === LV.start[1]) && ((x * 7 + z * 13 + i) % 11 === 0)) {
+    if (k === '' && h > 0 && !LV.stairs[K(x, z)] && !LV.crates.some(c => c[0] === x && c[1] === z) && !(x === LV.start[0] && z === LV.start[1]) && ((x * 7 + z * 13 + i) % 11 === 0)) {
       // a little decoration that never blocks anything: flowers / pebbles
       const f = sph(0.05, (x + z) % 2 ? MAT.redTop : MAT.lamp, x + 0.3, h + 0.04, z - 0.3);
       world.add(f);
@@ -1126,14 +1335,12 @@ function buildLevel(i) {
   facing = [0, 1];
   bearObj.rotation.y = 0;
 
-  cam.target.set((LV.w - 1) / 2, 1, (LV.d - 1) / 2);
-  cam.distT = Math.max(LV.w, LV.d) * 1.25 + 5;
-  cam.dist = cam.distT + 6;
-  cam.yawT = cam.yaw = Math.round(cam.yaw / (Math.PI / 4)) * (Math.PI / 4);
-  cam.pitchT = 0.72;
-  sun.target.position.copy(cam.target);
-  sun.position.set(cam.target.x + 6, 14, cam.target.z + 8);
-  const ext = Math.max(LV.w, LV.d) * 0.85 + 2;
+  cam.target.set(bearObj.position.x, bearObj.position.y + 0.5, bearObj.position.z);
+  cam.distT = 12;
+  cam.dist = cam.distT + 5;
+  cam.yawT = cam.yaw = 0;
+  cam.pitchT = 0.8;
+  const ext = 12;
   Object.assign(sun.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext });
   sun.shadow.camera.updateProjectionMatrix();
   // drifting pollen motes catching the light
@@ -1192,7 +1399,9 @@ function toast(msg, ms = 2500) {
 // each segment: { pts:[Vector3...], dur, onStart, onEnd, hop }
 function queue(seg) { anim.push(seg); }
 function busy() { return !!animCur || anim.length > 0; }
+let speed = 1;
 function tickAnim(dt) {
+  dt *= speed;
   if (!animCur && anim.length) { animCur = anim.shift(); animCur.t = 0; animCur.onStart && animCur.onStart(); }
   if (!animCur) return;
   const a = animCur;
@@ -1209,6 +1418,17 @@ function tickAnim(dt) {
 }
 
 function faceDir(dx, dz) { facing = [dx, dz]; bearObj.userData.faceT = Math.atan2(dx, dz); }
+// Swing the world round so the camera looks the way Bear is walking.
+// Walking back toward the camera leaves the view alone, so it never flips.
+let camFollow = true;
+function followTurn(dx, dz) {
+  if (!camFollow) return;
+  const fx = -Math.sin(cam.yawT), fz = -Math.cos(cam.yawT);
+  if (fx * dx + fz * dz < -0.5) return;
+  let d = Math.atan2(-dx, -dz) - cam.yawT;
+  d = Math.atan2(Math.sin(d), Math.cos(d));
+  cam.yawT += d;
+}
 
 function tryStep(dx, dz) {
   if (!playing || won || busy()) return false;
@@ -1216,6 +1436,7 @@ function tryStep(dx, dz) {
   const r = step(LV, ST, dx, dz);
   if (!r) { sfx('bump'); queue({ pts: [bearObj.position.clone(), bearObj.position.clone().add(new THREE.Vector3(dx * 0.12, 0, dz * 0.12)), bearObj.position.clone()], dur: 0.14 }); return false; }
     undoStack.push({ st: ST, holding });
+  followTurn(dx, dz);
   if (undoStack.length > 300) undoStack.shift();
   const prev = ST;
   ST = r.s;
@@ -1225,7 +1446,7 @@ function tryStep(dx, dz) {
 function animateStep(prev, ev) {
   const [ax, az] = ev.from, [bx, bz] = ev.to, dx = ev.dx, dz = ev.dz;
   const ya = bearObj.position.y;
-  const yb = heightAt(LV, ST, bx, bz) + (LV.kind[bz][bx] === 'pipe' ? 0.44 : 0) + (LV.kind[bz][bx] === '!' ? 0.12 : 0) - (ev.push && ev.push.fill && ev.push.to[0] === bx && ev.push.to[1] === bz ? 0 : 0);
+  const yb = standY(bx, bz);
   const A = posOf(ax, az, ya), B = posOf(bx, bz, yb);
   const P = (f, y) => posOf(ax + dx * f, az + dz * f, y);
   if (ev.kind === 'walk' || ev.kind === 'push') {
@@ -1264,6 +1485,7 @@ function animateCrate(push, dx, dz) {
   if (push.fill) c.filled = true;
 }
 function tickCrates(dt) {
+  dt *= speed;
   for (const c of crateMeshes) {
     const a = c.anim;
     if (!a) continue;
@@ -1477,7 +1699,7 @@ function tickParticles(dt) {
 // =====================================================================
 function camDirs() {
   // forward on the ground = from camera toward the target
-  const fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
+  const fx = -Math.sin(cam.yawT), fz = -Math.cos(cam.yawT);
   return { f: [fx, fz], r: [-fz, fx] };
 }
 function snap(v) { return Math.abs(v[0]) > Math.abs(v[1]) ? [Math.sign(v[0]), 0] : [0, Math.sign(v[1])]; }
@@ -1493,7 +1715,7 @@ addEventListener('keydown', e => {
   if (KEYS[e.code]) {
     e.preventDefault();
     const d = KEYS[e.code];
-    if (!heldDirs.includes(d)) heldDirs.push(d);
+    if (!heldDirs.some(h => h.name === d)) heldDirs.push({ name: d, dir: inputDir(d) });
     return;
   }
   if (e.repeat) return;
@@ -1506,7 +1728,8 @@ addEventListener('keydown', e => {
   else if (e.code === 'Equal' || e.code === 'NumpadAdd') cam.distT = Math.max(6, cam.distT - 1.5);
   else if (e.code === 'Minus' || e.code === 'NumpadSubtract') cam.distT = Math.min(30, cam.distT + 1.5);
 });
-addEventListener('keyup', e => { const d = KEYS[e.code]; if (d) { const i = heldDirs.indexOf(d); if (i >= 0) heldDirs.splice(i, 1); } });
+const releaseDir = d => { const i = heldDirs.findIndex(h => h.name === d); if (i >= 0) heldDirs.splice(i, 1); };
+addEventListener('keyup', e => { const d = KEYS[e.code]; if (d) releaseDir(d); });
 addEventListener('blur', () => { heldDirs.length = 0; });
 function rotateCam(s) { cam.yawT += s * Math.PI / 4; }
 
@@ -1516,8 +1739,8 @@ if (matchMedia('(pointer: coarse)').matches) enableTouch();
 addEventListener('touchstart', enableTouch, { passive: true });
 document.querySelectorAll('#dpad button').forEach(b => {
   const d = b.dataset.d;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); b.classList.add('on'); if (!heldDirs.includes(d)) heldDirs.push(d); });
-  const up = () => { b.classList.remove('on'); const i = heldDirs.indexOf(d); if (i >= 0) heldDirs.splice(i, 1); };
+  b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); b.classList.add('on'); if (!heldDirs.some(h => h.name === d)) heldDirs.push({ name: d, dir: inputDir(d) }); });
+  const up = () => { b.classList.remove('on'); releaseDir(d); };
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => b.addEventListener(t, up));
 });
 document.querySelectorAll('#acts .rot').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); rotateCam(+b.dataset.r); }));
@@ -1653,6 +1876,7 @@ document.getElementById('bUndo').addEventListener('click', e => { undo(); e.curr
 document.getElementById('bRestart').addEventListener('click', e => { restart(); e.currentTarget.blur(); });
 const bSound = document.getElementById('bSound');
 function toggleSound() { muted = !muted; bSound.textContent = muted ? 'Sound off' : 'Sound on'; }
+document.getElementById('bCam').addEventListener('click', e => { camFollow = !camFollow; e.currentTarget.textContent = camFollow ? 'Camera: follow' : 'Camera: free'; e.currentTarget.blur(); });
 bSound.addEventListener('click', e => { initAudio(); toggleSound(); e.currentTarget.blur(); });
 
 // =====================================================================
@@ -1665,7 +1889,7 @@ function frame(now) {
   if (inv > 0) inv -= dt;
 
   if (playing && !won && !busy()) {
-    if (heldDirs.length) { pathQueue = []; const [dx, dz] = inputDir(heldDirs[heldDirs.length - 1]); tryStep(dx, dz); }
+    if (heldDirs.length) { pathQueue = []; const [dx, dz] = heldDirs[heldDirs.length - 1].dir; tryStep(dx, dz); }
     else if (pathQueue.length) { const [dx, dz] = pathQueue.shift(); if (!tryStep(dx, dz)) pathQueue = []; }
   }
   tickAnim(dt);
@@ -1731,7 +1955,15 @@ function frame(now) {
   }
 
   // camera
-  cam.yaw += (cam.yawT - cam.yaw) * Math.min(1, dt * 8);
+  if (world && bearObj && playing) {
+    const bp = bearObj.position;
+    cam.target.x += (bp.x - cam.target.x) * Math.min(1, dt * 3);
+    cam.target.y += (bp.y + 0.5 - cam.target.y) * Math.min(1, dt * 3);
+    cam.target.z += (bp.z - cam.target.z) * Math.min(1, dt * 3);
+    sun.target.position.copy(cam.target);
+    sun.position.set(cam.target.x + 6, cam.target.y + 14, cam.target.z + 8);
+  }
+  cam.yaw += (cam.yawT - cam.yaw) * Math.min(1, dt * 3.5);
   cam.pitch += (cam.pitchT - cam.pitch) * Math.min(1, dt * 8);
   cam.dist += (cam.distT - cam.dist) * Math.min(1, dt * 4);
   const tgt = cam.target;
@@ -1773,6 +2005,7 @@ function frame(now) {
 
 // title backdrop: show world 1 spinning slowly behind the menu
 buildLevel(0);
+cam.target.set((LV.w - 1) / 2, 1, (LV.d - 1) / 2); cam.distT = 22;
 toastEl.classList.add('hide');
 playing = false;
 show('title');
@@ -1781,6 +2014,6 @@ spin();
 requestAnimationFrame(t => { last = t; frame(t); });
 
 // hooks for automated testing
-window.__bear = { solve, step, parseLevel, initState, stateKey, LEVELS, get ST() { return ST; }, get LV() { return LV; }, startLevel, tryStep, grab, get busy() { return busy(); }, get won() { return won; }, get hearts() { return hearts; }, bees: () => bees };
+window.__bear = { setSpeed: v => { speed = v; }, solve, step, parseLevel, initState, stateKey, LEVELS, get ST() { return ST; }, get LV() { return LV; }, startLevel, tryStep, grab, get busy() { return busy(); }, get won() { return won; }, get hearts() { return hearts; }, bees: () => bees };
 })();
 </script>
