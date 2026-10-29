@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Captain Bear 2</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,6 +61,12 @@ body {
 .hearts { display: flex; gap: 3px; }
 .hearts svg { width: 20px; height: 20px; }
 .tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.tool { display: inline-flex; align-items: center; gap: 6px; }
+.tool svg { width: 18px; height: 18px; flex: none; }
+.tool.off { opacity: 0.55; }
+.pad button svg { width: 26px; height: 26px; }
+#acts .rot svg { width: 24px; height: 24px; }
+.lvl, .name { white-space: nowrap; }
 button {
   font-family: var(--font-ui);
   font-weight: 700;
@@ -135,9 +143,20 @@ body:not(.touch) .pad { display: none; }
 .badge.on { background: var(--honey); }
 .how { font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0; text-align: left; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 700px) {
+  .hud { flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+  .tools { flex-wrap: nowrap; justify-content: flex-end; gap: 6px; }
+  .tool .lbl { display: none; }
+  .tool { padding: 8px; }
+  .tool svg { width: 20px; height: 20px; }
+  .left { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 5px 10px; gap: 8px; border-radius: 12px; }
+  .chip .lvl { font-size: 11px; }
+  .pots svg { width: 22px; height: 22px; }
+  .hearts svg { width: 17px; height: 17px; }
+}
 @media (max-width: 520px) {
   .chip .name { font-size: 15px; }
-  .tool { font-size: 12px; padding: 6px 8px; }
   .pad button { width: 50px; height: 50px; }
   #dpad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
   #acts .grab { width: 72px; height: 72px; }
@@ -152,26 +171,26 @@ body:not(.touch) .pad { display: none; }
     <div class="chip"><div class="pots" id="pots"></div><div class="hearts" id="hearts"></div><div class="keyhud" id="keysHud"></div><span class="steps" id="stepsHud">0 steps</span></div>
   </div>
   <div class="tools">
-    <button class="tool" id="bUndo" type="button">Undo</button>
-    <button class="tool" id="bRestart" type="button">Restart</button>
-    <button class="tool" id="bMenu" type="button">Levels</button>
-    <button class="tool" id="bCam" type="button">Camera: follow</button>
-    <button class="tool" id="bSound" type="button">Sound on</button>
+    <button class="tool" id="bUndo" type="button" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Undo</span></button>
+    <button class="tool" id="bRestart" type="button" aria-label="Restart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Restart</span></button>
+    <button class="tool" id="bMenu" type="button" aria-label="Levels"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></g></svg><span class="lbl">Levels</span></button>
+    <button class="tool" id="bCam" type="button" aria-label="Camera follows Bear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="12.5" r="3.4" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="lbl" id="camLbl">Camera: follow</span></button>
+    <button class="tool" id="bSound" type="button" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span class="lbl" id="sndLbl">Sound on</span></button>
   </div>
 </div>
 
 <div id="toast" class="hide"></div>
 
 <div class="pad" id="dpad" hidden>
-  <button data-d="up" type="button" aria-label="Walk away from camera">&#9650;</button>
-  <button data-d="left" type="button" aria-label="Walk left">&#9664;</button>
-  <button data-d="right" type="button" aria-label="Walk right">&#9654;</button>
-  <button data-d="down" type="button" aria-label="Walk toward camera">&#9660;</button>
+  <button data-d="up" type="button" aria-label="Walk away from camera"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 12H4z" fill="currentColor"/></svg></button>
+  <button data-d="left" type="button" aria-label="Walk left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l12-8v16z" fill="currentColor"/></svg></button>
+  <button data-d="right" type="button" aria-label="Walk right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12L7 4v16z" fill="currentColor"/></svg></button>
+  <button data-d="down" type="button" aria-label="Walk toward camera"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19L4 7h16z" fill="currentColor"/></svg></button>
 </div>
 <div class="pad" id="acts" hidden>
-  <button class="rot" data-r="-1" type="button" aria-label="Spin world left">&#10226;</button>
+  <button class="rot" data-r="-1" type="button" aria-label="Spin world left"><svg style="transform:scaleX(-1)" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="grab" id="bGrab" type="button">GRAB</button>
-  <button class="rot" data-r="1" type="button" aria-label="Spin world right">&#10227;</button>
+  <button class="rot" data-r="1" type="button" aria-label="Spin world right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
 <div class="keys" id="keys" hidden>Arrows walk &middot; Space grabs / throws &middot; Q / E spin &middot; Drag to look &middot; Mouse wheel zooms &middot; Z undo &middot; R restart</div>
 
@@ -1274,10 +1293,34 @@ function solveExact(i, cap = 4e6) {
 // AUDIO
 // =====================================================================
 let actx = null, muted = false;
-function initAudio() {
-  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
-  if (actx && actx.state === 'suspended') actx.resume();
+// iPhones mute Web Audio when the ring/silent switch is on, unless the page plays as "media".
+// So: ask for the playback audio session, keep a silent <audio> loop running, and unlock on the first touch.
+let silentEl = null;
+function silentWav() {
+  const n = 4410, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, str) => [...str].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  let bin = ''; new Uint8Array(buf).forEach(b => { bin += String.fromCharCode(b); });
+  return 'data:audio/wav;base64,' + btoa(bin);
 }
+function initAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  if (!silentEl) {
+    try { silentEl = new Audio(silentWav()); silentEl.loop = true; silentEl.setAttribute('playsinline', ''); } catch (e) { silentEl = null; }
+  }
+  if (silentEl && silentEl.paused && !document.hidden) { const pr = silentEl.play(); if (pr && pr.catch) pr.catch(() => {}); }
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state !== 'running') {
+    const pr = actx.resume(); if (pr && pr.catch) pr.catch(() => {});
+    try { const b = actx.createBuffer(1, 1, 22050), src = actx.createBufferSource(); src.buffer = b; src.connect(actx.destination); src.start(0); } catch (e) { /* ignore */ }
+  }
+}
+['touchend', 'click', 'keydown'].forEach(t => addEventListener(t, initAudio, { passive: true }));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (silentEl) silentEl.pause(); if (actx && actx.suspend) actx.suspend(); }
+  else if (actx && actx.resume) actx.resume().catch(() => {});
+});
 function tone(f0, f1, dur, type = 'triangle', vol = 0.12, delay = 0) {
   if (!actx || muted) return;
   const t0 = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
@@ -2462,6 +2505,9 @@ let toastTimer = 0;
 const toastEl = document.getElementById('toast');
 function toast(msg, ms = 2500) {
   toastEl.textContent = msg; toastEl.classList.remove('hide');
+  // sit just under the top bar so it never covers the treats or buttons
+  const hudEl = document.getElementById('hud');
+  toastEl.style.top = (!hudEl.hidden ? Math.round(hudEl.getBoundingClientRect().bottom + 10) : 92) + 'px';
   clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.add('hide'), ms);
 }
 
@@ -2978,6 +3024,7 @@ function show(id) {
   document.getElementById('keys').hidden = !inGame;
   playing = inGame;
   if (!inGame) toastEl.classList.add('hide');
+  else requestAnimationFrame(() => { toastEl.style.top = Math.round(document.getElementById('hud').getBoundingClientRect().bottom + 10) + 'px'; });
 }
 function renderSelect() {
   const wrap = document.getElementById('levelGrid');
@@ -3010,8 +3057,8 @@ document.getElementById('bNext').addEventListener('click', () => startLevel(Math
 document.getElementById('bUndo').addEventListener('click', e => { undo(); e.currentTarget.blur(); });
 document.getElementById('bRestart').addEventListener('click', e => { restart(); e.currentTarget.blur(); });
 const bSound = document.getElementById('bSound');
-function toggleSound() { muted = !muted; bSound.textContent = muted ? 'Sound off' : 'Sound on'; }
-document.getElementById('bCam').addEventListener('click', e => { camFollow = !camFollow; e.currentTarget.textContent = camFollow ? 'Camera: follow' : 'Camera: free'; e.currentTarget.blur(); });
+function toggleSound() { muted = !muted; document.getElementById('sndLbl').textContent = muted ? 'Sound off' : 'Sound on'; bSound.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on'); bSound.classList.toggle('off', muted); }
+document.getElementById('bCam').addEventListener('click', e => { camFollow = !camFollow; document.getElementById('camLbl').textContent = camFollow ? 'Camera: follow' : 'Camera: free'; e.currentTarget.classList.toggle('off', !camFollow); toast(camFollow ? 'Camera follows Bear' : 'Camera stays put', 1200); e.currentTarget.blur(); });
 bSound.addEventListener('click', e => { initAudio(); toggleSound(); e.currentTarget.blur(); });
 
 // =====================================================================
