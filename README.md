@@ -1,3 +1,20 @@
+# Bear games
+
+Play online: **https://captain-bear.netlify.app** (Captain Bear 2). The earlier games are at `/captain-bear` and `/commander-cap`.
+
+# Captain Bear 2: The Four Seasons (3D)
+
+`captain-bear-2.html` is the sequel: a 3D diorama puzzle adventure in the spirit of Captain Toad, starring a teddy bear who can't jump. Winter is coming, so Bear travels from spring to winter gathering food, then climbs to his cozy den to hibernate.
+
+- **12 worlds in 4 chapters** (Spring, Summer, Autumn, Night/Winter), each with its own look, weather and lighting.
+- **New mechanics:** slippery ice (Bear and crates slide), tiles that crumble once you step off, bounce mushrooms that spring you 2 tiles, crates on gold/silver plates that raise matching bridges, honey keys and locked gates.
+- **Returning mechanics:** stairs, ladders, ledge drops, crates into water, red/blue switch blocks, hollow-stump warps, pinecones to throw at bees.
+- Each world has 4 treats, a **secret golden acorn**, and a **step challenge** badge.
+- Every world is verified by the built-in solver (`solve()` / `solveExact()` in the script).
+- Graphics: physically based lighting, baked ambient occlusion, rounded toy blocks, swaying grass, waterfalls, falling petals/leaves/snow, fireflies and a headlamp at night, intro flyover, bloom and tilt-shift. It lowers quality on slower devices.
+
+Hosting: `netlify.toml` publishes the repo root as a static site with `/` serving `captain-bear-2.html`.
+
 # Commander Cap and the Veggie Valley Caper
 
 A retro platformer that mixes **Toad from Super Mario Bros. 2** (pull up veggies, lift baddies, throw them) with **Commander Keen** (raygun, pogo stick, candy points, key gems, EGA colours).

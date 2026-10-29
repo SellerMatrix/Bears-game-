@@ -1,0 +1,3190 @@
+<title>Captain Bear 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: full-screen 3D diorama; HUD chips float top, touch controls float bottom corners. */
+:root {
+  --sky: #8fd3ff;
+  --sky-deep: #3a8fd6;
+  --honey: #ffb81c;
+  --honey-deep: #c97a00;
+  --bear: #8a5a33;
+  --ink: #3b2412;
+  --paper: #fff8ea;
+  --red: #e8453c;
+  --blue: #3c7ae8;
+  --font-ui: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  box-sizing: border-box;
+}
+#view { position: fixed; inset: 0; }
+#view canvas { display: block; width: 100%; height: 100%; }
+.hud {
+  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px));
+  left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+}
+.chip {
+  pointer-events: auto;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0;
+}
+.chip .lvl { font-size: 13px; color: var(--honey-deep); letter-spacing: 0.04em; text-transform: uppercase; }
+.chip .name { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.left { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pots { display: flex; gap: 4px; }
+.pots svg { width: 26px; height: 26px; }
+#clearPots svg { width: 44px; height: 44px; }
+.hearts { display: flex; gap: 3px; }
+.hearts svg { width: 20px; height: 20px; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+button {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  touch-action: none;
+}
+button:active, button.on { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+button:focus-visible { outline: 3px solid var(--honey); outline-offset: 2px; }
+.tool { font-size: 14px; padding: 7px 11px; pointer-events: auto; }
+.pad {
+  position: fixed; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: grid; gap: 6px; pointer-events: none;
+}
+.pad button { pointer-events: auto; width: 58px; height: 58px; font-size: 22px; padding: 0; }
+#dpad { left: max(16px, env(safe-area-inset-left, 0px)); grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(3, 58px); }
+#dpad [data-d="up"] { grid-column: 2; grid-row: 1; }
+#dpad [data-d="left"] { grid-column: 1; grid-row: 2; }
+#dpad [data-d="right"] { grid-column: 3; grid-row: 2; }
+#dpad [data-d="down"] { grid-column: 2; grid-row: 3; }
+#acts { right: max(16px, env(safe-area-inset-right, 0px)); grid-template-columns: repeat(2, auto); align-items: end; }
+#acts .grab { width: 84px; height: 84px; border-radius: 50%; background: var(--honey); font-size: 17px; grid-row: span 2; }
+#acts .rot { font-size: 20px; }
+.keys {
+  position: fixed; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  background: rgba(255, 248, 234, 0.85); border: 2px solid var(--ink); border-radius: 12px;
+  padding: 6px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; pointer-events: none;
+}
+body.touch .keys { display: none; }
+body:not(.touch) .pad { display: none; }
+#toast {
+  position: fixed; left: 50%; top: 92px; transform: translateX(-50%);
+  width: min(460px, calc(100% - 40px));
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 5px 0 var(--ink);
+  padding: 10px 16px; font-size: 16px; font-weight: 500; text-align: center; line-height: 1.35;
+  transition: opacity 0.4s; pointer-events: none; text-wrap: balance;
+}
+#toast.hide { opacity: 0; }
+.screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(58, 143, 214, 0.55);
+  overflow-y: auto;
+}
+.card {
+  background: var(--paper); border: 4px solid var(--ink); border-radius: 24px; box-shadow: 0 8px 0 var(--ink);
+  padding: 22px 24px; width: min(560px, 100%); text-align: center; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 14px; align-items: center;
+}
+.logo { font-size: clamp(40px, 9vw, 64px); font-weight: 700; line-height: 0.95; color: var(--honey); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); margin: 0; text-wrap: balance; }
+.sub { font-size: 18px; font-weight: 500; margin: 0; }
+.big { font-size: 22px; padding: 12px 30px; background: var(--honey); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+@media (max-width: 460px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+.lv { padding: 10px 6px; display: flex; flex-direction: column; gap: 4px; align-items: center; font-size: 15px; }
+.lv b { font-size: 26px; }
+.lv small { font-size: 12px; font-weight: 500; }
+.lv[disabled] { opacity: 0.45; cursor: not-allowed; }
+.lv .mini svg { width: 16px; height: 16px; }
+.chapters { display: flex; flex-direction: column; gap: 14px; width: 100%; max-height: 62vh; overflow-y: auto; }
+.chapter h3 { margin: 0 0 6px; font-size: 20px; text-align: left; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.chapter h3 small { font-size: 13px; font-weight: 500; color: var(--honey-deep); }
+.chapter .grid { grid-template-columns: repeat(3, 1fr); }
+.lv .medal { font-size: 11px; font-weight: 700; color: var(--paper); background: var(--honey-deep); border-radius: 8px; padding: 1px 6px; }
+.keyhud { display: flex; align-items: center; gap: 2px; font-weight: 700; }
+.keyhud svg { width: 22px; height: 22px; }
+.steps { font-size: 13px; font-weight: 600; color: var(--honey-deep); white-space: nowrap; }
+.challenge { margin: 0; font-size: 15px; font-weight: 500; display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.badge { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 10px; border: 2px solid var(--ink); background: var(--paper); }
+.badge.on { background: var(--honey); }
+.how { font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0; text-align: left; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 520px) {
+  .chip .name { font-size: 15px; }
+  .tool { font-size: 12px; padding: 6px 8px; }
+  .pad button { width: 50px; height: 50px; }
+  #dpad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
+  #acts .grab { width: 72px; height: 72px; }
+}
+</style>
+
+<div id="view"></div>
+
+<div class="hud" id="hud" hidden>
+  <div class="left">
+    <div class="chip"><span class="lvl" id="lvlNum">Level 1</span><span class="name" id="lvlName">Picnic Hill</span></div>
+    <div class="chip"><div class="pots" id="pots"></div><div class="hearts" id="hearts"></div><div class="keyhud" id="keysHud"></div><span class="steps" id="stepsHud">0 steps</span></div>
+  </div>
+  <div class="tools">
+    <button class="tool" id="bUndo" type="button">Undo</button>
+    <button class="tool" id="bRestart" type="button">Restart</button>
+    <button class="tool" id="bMenu" type="button">Levels</button>
+    <button class="tool" id="bCam" type="button">Camera: follow</button>
+    <button class="tool" id="bSound" type="button">Sound on</button>
+  </div>
+</div>
+
+<div id="toast" class="hide"></div>
+
+<div class="pad" id="dpad" hidden>
+  <button data-d="up" type="button" aria-label="Walk away from camera">&#9650;</button>
+  <button data-d="left" type="button" aria-label="Walk left">&#9664;</button>
+  <button data-d="right" type="button" aria-label="Walk right">&#9654;</button>
+  <button data-d="down" type="button" aria-label="Walk toward camera">&#9660;</button>
+</div>
+<div class="pad" id="acts" hidden>
+  <button class="rot" data-r="-1" type="button" aria-label="Spin world left">&#10226;</button>
+  <button class="grab" id="bGrab" type="button">GRAB</button>
+  <button class="rot" data-r="1" type="button" aria-label="Spin world right">&#10227;</button>
+</div>
+<div class="keys" id="keys" hidden>Arrows walk &middot; Space grabs / throws &middot; Q / E spin &middot; Drag to look &middot; Mouse wheel zooms &middot; Z undo &middot; R restart</div>
+
+<div class="screen" id="title">
+  <div class="card">
+    <h1 class="logo">Captain Bear 2</h1>
+    <p class="sub">The Four Seasons</p>
+    <p class="how">Winter is coming, and Bear's tummy is rumbling. Travel from spring to winter gathering honey, salmon and berries, then climb to the cozy den to hibernate. Bear still can't jump, so slide across ice, bounce off mushrooms, push crates onto plates, unlock gates with honey keys and spin each world to find the secret golden acorn.</p>
+    <button class="big" id="bPlay" type="button">Play</button>
+  </div>
+</div>
+
+<div class="screen" id="select" hidden>
+  <div class="card">
+    <h2 class="logo" style="font-size: 40px">Pick a world</h2>
+    <div class="chapters" id="levelGrid"></div>
+    <button class="tool" id="bTitle" type="button">Back</button>
+  </div>
+</div>
+
+<div class="screen" id="clear" hidden>
+  <div class="card">
+    <h2 class="logo" style="font-size: 44px">Honeycomb get!</h2>
+    <div class="pots" id="clearPots" style="justify-content:center"></div>
+    <p class="sub" id="clearMsg"></p>
+    <p class="challenge" id="clearChallenge"></p>
+    <div class="row">
+      <button class="tool" id="bReplay" type="button">Play again</button>
+      <button class="tool" id="bLevels" type="button">Levels</button>
+      <button class="big" id="bNext" type="button">Next world</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+// LEVELS (12 worlds in 4 seasonal chapters)
+// =====================================================================
+const LEVELS = [
+ {
+  "name": "Blossom Path",
+  "theme": "spring",
+  "chapter": 0,
+  "tip": "Petal tiles crumble once Bear steps off them, so plan your route! Spin the world to spot hidden paths.",
+  "H": [
+   "3333333.222222222",
+   "33333332222222222",
+   "3333333.222222222",
+   "3333333.222222222",
+   "1111121.222222222",
+   "1111111......1111",
+   "1111111...1111111",
+   "11111111111111111",
+   "1111111...1111111",
+   "1111111......1111",
+   "1111111......1111"
+  ],
+  "O": [
+   "a...............f",
+   ".................",
+   "...h.............",
+   ".................",
+   ".....G...........",
+   ".................",
+   ".................",
+   ".......xxx.r.....",
+   ".................",
+   "..t..............",
+   ".S..............h"
+  ],
+  "links": [
+   [
+    7,
+    1,
+    6,
+    1,
+    "ladder"
+   ],
+   [
+    14,
+    5,
+    14,
+    4,
+    "stairs"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      2,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ],
+    "y": 1
+   },
+   {
+    "path": [
+     [
+      13,
+      8
+     ],
+     [
+      16,
+      8
+     ]
+    ],
+    "y": 1
+   },
+   {
+    "path": [
+     [
+      9,
+      2
+     ],
+     [
+      15,
+      2
+     ]
+    ],
+    "y": 2
+   }
+  ],
+  "par": 76
+ },
+ {
+  "name": "Mushroom Grove",
+  "theme": "spring",
+  "chapter": 0,
+  "tip": "Walk onto a bounce mushroom to spring two tiles forward, even over walls and water!",
+  "H": [
+   "33333.11111.33333",
+   "33333.11111.33333",
+   "33333.11111.33333",
+   "33333.11111.33333",
+   "33333.11111.33333",
+   ".................",
+   "11111411111.22222",
+   "11111411111.22222",
+   "11111411111.22222",
+   "11111411111.22222",
+   "11111411111.22222"
+  ],
+  "O": [
+   "G.......h.......f",
+   "......m..........",
+   "............m....",
+   ".................",
+   ".................",
+   ".................",
+   ".................",
+   "..........m...c..",
+   "....m...c........",
+   "..t...m..........",
+   ".S.m.a....h.....h"
+  ],
+  "links": [
+   [
+    14,
+    5,
+    14,
+    4,
+    "ladder"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      6,
+      6
+     ],
+     [
+      10,
+      6
+     ]
+    ],
+    "y": 1
+   },
+   {
+    "path": [
+     [
+      12,
+      9
+     ],
+     [
+      16,
+      9
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      6,
+      3
+     ],
+     [
+      10,
+      3
+     ]
+    ],
+    "y": 1
+   },
+   {
+    "path": [
+     [
+      1,
+      2
+     ],
+     [
+      4,
+      2
+     ]
+    ],
+    "y": 3
+   }
+  ],
+  "par": 100
+ },
+ {
+  "name": "Beehive Gardens",
+  "theme": "spring",
+  "chapter": 0,
+  "tip": "Push a crate onto a plate to raise the matching golden or silver bridge. It only stays up while the crate is there.",
+  "H": [
+   "22222.22222.22222",
+   "22222.22222.22222",
+   "22222222222222222",
+   "22222.22222.22222",
+   "22222.22222.22222",
+   "111311...11111..1",
+   "111111...13111..1",
+   "11111111111111..1",
+   "131111...11111..1",
+   "111111...11111111",
+   "111111...11111..1"
+  ],
+  "O": [
+   "G...........h...k",
+   ".................",
+   ".....L.....x.....",
+   ".................",
+   "......r..........",
+   ".................",
+   ".=...........+...",
+   "...c..YYY........",
+   "...........c.....",
+   "..............WW.",
+   "r....S.......f..a"
+  ],
+  "links": [
+   [
+    16,
+    5,
+    16,
+    4,
+    "stairs"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      6,
+      1
+     ],
+     [
+      10,
+      1
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      12,
+      3
+     ],
+     [
+      16,
+      3
+     ]
+    ],
+    "y": 2
+   }
+  ],
+  "par": 121
+ },
+ {
+  "name": "Salmon Falls",
+  "theme": "summer",
+  "chapter": 1,
+  "tip": "Fill the river with crates to reach the far bank. Rocky gaps make the order tricky!",
+  "H": [
+   "22222222..1111111",
+   "22222222..1311131",
+   "22222222..1111111",
+   "22222222..3313133",
+   "22222222..1111111",
+   "22222222..1111111",
+   "22222222..3313133",
+   "22222222..1111111",
+   "22222222..1311131",
+   "22222222..1111111",
+   "22222222..1111111"
+  ],
+  "O": [
+   "...h............f",
+   ".................",
+   ".................",
+   "............c....",
+   ".................",
+   "G...........c....",
+   ".................",
+   ".................",
+   ".................",
+   "...............S.",
+   "r.....a.........h"
+  ],
+  "links": [
+   [
+    8,
+    5,
+    7,
+    5,
+    "ladder"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      1,
+      2
+     ],
+     [
+      6,
+      2
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      10,
+      9
+     ],
+     [
+      16,
+      9
+     ]
+    ],
+    "y": 1
+   }
+  ],
+  "par": 93
+ },
+ {
+  "name": "Lily Lagoon",
+  "theme": "summer",
+  "chapter": 1,
+  "tip": "Lily pads sink after one use. Find the one route that visits every treat!",
+  "H": [
+   ".................",
+   "..1111111111111..",
+   "..1...1.1.1...1..",
+   "..11111.1.11111..",
+   "11..1...1...1..11",
+   "111111.111.111111",
+   "11..1...1...1..11",
+   "..1111111111111..",
+   "..1...1...1...1..",
+   "..1111111111111..",
+   "................."
+  ],
+  "O": [
+   ".................",
+   "..h..x.....x..f..",
+   "..x...x...x...x..",
+   "........a........",
+   "....x...x...x....",
+   "S...............G",
+   "....x.......x....",
+   ".................",
+   "..x...x...x...x..",
+   "..r..x.....x..h..",
+   "................."
+  ],
+  "links": [],
+  "bees": [],
+  "par": 81
+ },
+ {
+  "name": "Honeycomb Canyon",
+  "theme": "summer",
+  "chapter": 1,
+  "tip": "Honey keys open gates, but each key works only once. Use them wisely!",
+  "H": [
+   "33333.22222.11111",
+   "33333.22222.11111",
+   "33333.22222.11111",
+   "33333.22222.11111",
+   "33333.22222.11111",
+   "33333322222.11111",
+   "33333.22222.11111",
+   "55355.22222.11111",
+   "33333.22222211111",
+   "33333.22222.11111",
+   "33333.22222.11111"
+  ],
+  "O": [
+   "k.........k.....a",
+   "....p............",
+   "..............p..",
+   "........h........",
+   "..S.............f",
+   ".....L...........",
+   ".................",
+   "..L..............",
+   "...........L.....",
+   "............k....",
+   "G.....r.........h"
+  ],
+  "links": [],
+  "bees": [
+   {
+    "path": [
+     [
+      6,
+      6
+     ],
+     [
+      10,
+      6
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      12,
+      6
+     ],
+     [
+      16,
+      6
+     ]
+    ],
+    "y": 1
+   }
+  ],
+  "par": 121
+ },
+ {
+  "name": "Leafpile Lane",
+  "theme": "autumn",
+  "chapter": 2,
+  "tip": "Every leafy bridge crumbles after one crossing. Visit each grove in the right order!",
+  "H": [
+   "2222..2222..2222",
+   "2222222222222222",
+   "2222..2222..2222",
+   ".2.....2.....2..",
+   "2222..2222..2222",
+   "2222222222222222",
+   "2222..2222..2222",
+   "..2.....2.....2.",
+   "2222..2222..2222",
+   "2222222222222222",
+   "2222..2222..2222"
+  ],
+  "O": [
+   "h........a.....G",
+   "....xx....xx....",
+   "................",
+   ".x.....x.....x..",
+   "...............f",
+   "....xx.r..xx....",
+   "................",
+   "..x.....x.....x.",
+   "................",
+   "....xx....xx....",
+   ".S.............h"
+  ],
+  "links": [],
+  "bees": [
+   {
+    "path": [
+     [
+      6,
+      4
+     ],
+     [
+      9,
+      4
+     ]
+    ],
+    "y": 2
+   }
+  ],
+  "par": 76
+ },
+ {
+  "name": "Acorn Attic",
+  "theme": "autumn",
+  "chapter": 2,
+  "tip": "Crates, plates and gates. Some gates hide treats, so count your keys!",
+  "H": [
+   "22222222.22222222",
+   "22222222.22222222",
+   "22222222222222222",
+   "22222222.22222222",
+   "...............1.",
+   "111111..111314111",
+   "111111..111114111",
+   "111111..111114111",
+   "11111111111111111",
+   "111111..111114111",
+   "111111..111114111"
+  ],
+  "O": [
+   "G...h...........k",
+   ".................",
+   "........L........",
+   "...........f.....",
+   "...............W.",
+   "............h...a",
+   "............L....",
+   "...c...........c.",
+   "......YY.....L...",
+   ".=.............+.",
+   "r.S.......k.....k"
+  ],
+  "links": [
+   [
+    15,
+    4,
+    15,
+    3,
+    "ladder"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      8,
+      9
+     ],
+     [
+      12,
+      9
+     ]
+    ],
+    "y": 1
+   },
+   {
+    "path": [
+     [
+      9,
+      1
+     ],
+     [
+      16,
+      1
+     ]
+    ],
+    "y": 2
+   }
+  ],
+  "par": 124
+ },
+ {
+  "name": "Moonlit Hollow",
+  "theme": "night",
+  "chapter": 2,
+  "tip": "It's night! Bear's headlamp lights the way. Juggle the switches and stumps to reach every treat.",
+  "H": [
+   "22222.22222.22222",
+   "22222.22222.22222",
+   "22222222222.22222",
+   "22222.22222.22222",
+   "22222.22222.22222",
+   "..2.....2.....2..",
+   "22222.22222.22222",
+   "22222.22222.22222",
+   "22222222222.22222",
+   "22222.22222.22222",
+   "22222.22222.22222"
+  ],
+  "O": [
+   "G.....!.h...q...f",
+   ".................",
+   ".....A...........",
+   ".................",
+   "..........q......",
+   "..B.....B.....B..",
+   "!...............h",
+   ".................",
+   ".....A..........!",
+   ".................",
+   "rS......p.....p.a"
+  ],
+  "links": [],
+  "bees": [
+   {
+    "path": [
+     [
+      6,
+      7
+     ],
+     [
+      10,
+      7
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      12,
+      2
+     ],
+     [
+      16,
+      2
+     ]
+    ],
+    "y": 2
+   },
+   {
+    "path": [
+     [
+      0,
+      3
+     ],
+     [
+      4,
+      3
+     ]
+    ],
+    "y": 2
+   }
+  ],
+  "par": 61
+ },
+ {
+  "name": "Frozen Fjord",
+  "theme": "winter",
+  "chapter": 3,
+  "tip": "Ice is slippery! Bear slides until something stops him. Snowy patches and rocks are your brakes.",
+  "H": [
+   ".................",
+   "11111311111311111",
+   "11111111131111111",
+   "11111131111113111",
+   "111311111131111..",
+   "11111113111111111",
+   "111131111113111..",
+   "11111111311111111",
+   "11111311111113111",
+   "11131111131111111",
+   "................."
+  ],
+  "O": [
+   ".................",
+   "..iii.iiiii.iia..",
+   "..iiiiiii.iihii..",
+   "..iiii.iiiiii.i..",
+   "..i.iiiifi.iiii..",
+   "S.iiiii.iiiiiiiLG",
+   "..ii.iiiiii.iii..",
+   "..iiiiii.ikiiii..",
+   "t.iri.iiiiiii.i..",
+   "..i.iihii.iiiii..",
+   "................."
+  ],
+  "links": [],
+  "bees": [
+   {
+    "path": [
+     [
+      15,
+      7
+     ],
+     [
+      16,
+      9
+     ]
+    ],
+    "y": 1
+   }
+  ],
+  "par": 38
+ },
+ {
+  "name": "Icicle Caverns",
+  "theme": "winter",
+  "chapter": 3,
+  "tip": "Crates slide on ice too! Slide one onto each plate to raise both bridges to the honeycomb.",
+  "H": [
+   "44444444444444444",
+   "41111111131111114",
+   "41131111111113114",
+   "41111.11111111131",
+   "41111111311111131",
+   "41311111111111111",
+   "4111113111.111114",
+   "41111111111111114",
+   "41111111111311.14",
+   "41111111111111114",
+   "44444444444444444"
+  ],
+  "O": [
+   ".................",
+   ".hiiiiiii.iiiifi.",
+   ".ii.+iC.iiiii.ii.",
+   ".iiii.iiiiCiiii.G",
+   ".iiiiiii.iiiiii.W",
+   ".i.iiiiiaiiiiiiiY",
+   ".iiiii.iii.iiiii.",
+   ".ii.Ciiiiiii=iii.",
+   ".iihiiiiiii.ii.i.",
+   ".Siiiiiriiiiiiii.",
+   "................."
+  ],
+  "links": [],
+  "bees": [],
+  "par": 30
+ },
+ {
+  "name": "Cozy Den Summit",
+  "theme": "winter",
+  "chapter": 3,
+  "tip": "The last climb! Bounce, push, slide and unlock your way up to the cozy den before winter sets in.",
+  "H": [
+   "5444.33333..3333333",
+   "4444.33333..3333333",
+   "4444.33333333333333",
+   "4444433333..3333333",
+   "4444.33333..3333333",
+   "4444.33333..3333333",
+   "4444.33333...422222",
+   ".............222422",
+   "111111422222.242222",
+   "111111422222.222242",
+   "111111422222.222222",
+   "111111422222.224224",
+   "111111422222.222222"
+  ],
+  "O": [
+   "G...........h.....k",
+   "...................",
+   "..........xx.......",
+   "....L..............",
+   "..............t....",
+   "...................",
+   ".........a....ii.ii",
+   ".............iii.ii",
+   "r............i.iiii",
+   "..t..........iiii.i",
+   ".....m...c...ifiiii",
+   ".S...........ii.ii.",
+   "...........h.iiiiii"
+  ],
+  "links": [
+   [
+    12,
+    10,
+    13,
+    10,
+    "ladder"
+   ],
+   [
+    16,
+    6,
+    16,
+    5,
+    "stairs"
+   ],
+   [
+    5,
+    3,
+    4,
+    3,
+    "stairs"
+   ],
+   [
+    1,
+    0,
+    0,
+    0,
+    "stairs"
+   ]
+  ],
+  "bees": [
+   {
+    "path": [
+     [
+      13,
+      3
+     ],
+     [
+      18,
+      3
+     ]
+    ],
+    "y": 3
+   },
+   {
+    "path": [
+     [
+      5,
+      4
+     ],
+     [
+      9,
+      4
+     ]
+    ],
+    "y": 3
+   },
+   {
+    "path": [
+     [
+      0,
+      4
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "y": 4
+   },
+   {
+    "path": [
+     [
+      1,
+      9
+     ],
+     [
+      5,
+      9
+     ]
+    ],
+    "y": 1
+   }
+  ],
+  "par": 74
+ }
+];
+
+const CHAPTERS = [
+  { name: 'Spring', blurb: 'Blossoms, bounce mushrooms and busy bees.' },
+  { name: 'Summer', blurb: 'Rivers, lily pads and honey keys.' },
+  { name: 'Autumn', blurb: 'Crumbly leaves, crates and a moonlit night.' },
+  { name: 'Winter', blurb: 'Slippery ice and the climb to the cozy den.' }
+];
+
+// =====================================================================
+// PUZZLE RULES (pure functions, shared by the game and the solver)
+//  Tile codes in O:  S start  G honeycomb  h/f/r treats  a golden acorn  c crate  C crate on ice
+//   t pinecone pile  ! switch  A/B red/blue blocks  p q u v hollow stump pairs  i ice  x crumbling tile
+//   m bounce mushroom  k honey key  L locked gate  = gold plate  Y gold bridge  + silver plate  W silver bridge
+// =====================================================================
+const K = (x, z) => x + ',' + z;
+const PLATE_FOR = { Y: '=', W: '+' };
+function parseLevel(def) {
+  const d = def.H.length, w = def.H[0].length;
+  const base = [], kind = [], crates = [], treats = [], potIndex = {}, keyIndex = {}, pipes = { p: [], q: [], u: [], v: [] }, partner = {}, links = new Map(), stairs = {};
+  let start = [0, 0], goal = null, pots = 0, keys = 0;
+  for (let z = 0; z < d; z++) {
+    base.push([]); kind.push([]);
+    for (let x = 0; x < w; x++) {
+      const hc = def.H[z][x], oc = (def.O[z] || '')[x] || '.';
+      base[z].push(hc === '.' ? 0 : +hc);
+      let k = '';
+      if (oc === 'S') start = [x, z];
+      else if (oc === 'G') { k = 'G'; goal = [x, z]; }
+      else if ('hfra'.includes(oc)) { k = 'h'; treats.push(oc); potIndex[K(x, z)] = pots++; }
+      else if (oc === 'c') crates.push([x, z]);
+      else if (oc === 'C') { crates.push([x, z]); k = 'ice'; }
+      else if (oc === 'i') k = 'ice';
+      else if (oc === 'x') k = 'x';
+      else if (oc === 'm') k = 'm';
+      else if (oc === 'k') { k = 'k'; keyIndex[K(x, z)] = keys++; }
+      else if ('tL!AB=+YW'.includes(oc)) k = oc;
+      else if (oc in pipes) { k = 'pipe'; pipes[oc].push([x, z]); }
+      kind[z].push(k);
+    }
+  }
+  for (const pr of Object.values(pipes)) if (pr.length === 2) { partner[K(...pr[0])] = pr[1]; partner[K(...pr[1])] = pr[0]; }
+  for (const [x1, z1, x2, z2, type] of def.links || []) { links.set(K(x1, z1) + '>' + K(x2, z2), type); links.set(K(x2, z2) + '>' + K(x1, z1), type); }
+  // stairs sit on the lower cell, so Bear stands halfway up them there
+  for (const [x1, z1, x2, z2, type] of def.links || []) {
+    if (type !== 'stairs') continue;
+    const h1 = base[z1][x1], h2 = base[z2][x2];
+    if (h1 < h2) stairs[K(x1, z1)] = h2 - h1; else stairs[K(x2, z2)] = h1 - h2;
+  }
+  return { def, w, d, base, kind, crates, treats, potIndex, pots, keyIndex, partner, links, stairs, start, goal, bees: def.bees || [] };
+}
+function initState(lv) { return { x: lv.start[0], z: lv.start[1], mode: 0, crates: lv.crates.map(c => c.slice()), add: {}, pots: 0, gone: {}, keys: 0, got: 0, open: {} }; }
+function cloneState(s) {
+  return { x: s.x, z: s.z, mode: s.mode, crates: s.crates.map(c => c.slice()), add: Object.assign({}, s.add), pots: s.pots,
+    gone: Object.assign({}, s.gone), keys: s.keys, got: s.got, open: Object.assign({}, s.open) };
+}
+const inb = (lv, x, z) => x >= 0 && z >= 0 && x < lv.w && z < lv.d;
+const crateAt = (s, x, z) => s.crates.findIndex(c => c[0] === x && c[1] === z);
+function plateDown(lv, s, plate) { return s.crates.some(c => lv.kind[c[1]][c[0]] === plate); }
+function heightAt(lv, s, x, z) {
+  if (!inb(lv, x, z)) return 0;
+  const key = K(x, z);
+  if (s.gone[key]) return 0;
+  const k = lv.kind[z][x];
+  let b = lv.base[z][x];
+  if (k === 'A' && s.mode !== 0) b = 0;
+  if (k === 'B' && s.mode !== 1) b = 0;
+  if ((k === 'Y' || k === 'W') && !plateDown(lv, s, PLATE_FOR[k])) b = 0;
+  return b + (s.add[key] || 0);
+}
+const crateCanEnter = k => k === '' || k === 'ice' || k === '=' || k === '+';
+// Bear arrives on a cell: collect things, then keep sliding on ice or bouncing off mushrooms.
+function arrive(lv, s, ev, dx, dz) {
+  for (let guard = 0; guard < 80; guard++) {
+    const k = lv.kind[s.z][s.x], key = K(s.x, s.z);
+    if (k === '!') { s.mode ^= 1; ev.sw = (ev.sw || 0) + 1; return; }
+    if (k === 'h') { const i = lv.potIndex[key]; if (!(s.pots & (1 << i))) { s.pots |= 1 << i; (ev.pots = ev.pots || []).push(i); } return; }
+    if (k === 'k') { const i = lv.keyIndex[key]; if (!(s.got & (1 << i))) { s.got |= 1 << i; s.keys++; (ev.keyGot = ev.keyGot || []).push(i); } return; }
+    if (k === 'G') { ev.goal = true; return; }
+    if (k === 'pipe') { const p = lv.partner[key]; if (p) { s.x = p[0]; s.z = p[1]; ev.pipe = p; } return; }
+    if (k === 'm') {
+      const lx = s.x + 2 * dx, lz = s.z + 2 * dz, hm = heightAt(lv, s, s.x, s.z), hl = heightAt(lv, s, lx, lz);
+      if (hl <= 0 || hl > hm + 3 || crateAt(s, lx, lz) >= 0 || (lv.kind[lz][lx] === 'L' && !s.open[K(lx, lz)])) return;
+      ev.extra.push({ type: 'bounce', from: [s.x, s.z], to: [lx, lz] });
+      s.x = lx; s.z = lz;
+      continue;
+    }
+    if (k === 'ice') {
+      const nx = s.x + dx, nz = s.z + dz, h = heightAt(lv, s, s.x, s.z);
+      if (!inb(lv, nx, nz) || heightAt(lv, s, nx, nz) !== h || crateAt(s, nx, nz) >= 0 || (lv.kind[nz][nx] === 'L' && !s.open[K(nx, nz)])) return;
+      ev.extra.push({ type: 'slide', from: [s.x, s.z], to: [nx, nz] });
+      s.x = nx; s.z = nz;
+      continue;
+    }
+    return;
+  }
+}
+function step(lv, s0, dx, dz) {
+  const ax = s0.x, az = s0.z, bx = ax + dx, bz = az + dz;
+  if (!inb(lv, bx, bz)) return null;
+  const ha = heightAt(lv, s0, ax, az), hb = heightAt(lv, s0, bx, bz);
+  if (hb <= 0) return null;
+  const link = lv.links.get(K(ax, az) + '>' + K(bx, bz)) || null;
+  const s = cloneState(s0);
+  const ev = { dx, dz, from: [ax, az], to: [bx, bz], ha, hb, kind: 'walk', extra: [] };
+  const ci = crateAt(s, bx, bz);
+  if (ci >= 0) {
+    if (hb !== ha) return null;
+    // the crate moves one tile, and keeps sliding while it sits on ice
+    let cx = bx, cz = bz, fill = null;
+    const path = [];
+    for (let n = 0; n < 40; n++) {
+      const nx = cx + dx, nz = cz + dz;
+      if (!inb(lv, nx, nz)) break;
+      const nk = lv.kind[nz][nx], hc = heightAt(lv, s, cx, cz), hn = heightAt(lv, s, nx, nz);
+      if (!crateCanEnter(nk) || lv.stairs[K(nx, nz)] || crateAt(s, nx, nz) >= 0) break;
+      if (hn === hc) { cx = nx; cz = nz; path.push([cx, cz]); if (lv.kind[cz][cx] !== 'ice') break; continue; }
+      if (hn < hc) fill = [nx, nz, hn];
+      break;
+    }
+    if (!path.length && !fill) return null;
+    if (fill) {
+      s.crates.splice(ci, 1);
+      s.add[K(fill[0], fill[1])] = (s.add[K(fill[0], fill[1])] || 0) + 1;
+    } else s.crates[ci] = [cx, cz];
+    ev.push = { from: [bx, bz], path, fill: fill ? [fill[0], fill[1]] : null, land: fill ? fill[2] : 0, y: hb };
+    ev.kind = 'push';
+  } else if (link) ev.kind = link;
+  else if (hb < ha) ev.kind = 'drop';
+  else if (hb !== ha) return null;
+  if (lv.kind[bz][bx] === 'L' && !s.open[K(bx, bz)]) {
+    if (s.keys <= 0) return null;
+    s.keys--; s.open[K(bx, bz)] = 1; ev.gate = [bx, bz];
+  }
+  if (lv.kind[az][ax] === 'x') { s.gone[K(ax, az)] = 1; ev.crumble = [ax, az]; }
+  s.x = bx; s.z = bz;
+  arrive(lv, s, ev, dx, dz);
+  if (heightAt(lv, s, s.x, s.z) <= 0) return null; // never leave Bear standing on nothing
+  return { s, ev };
+}
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const objKeys = o => Object.keys(o).sort().join(';');
+const stateKeyNP = s => s.x + ',' + s.z + '|' + s.mode + '|' + s.crates.map(c => c.join(',')).sort().join(';') + '|' + Object.keys(s.add).sort().map(k => k + ':' + s.add[k]).join(';') + '|' + objKeys(s.gone) + '|' + s.keys + '|' + s.got + '|' + objKeys(s.open);
+// Shortest route from s0 to the step that eats treat `want` (or reaches the honeycomb when want < 0).
+function bfsTo(lv, s0, want, cap = 2e6) {
+  const prev = new Map([[stateKeyNP(s0), null]]);
+  const route = k => { const out = []; while (prev.get(k)) { out.unshift(prev.get(k).d); k = prev.get(k).p; } return out; };
+  let frontier = [s0];
+  while (frontier.length) {
+    const next = [];
+    for (const s of frontier) {
+      const sk = stateKeyNP(s);
+      for (const d of DIRS) {
+        const r = step(lv, s, d[0], d[1]);
+        if (!r) continue;
+        if (r.ev.goal) { if (want < 0) return { s: r.s, path: route(sk).concat([d]) }; continue; }
+        if (want >= 0 && r.ev.pots && r.ev.pots.includes(want)) return { s: r.s, path: route(sk).concat([d]) };
+        const k = stateKeyNP(r.s);
+        if (prev.has(k)) continue;
+        prev.set(k, { p: sk, d }); next.push(r.s);
+      }
+    }
+    if (prev.size > cap) return null;
+    frontier = next;
+  }
+  return null;
+}
+// Proves a level can be finished with every treat and the golden acorn: tries treat orders, nearest first.
+function solve(i, maxTries = 300) {
+  const lv = typeof i === 'number' ? parseLevel(LEVELS[i]) : i;
+  let tries = 0;
+  function go(s, path) {
+    if (++tries > maxTries) return null;
+    const left = [];
+    for (let t = 0; t < lv.pots; t++) if (!(s.pots & (1 << t))) left.push(t);
+    if (!left.length) { const r = bfsTo(lv, s, -1); return r ? path.concat(r.path) : null; }
+    const legs = left.map(t => bfsTo(lv, s, t)).filter(Boolean).sort((a, b) => a.path.length - b.path.length);
+    for (const leg of legs) { const out = go(leg.s, path.concat(leg.path)); if (out) return out; }
+    return null;
+  }
+  const path = go(initState(lv), []);
+  return { moves: path ? path.length : -1, pots: lv.pots, path, tries };
+}
+// How many treats can be reached at all, and can the honeycomb be reached (for level design checks)
+function reachReport(i) {
+  const lv = parseLevel(LEVELS[i]);
+  const s0 = initState(lv), seen = new Set([stateKeyNP(s0)]);
+  let frontier = [s0], goal = false, potsSeen = 0;
+  while (frontier.length && seen.size < 2e6) {
+    const next = [];
+    for (const s of frontier) for (const d of DIRS) {
+      const r = step(lv, s, d[0], d[1]); if (!r) continue;
+      if (r.ev.pots) r.ev.pots.forEach(p => { potsSeen |= 1 << p; });
+      if (r.ev.goal) { goal = true; continue; }
+      const k = stateKeyNP(r.s); if (seen.has(k)) continue; seen.add(k); next.push(r.s);
+    }
+    frontier = next;
+  }
+  return { goal, potsSeen: potsSeen.toString(2), states: seen.size };
+}
+
+// Exact search over every state including which treats are eaten (used when the quick solver is unsure).
+function solveExact(i, cap = 4e6) {
+  const lv = typeof i === 'number' ? parseLevel(LEVELS[i]) : i;
+  const all = (1 << lv.pots) - 1, key = s => stateKeyNP(s) + '#' + s.pots;
+  const s0 = initState(lv), prev = new Map([[key(s0), null]]);
+  let frontier = [s0];
+  while (frontier.length) {
+    const next = [];
+    for (const s of frontier) {
+      const sk = key(s);
+      for (const d of DIRS) {
+        const r = step(lv, s, d[0], d[1]); if (!r) continue;
+        if (r.ev.goal) {
+          if (r.s.pots !== all) continue;
+          const out = [d]; let k = sk; while (prev.get(k)) { out.unshift(prev.get(k).d); k = prev.get(k).p; }
+          return { moves: out.length, path: out, states: prev.size };
+        }
+        const k = key(r.s); if (prev.has(k)) continue;
+        prev.set(k, { p: sk, d }); next.push(r.s);
+      }
+    }
+    if (prev.size > cap) return { moves: -2, states: prev.size };
+    frontier = next;
+  }
+  return { moves: -1, states: prev.size };
+}
+// =====================================================================
+// AUDIO
+// =====================================================================
+let actx = null, muted = false;
+function initAudio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function tone(f0, f1, dur, type = 'triangle', vol = 0.12, delay = 0) {
+  if (!actx || muted) return;
+  const t0 = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+const seq = (fs, st = 0.08, type = 'triangle', vol = 0.12) => fs.forEach((f, i) => tone(f, f, st * 1.1, type, vol, i * st));
+const SFX = {
+  step: () => tone(220 + Math.random() * 40, 180, 0.06, 'sine', 0.08),
+  climb: () => seq([300, 360, 420], 0.06, 'sine', 0.08),
+  drop: () => tone(500, 150, 0.25, 'sine', 0.1),
+  bump: () => tone(110, 90, 0.08, 'square', 0.05),
+  push: () => tone(90, 70, 0.18, 'sawtooth', 0.06),
+  splash: () => { tone(800, 120, 0.35, 'sine', 0.12); tone(300, 60, 0.3, 'triangle', 0.08, 0.05); },
+  sw: () => seq([392, 523], 0.07, 'square', 0.06),
+  pipe: () => tone(900, 120, 0.4, 'square', 0.05),
+  pot: () => seq([784, 988, 1175, 1568], 0.07),
+  pluck: () => tone(200, 800, 0.15, 'triangle', 0.12),
+  throw: () => tone(700, 200, 0.2, 'triangle', 0.1),
+  poof: () => { tone(1200, 300, 0.2, 'square', 0.05); seq([660, 880], 0.06); },
+  hurt: () => tone(400, 90, 0.35, 'sawtooth', 0.08),
+  undo: () => tone(500, 300, 0.12, 'sine', 0.08),
+  star: () => seq([523, 659, 784, 1046, 784, 1046, 1318], 0.1, 'triangle', 0.13)
+};
+const sfx = n => SFX[n] && SFX[n]();
+
+// =====================================================================
+// THREE.JS SCENE
+// =====================================================================
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.75);
+renderer.setPixelRatio(pixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 260);
+const lin = c => new THREE.Color(c).convertSRGBToLinear();
+const hemi = new THREE.HemisphereLight(lin(0xeaf6ff), lin(0x8a6a4a), 0.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(lin(0xfff0d8), 1.7);
+sun.position.set(6, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
+Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 50 });
+scene.add(sun); scene.add(sun.target);
+
+// --- modern pipeline: HDR render -> bloom -> tilt-shift, ACES tone map, grade (falls back to plain rendering) ---
+const FinalShader = {
+  uniforms: { tDiffuse: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uFocus: { value: 0.5 }, uBlur: { value: 6 }, uExposure: { value: 1.0 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uSat: { value: 1.1 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform vec2 uRes; uniform float uFocus, uBlur, uExposure, uSat; uniform vec3 uTint; varying vec2 vUv;
+    vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+    vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1.0/2.4))-0.055, step(0.0031308, c)); }
+    void main(){
+      vec3 col = texture2D(tDiffuse, vUv).rgb;
+      float amt = smoothstep(0.14, 0.6, abs(vUv.y - uFocus)) * uBlur;
+      if (amt > 0.05) {
+        vec3 acc = col; float ws = 1.0;
+        for (int i = 0; i < 16; i++) {
+          float a = float(i) * 2.39996, r = sqrt(float(i) + 0.5) / 4.0;
+          acc += texture2D(tDiffuse, vUv + vec2(cos(a), sin(a)) * r * amt / uRes).rgb; ws += 1.0;
+        }
+        col = acc / ws;
+      }
+      col = aces(col * uExposure * uTint);
+      float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+      col = mix(vec3(l), col, uSat);
+      col = toSRGB(max(col, 0.0));
+      vec2 q = vUv - 0.5; col *= 1.0 - dot(q, q) * 0.5;
+      gl_FragColor = vec4(col, 1.0);
+    }`
+};
+let composer = null, bloomPass = null, finalPass = null;
+function setupPost() {
+  const ok = THREE.EffectComposer && THREE.RenderPass && THREE.ShaderPass && THREE.UnrealBloomPass && THREE.CopyShader && THREE.LuminosityHighPassShader;
+  if (!ok) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.95;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    return;
+  }
+  renderer.toneMapping = THREE.NoToneMapping;
+  const gl2 = renderer.capabilities.isWebGL2;
+  const hdr = gl2 && renderer.extensions.has('EXT_color_buffer_float');
+  const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: hdr ? THREE.HalfFloatType : THREE.UnsignedByteType };
+  const rt = gl2 && THREE.WebGLMultisampleRenderTarget ? new THREE.WebGLMultisampleRenderTarget(innerWidth, innerHeight, opts) : new THREE.WebGLRenderTarget(innerWidth, innerHeight, opts);
+  composer = new THREE.EffectComposer(renderer, rt);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.35, 0.5, 1.4);
+  composer.addPass(bloomPass);
+  finalPass = new THREE.ShaderPass(FinalShader);
+  composer.addPass(finalPass);
+}
+setupPost();
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setSize(w, h, false);
+  if (composer) {
+    composer.setPixelRatio(pixelRatio);
+    composer.setSize(w, h);
+    finalPass.uniforms.uRes.value.set(w * pixelRatio, h * pixelRatio);
+    finalPass.uniforms.uBlur.value = 5 * pixelRatio;
+  }
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+
+// --- sky dome + matching reflection environment ---
+const SkyShader = (top, hor, gnd, sunAmt) => new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { top: { value: lin(top) }, hor: { value: lin(hor) }, gnd: { value: lin(gnd) }, sunAmt: { value: sunAmt } },
+  vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform vec3 top, hor, gnd; uniform float sunAmt; varying vec3 vP;
+    void main(){
+      vec3 d = normalize(vP); float h = d.y;
+      vec3 c = h > 0.0 ? mix(hor, top, pow(h, 0.55)) : mix(hor, gnd, pow(-h, 0.45));
+      c += vec3(1.0, 0.85, 0.6) * pow(max(dot(d, normalize(vec3(0.4, 0.75, 0.55))), 0.0), 48.0) * sunAmt;
+      gl_FragColor = vec4(c, 1.0);
+      #include <tonemapping_fragment>
+      #include <encodings_fragment>
+    }`
+});
+const skyDome = new THREE.Mesh(new THREE.SphereGeometry(120, 32, 16), SkyShader(0x4aa8ff, 0xcdeeff, 0x8a6a4a, 0));
+skyDome.renderOrder = -1;
+scene.add(skyDome);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envCache = {};
+function envFor(th) {
+  if (envCache[th.name]) return envCache[th.name];
+  const s = new THREE.Scene();
+  s.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), SkyShader(th.skyTop, th.horizon, th.ground, 6)));
+  return (envCache[th.name] = pmrem.fromScene(s, 0.02).texture);
+}
+
+// --- shader touches: soft fuzzy rim light for fur, swaying grass ---
+function addRim(mat, hex, power, strength) {
+  const c = lin(hex);
+  mat.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', `#include <dithering_fragment>
+      { float rim = pow(1.0 - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0.0, 1.0), ${power.toFixed(2)});
+        gl_FragColor.rgb += vec3(${c.r.toFixed(3)}, ${c.g.toFixed(3)}, ${c.b.toFixed(3)}) * rim * ${strength.toFixed(2)}; }`);
+  };
+  mat.customProgramCacheKey = () => 'rim' + hex + power + strength;
+  return mat;
+}
+const timeU = { value: 0 };
+
+// --- physically based materials (old Lambert/Phong calls map onto these) ---
+function stdMat(p, rough) {
+  const o = { roughness: rough, metalness: 0 };
+  for (const k in p) {
+    if (k === 'color' || k === 'emissive') o[k] = lin(p[k]);
+    else if (k === 'shininess') o.roughness = Math.max(0.12, Math.min(0.9, 1 - Math.sqrt(p.shininess / 150)));
+    else if (k === 'map') { p.map.encoding = THREE.sRGBEncoding; o.map = p.map; }
+    else o[k] = p[k];
+  }
+  return new THREE.MeshStandardMaterial(o);
+}
+const LAM = p => stdMat(p, 0.88);
+const PHONG = p => stdMat(p, 0.4);
+
+// --- canvas textures ---
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function canvasTex(size, draw) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+const THEMES = {
+  spring: { name: 'spring', top: ['#8ee05e', '#82d655'], side: '#a8703f', sideDark: '#7e5230', lip: '#6cc447', grass: 0x5cbf37, grassPer: 9, water: 0x3aa6f0,
+    skyTop: 0x5aa8ff, horizon: 0xffe4f0, ground: 0x8a6a4a, below: 0xa8c8ff, sun: 0xfff0dc, sunI: 1.75, hemiI: 0.32, tint: [1.0, 0.98, 1.0], sat: 1.12,
+    tree: 'blossom', weather: 'petals', decor: 'flowers', crumble: 'petals' },
+  summer: { name: 'summer', top: ['#7cd34a', '#70c843'], side: '#c08a4f', sideDark: '#93633a', lip: '#5bb83a', grass: 0x4fae2f, grassPer: 8, water: 0x16b8e0,
+    skyTop: 0x2f9cff, horizon: 0xe2f7ff, ground: 0xd9b88a, below: 0x7cc8ff, sun: 0xfff2d0, sunI: 1.9, hemiI: 0.32, tint: [1.02, 1.0, 0.97], sat: 1.15,
+    tree: 'oak', weather: 'pollen', decor: 'flowers', crumble: 'lily' },
+  autumn: { name: 'autumn', top: ['#b8b04a', '#aea444'], side: '#8a5a36', sideDark: '#64402a', lip: '#d27c2c', grass: 0xc08a2a, grassPer: 6, water: 0x2f80b0,
+    skyTop: 0x6a86d8, horizon: 0xffd2a4, ground: 0x7a5a3a, below: 0xf2b88a, sun: 0xffc690, sunI: 1.8, hemiI: 0.3, tint: [1.06, 0.98, 0.9], sat: 1.12,
+    tree: 'autumn', weather: 'leaves', decor: 'mushrooms', crumble: 'leaves' },
+  night: { name: 'night', top: ['#3f8050', '#387548'], side: '#5a4638', sideDark: '#3c2e26', lip: '#2f6e40', grass: 0x2f7040, grassPer: 7, water: 0x1a4a9a,
+    skyTop: 0x05081c, horizon: 0x24306a, ground: 0x10142a, below: 0x0c1230, sun: 0x9fb8ff, sunI: 0.55, hemiI: 0.12, tint: [0.92, 0.97, 1.1], sat: 1.05,
+    tree: 'oak', weather: 'fireflies', decor: 'glowshrooms', crumble: 'leaves', night: true },
+  winter: { name: 'winter', top: ['#dfe8f4', '#d6e1ef'], side: '#646e82', sideDark: '#4a5468', lip: '#eef4fb', grass: 0xdfe8f0, grassPer: 0, water: 0x3f98d8,
+    skyTop: 0x3f78d0, horizon: 0xd8e6fa, ground: 0x7a88a8, below: 0x9fb8e8, sun: 0xffe8d4, sunI: 1.2, hemiI: 0.26, tint: [0.92, 0.96, 1.04], sat: 1.12,
+    tree: 'pine', weather: 'snow', decor: 'snowballs', crumble: 'snow' }
+};
+const sideCache = {};
+function sideMat(theme) {
+  if (sideCache[theme]) return sideCache[theme];
+  const th = THEMES[theme];
+  seed = 11;
+  const t = canvasTex(128, (g, s) => {
+    g.fillStyle = th.side; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${rnd() < 0.5 ? '0,0,0' : '255,255,255'},${0.03 + rnd() * 0.05})`; g.fillRect(rnd() * s, rnd() * s, 2 + rnd() * 3, 2 + rnd() * 3); }
+    for (let i = 0; i < 14; i++) {
+      const x = rnd() * s, y = rnd() * s, r = 4 + rnd() * 7;
+      g.fillStyle = th.sideDark; g.beginPath(); g.ellipse(x, y, r, r * 0.7, rnd() * 3, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.25, r * 0.5, r * 0.3, 0, 0, Math.PI * 2); g.fill();
+    }
+  });
+  return (sideCache[theme] = LAM({ map: t }));
+}
+const topTex = {};
+function topMat(theme, alt) {
+  const key = theme + alt;
+  if (topTex[key]) return topTex[key];
+  const th = THEMES[theme];
+  seed = 3 + alt * 17;
+  const t = canvasTex(128, (g, s) => {
+    g.fillStyle = th.top[alt]; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 1400; i++) {
+      g.fillStyle = `rgba(${rnd() < 0.55 ? '0,40,0' : '255,255,220'},${0.04 + rnd() * 0.06})`;
+      g.fillRect(rnd() * s, rnd() * s, 1 + rnd() * 2, 2 + rnd() * 4);
+    }
+  });
+  return (topTex[key] = LAM({ map: t }));
+}
+const crateTex = canvasTex(128, (g, s) => {
+  g.fillStyle = '#c98b4a'; g.fillRect(0, 0, s, s);
+  seed = 5;
+  for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(90,50,20,${0.08 + rnd() * 0.1})`; g.fillRect(0, rnd() * s, s, 1 + rnd() * 2); }
+  g.fillStyle = '#8f5a2a'; g.fillRect(0, 0, s, 14); g.fillRect(0, s - 14, s, 14); g.fillRect(0, 0, 14, s); g.fillRect(s - 14, 0, 14, s);
+  g.save(); g.translate(s / 2, s / 2); g.rotate(Math.PI / 4); g.fillRect(-7, -80, 14, 160); g.restore();
+  g.fillStyle = '#5a3a1a'; [[7, 7], [s - 7, 7], [7, s - 7], [s - 7, s - 7]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); });
+});
+crateTex.offset.set(0.5, 0.5);
+
+// rounded, beveled blocks: the chunky toy-diorama look
+const rgeoCache = {};
+function roundedGeo(w, h, d, r, b) {
+  const key = [w, h, d, r, b].join('_');
+  if (rgeoCache[key]) return rgeoCache[key];
+  const iw = w / 2 - b, id = d / 2 - b, rr = Math.max(0.005, Math.min(r, iw, id));
+  const sh = new THREE.Shape();
+  sh.moveTo(-iw + rr, -id); sh.lineTo(iw - rr, -id); sh.quadraticCurveTo(iw, -id, iw, -id + rr);
+  sh.lineTo(iw, id - rr); sh.quadraticCurveTo(iw, id, iw - rr, id);
+  sh.lineTo(-iw + rr, id); sh.quadraticCurveTo(-iw, id, -iw, id - rr);
+  sh.lineTo(-iw, -id + rr); sh.quadraticCurveTo(-iw, -id, -iw + rr, -id);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(0.001, h - 2 * b), bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 3, curveSegments: 4 });
+  g.rotateX(-Math.PI / 2);
+  g.translate(0, b, 0);
+  return (rgeoCache[key] = g);
+}
+function rmesh(geo, mats) { const m = new THREE.Mesh(geo, mats); m.castShadow = true; m.receiveShadow = true; return m; }
+function rbox(w, h, d, mat, x, y, z) {
+  const m = rmesh(roundedGeo(w, h, d, 0.08, 0.04), [mat, mat]);
+  m.geometry = m.geometry.clone(); m.geometry.translate(0, -h / 2, 0);
+  m.position.set(x, y, z); return m;
+}
+const glowTex = canvasTex(64, (g, s) => {
+  const gr = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, s, s);
+});
+const MAT = {
+  crate: LAM({ map: crateTex }),
+  white: LAM({ color: 0xffffff }),
+  black: PHONG({ color: 0x1a1008, shininess: 80 }),
+  bear: LAM({ color: 0xa0652f }),
+  bearLight: LAM({ color: 0xe8c08a }),
+  bearDark: LAM({ color: 0x6e3f1c }),
+  pack: LAM({ color: 0xd8432f }),
+  lamp: LAM({ color: 0xffe066, emissive: 0xffc400, emissiveIntensity: 0.6 }),
+  honey: PHONG({ color: 0xffb81c, emissive: 0x7a4a00, emissiveIntensity: 0.35, shininess: 90 }),
+  pot: PHONG({ color: 0xc8732e, shininess: 40 }),
+  cloth: LAM({ color: 0xf2f2f2 }),
+  star: PHONG({ color: 0xffd23a, emissive: 0xffa200, emissiveIntensity: 0.55, shininess: 120 }),
+  leaf: LAM({ color: 0x3fae3a }),
+  leafLight: LAM({ color: 0x6fdc52 }),
+  bark: LAM({ color: 0x7a4b26 }),
+  cone: LAM({ color: 0x7b4a22 }),
+  coneLight: LAM({ color: 0xa8692f }),
+  salmon: PHONG({ color: 0xf47a5a, shininess: 70 }),
+  salmonBelly: PHONG({ color: 0xf6d6c8, shininess: 70 }),
+  salmonBack: PHONG({ color: 0x8a5a6a, shininess: 70 }),
+  berry: PHONG({ color: 0x4a4fd0, shininess: 90 }),
+  berryLight: PHONG({ color: 0x7a5ae0, shininess: 90 }),
+  honeyDeep: PHONG({ color: 0xd88a00, emissive: 0x6a3a00, emissiveIntensity: 0.4 }),
+  pipeDark: LAM({ color: 0x0c3d16 }),
+  wood: LAM({ color: 0x9c6530 }),
+  woodLight: LAM({ color: 0xc98b4a }),
+  red: LAM({ color: 0xe8453c }),
+  blue: LAM({ color: 0x3c7ae8 }),
+  redTop: LAM({ color: 0xff6f63 }),
+  blueTop: LAM({ color: 0x6fa0ff }),
+  grey: LAM({ color: 0x8c8c8c }),
+  bee: LAM({ color: 0xffcf1f }),
+  wing: LAM({ color: 0xe8fbff, transparent: true, opacity: 0.75, side: THREE.DoubleSide }),
+  cloud: LAM({ color: 0xffffff }),
+  shadow: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false }),
+  spec: new THREE.MeshBasicMaterial({ color: 0xffffff })
+};
+Object.assign(MAT.honey, { roughness: 0.12 });
+Object.assign(MAT.honeyDeep, { roughness: 0.18 });
+Object.assign(MAT.star, { metalness: 0.55, roughness: 0.22, emissiveIntensity: 0.9 });
+Object.assign(MAT.pot, { roughness: 0.45 });
+Object.assign(MAT.black, { roughness: 0.12 });
+Object.assign(MAT.salmon, { roughness: 0.32 });
+Object.assign(MAT.salmonBelly, { roughness: 0.28, metalness: 0.15 });
+Object.assign(MAT.berry, { roughness: 0.18 });
+Object.assign(MAT.berryLight, { roughness: 0.18 });
+Object.assign(MAT.red, { roughness: 0.35 }); Object.assign(MAT.blue, { roughness: 0.35 });
+Object.assign(MAT.lamp, { emissiveIntensity: 2.2 });
+Object.assign(MAT.wing, { roughness: 0.1, opacity: 0.55 });
+Object.assign(MAT.crate, { roughness: 0.75 });
+MAT.bear.color = lin(0xa86a34);
+addRim(MAT.bear, 0xffd2a0, 2.4, 0.55);
+addRim(MAT.bearLight, 0xfff0d8, 2.4, 0.4);
+addRim(MAT.bearDark, 0xffc890, 2.4, 0.35);
+addRim(MAT.bee, 0xfff3b0, 2.2, 0.5);
+addRim(MAT.cloud, 0xffffff, 1.6, 0.6);
+addRim(MAT.leaf, 0xd8ff9a, 2.5, 0.35);
+MAT.water = new THREE.MeshStandardMaterial({ color: lin(0x2f9be8), roughness: 0.06, metalness: 0.0, transparent: true, opacity: 0.78, envMapIntensity: 1.4 });
+MAT.waterSide = new THREE.MeshStandardMaterial({ color: lin(0x2f9be8), roughness: 0.1, transparent: true, opacity: 0.55 });
+const sph = (r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => {
+  const o = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 20), m);
+  o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.castShadow = true; return o;
+};
+const box = (w, h, d, m, x = 0, y = 0, z = 0) => {
+  const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; return o;
+};
+const cyl = (rt, rb, h, m, x = 0, y = 0, z = 0, seg = 20) => {
+  const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
+  o.position.set(x, y, z); o.castShadow = true; return o;
+};
+
+// --- models ---
+function makeBear() {
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(0.2, MAT.bear, 0, 0.3, 0, 1, 1.1, 0.95));
+  body.add(sph(0.13, MAT.bearLight, 0, 0.29, 0.1, 1, 1.1, 0.6));
+  const head = new THREE.Group(); head.position.y = 0.6; body.add(head);
+  head.add(sph(0.19, MAT.bear, 0, 0, 0, 1, 0.95, 0.95));
+  head.add(sph(0.075, MAT.bear, -0.14, 0.15, -0.02)); head.add(sph(0.075, MAT.bear, 0.14, 0.15, -0.02));
+  head.add(sph(0.04, MAT.bearDark, -0.14, 0.15, 0.03)); head.add(sph(0.04, MAT.bearDark, 0.14, 0.15, 0.03));
+  head.add(sph(0.085, MAT.bearLight, 0, -0.05, 0.15, 1.1, 0.85, 0.8));
+  head.add(sph(0.035, MAT.black, 0, -0.01, 0.22, 1.2, 0.9, 1));
+  head.add(sph(0.026, MAT.black, -0.075, 0.05, 0.16)); head.add(sph(0.026, MAT.black, 0.075, 0.05, 0.16));
+  head.add(sph(0.008, MAT.spec, -0.068, 0.062, 0.182)); head.add(sph(0.008, MAT.spec, 0.082, 0.062, 0.182));
+  head.add(sph(0.01, MAT.spec, 0.012, 0.0, 0.245));
+  // headlamp, like a treasure tracker
+  const band = cyl(0.195, 0.195, 0.04, MAT.pack, 0, 0.08, 0); band.scale.z = 0.98; head.add(band);
+  const lamp = cyl(0.05, 0.05, 0.05, MAT.lamp, 0, 0.1, 0.18); lamp.rotation.x = Math.PI / 2; head.add(lamp);
+  // backpack
+  body.add(box(0.26, 0.28, 0.13, MAT.pack, 0, 0.36, -0.2));
+  body.add(box(0.27, 0.07, 0.14, MAT.lamp, 0, 0.47, -0.2));
+  const armL = sph(0.07, MAT.bear, -0.2, 0.33, 0.03, 1, 1.4, 1), armR = sph(0.07, MAT.bear, 0.2, 0.33, 0.03, 1, 1.4, 1);
+  body.add(armL, armR);
+  const legL = sph(0.08, MAT.bear, -0.09, 0.08, 0.02, 1, 0.9, 1.2), legR = sph(0.08, MAT.bear, 0.09, 0.08, 0.02, 1, 0.9, 1.2);
+  g.add(legL, legR);
+  g.userData = { body, head, armL, armR, legL, legR };
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 20), MAT.shadow);
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.01;
+  g.add(shadow);
+  return g;
+}
+function makePot() {
+  const g = new THREE.Group();
+  const pts = [[0, 0], [0.12, 0], [0.16, 0.06], [0.17, 0.14], [0.14, 0.22], [0.1, 0.25], [0.11, 0.28], [0, 0.28]].map(p => new THREE.Vector2(p[0], p[1]));
+  const pot = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), MAT.pot); pot.castShadow = true; g.add(pot);
+  g.add(cyl(0.13, 0.13, 0.04, MAT.cloth, 0, 0.28, 0));
+  g.add(sph(0.07, MAT.honey, 0.09, 0.22, 0.09, 0.6, 1, 0.6));
+  const label = cyl(0.172, 0.172, 0.07, MAT.honey, 0, 0.13, 0); g.add(label);
+  return g;
+}
+function makeSalmon() {
+  const g = new THREE.Group();
+  const fish = new THREE.Group(); g.add(fish);
+  fish.add(sph(0.1, MAT.salmon, 0, 0.12, 0, 0.75, 0.95, 2.1));
+  fish.add(sph(0.08, MAT.salmonBelly, 0, 0.09, 0.02, 0.6, 0.6, 1.8));
+  fish.add(sph(0.06, MAT.salmonBack, 0, 0.18, -0.02, 0.5, 0.45, 1.9));
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.14, 4), MAT.salmon);
+  tail.rotation.x = Math.PI / 2; tail.scale.set(0.3, 1, 1); tail.position.set(0, 0.12, -0.25); fish.add(tail);
+  const fin = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.09, 4), MAT.salmonBack);
+  fin.scale.set(0.3, 1, 1); fin.position.set(0, 0.24, 0); fish.add(fin);
+  fish.add(sph(0.022, MAT.white, -0.06, 0.15, 0.13)); fish.add(sph(0.022, MAT.white, 0.06, 0.15, 0.13));
+  fish.add(sph(0.012, MAT.black, -0.07, 0.15, 0.145)); fish.add(sph(0.012, MAT.black, 0.07, 0.15, 0.145));
+  g.userData.fish = fish;
+  return g;
+}
+function makeBerries() {
+  const g = new THREE.Group();
+  const spots = [[0, 0.07, 0], [0.08, 0.07, 0.03], [-0.07, 0.07, 0.04], [0.02, 0.07, -0.08], [0.01, 0.15, 0.01], [-0.05, 0.14, -0.04], [0.06, 0.14, -0.02]];
+  spots.forEach(([x, y, z], i) => g.add(sph(0.06, i % 3 ? MAT.berry : MAT.berryLight, x, y, z)));
+  for (let i = 0; i < 2; i++) {
+    const l = sph(0.07, MAT.leafLight, i ? 0.08 : -0.08, 0.2, 0, 1, 0.25, 0.55);
+    l.rotation.z = i ? -0.5 : 0.5; g.add(l);
+  }
+  g.add(box(0.015, 0.08, 0.015, MAT.wood, 0, 0.21, 0));
+  return g;
+}
+function makeHoneycomb() {
+  // the big golden honeycomb that ends each world
+  const g = new THREE.Group();
+  const comb = new THREE.Group(); g.add(comb);
+  const r = 0.12, hexes = [[0, 0]];
+  for (let i = 0; i < 6; i++) hexes.push([Math.cos(i * Math.PI / 3 + Math.PI / 6) * r * 1.75, Math.sin(i * Math.PI / 3 + Math.PI / 6) * r * 1.75]);
+  for (const [x, y] of hexes) {
+    const c = cyl(r, r, 0.14, MAT.star, x, y, 0, 6);
+    c.rotation.x = Math.PI / 2; c.rotation.y = Math.PI / 6; comb.add(c);
+    const cell = cyl(r * 0.72, r * 0.72, 0.15, MAT.honeyDeep, x, y, 0, 6);
+    cell.rotation.x = Math.PI / 2; cell.rotation.y = Math.PI / 6; comb.add(cell);
+  }
+  comb.add(sph(0.05, MAT.honey, 0.05, -0.33, 0.04, 0.8, 1.3, 0.8));
+  comb.add(sph(0.035, MAT.honey, -0.12, -0.28, 0.04, 0.8, 1.3, 0.8));
+  return g;
+}
+function makePinecone() {
+  const g = new THREE.Group();
+  for (let i = 0; i < 5; i++) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 - i * 0.018, 0.1, 8), i % 2 ? MAT.cone : MAT.coneLight);
+    c.position.y = 0.06 + i * 0.055; c.rotation.y = i * 0.4; c.castShadow = true;
+    g.add(c);
+  }
+  const tip = sph(0.03, MAT.cone, 0, 0.32, 0); g.add(tip);
+  g.rotation.x = Math.PI; g.position.y = 0;
+  const holder = new THREE.Group(); holder.add(g); g.position.y = 0.36;
+  return holder;
+}
+function makeConePile() {
+  const g = new THREE.Group();
+  [[-0.12, 0.05, 1.2], [0.1, -0.08, 2.4], [0.02, 0.13, 0.3]].forEach(([x, z, ry]) => {
+    const c = makePinecone(); c.scale.setScalar(0.75); c.rotation.set(Math.PI / 2, ry, 0); c.position.set(x, 0.1, z);
+    g.add(c);
+  });
+  const needles = sph(0.28, MAT.leaf, 0, 0, 0, 1, 0.12, 1); needles.castShadow = false; g.add(needles);
+  return g;
+}
+function makeBee() {
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(0.16, MAT.bee, 0, 0, 0, 1, 0.95, 1.25));
+  const s1 = cyl(0.158, 0.158, 0.05, MAT.black, 0, 0, -0.03); s1.rotation.x = Math.PI / 2; body.add(s1);
+  const s2 = cyl(0.13, 0.13, 0.05, MAT.black, 0, 0, -0.13); s2.rotation.x = Math.PI / 2; body.add(s2);
+  const st = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 8), MAT.black); st.rotation.x = -Math.PI / 2; st.position.z = -0.22; body.add(st);
+  body.add(sph(0.035, MAT.white, -0.07, 0.05, 0.16)); body.add(sph(0.035, MAT.white, 0.07, 0.05, 0.16));
+  body.add(sph(0.018, MAT.black, -0.07, 0.05, 0.19)); body.add(sph(0.018, MAT.black, 0.07, 0.05, 0.19));
+  const brow1 = box(0.07, 0.015, 0.02, MAT.black, -0.07, 0.1, 0.18); brow1.rotation.z = -0.4; body.add(brow1);
+  const brow2 = box(0.07, 0.015, 0.02, MAT.black, 0.07, 0.1, 0.18); brow2.rotation.z = 0.4; body.add(brow2);
+  const wingGeo = new THREE.CircleGeometry(0.13, 14);
+  const wl = new THREE.Mesh(wingGeo, MAT.wing), wr = new THREE.Mesh(wingGeo, MAT.wing);
+  wl.position.set(-0.1, 0.16, -0.02); wr.position.set(0.1, 0.16, -0.02);
+  wl.rotation.x = wr.rotation.x = -Math.PI / 2;
+  body.add(wl, wr);
+  g.userData = { body, wl, wr };
+  return g;
+}
+function makeStump() {
+  // hollow tree stump: walk in, pop out of its twin
+  const g = new THREE.Group();
+  g.add(cyl(0.36, 0.42, 0.42, MAT.bark, 0, 0.21, 0, 12));
+  g.add(cyl(0.37, 0.37, 0.03, MAT.woodLight, 0, 0.42, 0, 12));
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.26, 16), MAT.pipeDark);
+  hole.rotation.x = -Math.PI / 2; hole.position.y = 0.44; g.add(hole);
+  for (let i = 0; i < 4; i++) {
+    const root = box(0.1, 0.08, 0.22, MAT.bark, Math.cos(i * 1.57 + 0.4) * 0.4, 0.04, Math.sin(i * 1.57 + 0.4) * 0.4);
+    root.rotation.y = -(i * 1.57 + 0.4) + Math.PI / 2; g.add(root);
+  }
+  g.add(sph(0.06, MAT.leafLight, 0.2, 0.47, 0.18, 1, 0.4, 1));
+  return g;
+}
+function makeSwitch() {
+  const g = new THREE.Group();
+  g.add(cyl(0.36, 0.4, 0.08, MAT.grey, 0, 0.04, 0));
+  const btn = cyl(0.26, 0.28, 0.1, MAT.red, 0, 0.12, 0); g.add(btn);
+  g.userData.btn = btn;
+  return g;
+}
+function makeStairs(dx, dz) {
+  const g = new THREE.Group();
+  for (let i = 0; i < 4; i++) {
+    const s = rbox(0.88, (i + 1) * 0.25, 0.25, MAT.woodLight, 0, (i + 1) * 0.125, -0.375 + i * 0.25);
+    g.add(s);
+  }
+  g.rotation.y = Math.atan2(dx, dz);
+  return g;
+}
+function makeLadder(height) {
+  const g = new THREE.Group();
+  g.add(box(0.05, height, 0.05, MAT.wood, -0.22, height / 2, 0));
+  g.add(box(0.05, height, 0.05, MAT.wood, 0.22, height / 2, 0));
+  for (let y = 0.2; y < height; y += 0.25) g.add(box(0.44, 0.04, 0.04, MAT.woodLight, 0, y, 0));
+  return g;
+}
+function makeTree(theme) {
+  const g = new THREE.Group();
+  if (theme === 'beach') {
+    g.add(cyl(0.05, 0.07, 0.9, MAT.wood, 0, 0.45, 0));
+    for (let i = 0; i < 5; i++) {
+      const l = box(0.5, 0.03, 0.14, MAT.leaf, Math.cos(i * 1.26) * 0.22, 0.88, Math.sin(i * 1.26) * 0.22);
+      l.rotation.y = -i * 1.26; l.rotation.z = -0.35; g.add(l);
+    }
+  } else {
+    g.add(cyl(0.06, 0.08, 0.4, MAT.wood, 0, 0.2, 0));
+    g.add(sph(0.26, MAT.leaf, 0, 0.55, 0));
+    g.add(sph(0.18, MAT.leafLight, 0.1, 0.68, 0.08));
+  }
+  return g;
+}
+
+// --- sequel materials ---
+Object.assign(MAT, {
+  ice: new THREE.MeshStandardMaterial({ color: lin(0x7cc4f0), roughness: 0.03, metalness: 0.1, transparent: true, opacity: 0.9, envMapIntensity: 1.8, emissive: lin(0x0a3050), emissiveIntensity: 0.3 }),
+  iceSide: new THREE.MeshStandardMaterial({ color: lin(0x4f9ad8), roughness: 0.1, transparent: true, opacity: 0.85, envMapIntensity: 1.4 }),
+  mushCap: PHONG({ color: 0xe8382e, shininess: 60 }),
+  mushStem: LAM({ color: 0xfff1dc }),
+  gold: new THREE.MeshStandardMaterial({ color: lin(0xffc93a), metalness: 0.75, roughness: 0.22, emissive: lin(0x5a3600), emissiveIntensity: 0.5 }),
+  silver: new THREE.MeshStandardMaterial({ color: lin(0xdfe6f0), metalness: 0.8, roughness: 0.2, emissive: lin(0x202a3a), emissiveIntensity: 0.4 }),
+  stone: LAM({ color: 0x9a948a }),
+  gateWood: LAM({ color: 0x8a5428 }),
+  lily: PHONG({ color: 0x3fb34a, shininess: 40 }),
+  lilyLight: LAM({ color: 0x7ad866 }),
+  petal: LAM({ color: 0xffb3d1 }),
+  blossom: LAM({ color: 0xffb8d8 }),
+  blossomDeep: LAM({ color: 0xf28ab8 }),
+  leafOrange: LAM({ color: 0xe8792a }),
+  leafRed: LAM({ color: 0xc8402a }),
+  leafYellow: LAM({ color: 0xf2c23a }),
+  pine: LAM({ color: 0x2f7a4a }),
+  snow: LAM({ color: 0xfafcff }),
+  scarf: LAM({ color: 0xd8302f }),
+  scarfStripe: LAM({ color: 0xfff4e0 }),
+  bedroll: LAM({ color: 0x3f8a5a }),
+  pink: LAM({ color: 0xff9aa8 }),
+  glowMush: new THREE.MeshStandardMaterial({ color: lin(0x7fffd8), emissive: lin(0x3fe8c0), emissiveIntensity: 1.6, roughness: 0.5 }),
+  falls: null
+});
+addRim(MAT.pine, 0xd8ffd0, 2.5, 0.25);
+addRim(MAT.blossom, 0xffffff, 2.2, 0.35);
+addRim(MAT.snow, 0xd8ecff, 2.0, 0.3);
+const fallsTex = canvasTex(64, (g, s) => {
+  g.fillStyle = 'rgba(255,255,255,0.0)'; g.clearRect(0, 0, s, s);
+  seed = 9;
+  for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(255,255,255,${0.25 + rnd() * 0.5})`; g.fillRect(rnd() * s, rnd() * s, 1 + rnd() * 2, 6 + rnd() * 16); }
+});
+fallsTex.repeat.set(1, 2);
+MAT.falls = new THREE.MeshStandardMaterial({ color: lin(0x9fe0ff), map: fallsTex, transparent: true, opacity: 0.85, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false, emissive: lin(0x2a6a8a), emissiveIntensity: 0.4 });
+fallsTex.encoding = THREE.sRGBEncoding;
+const crackTex = canvasTex(128, (g, s) => {
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, s, s);
+  g.strokeStyle = 'rgba(60,40,30,0.55)'; g.lineWidth = 3;
+  seed = 21;
+  for (let i = 0; i < 7; i++) { g.beginPath(); let x = s / 2, y = s / 2; g.moveTo(x, y); for (let j = 0; j < 5; j++) { x += (rnd() - 0.5) * 50; y += (rnd() - 0.5) * 50; g.lineTo(x, y); } g.stroke(); }
+});
+crackTex.encoding = THREE.sRGBEncoding;
+// side material with baked ambient occlusion (darker toward the bottom of every column)
+const aoSideCache = {};
+function aoSideMat(theme) {
+  if (aoSideCache[theme]) return aoSideCache[theme];
+  const m = sideMat(theme).clone();
+  m.vertexColors = true;
+  return (aoSideCache[theme] = m);
+}
+const aoGeoCache = {};
+function aoColumnGeo(h) {
+  if (aoGeoCache[h]) return aoGeoCache[h];
+  const g = roundedGeo(0.96, h + 0.9, 0.96, 0.12, 0.05).clone();
+  const pos = g.attributes.position, col = new Float32Array(pos.count * 3), top = h + 0.9;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i), f = Math.pow(Math.min(1, Math.max(0, y / top)), 0.55), v = 0.42 + 0.58 * f;
+    col[i * 3] = v; col[i * 3 + 1] = v; col[i * 3 + 2] = Math.min(1, v * 1.04);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return (aoGeoCache[h] = g);
+}
+
+function makeMushroom() {
+  const g = new THREE.Group();
+  const stem = cyl(0.13, 0.17, 0.28, MAT.mushStem, 0, 0.14, 0, 16); g.add(stem);
+  const cap = new THREE.Group(); cap.position.y = 0.28; g.add(cap);
+  const c = new THREE.Mesh(new THREE.SphereGeometry(0.4, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), MAT.mushCap);
+  c.scale.y = 0.55; c.castShadow = true; cap.add(c);
+  for (let i = 0; i < 6; i++) {
+    const a = i * 1.05, r = i ? 0.24 : 0;
+    const sp = sph(0.06, MAT.mushStem, Math.cos(a) * r, i ? 0.15 : 0.22, Math.sin(a) * r, 1, 0.35, 1);
+    cap.add(sp);
+  }
+  g.userData.cap = cap;
+  return g;
+}
+function makeKey() {
+  const g = new THREE.Group(), k = new THREE.Group(); g.add(k);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.03, 10, 24), MAT.gold); ring.position.y = 0.36; ring.castShadow = true; k.add(ring);
+  k.add(cyl(0.025, 0.025, 0.28, MAT.gold, 0, 0.16, 0, 10));
+  k.add(box(0.07, 0.035, 0.035, MAT.gold, 0.05, 0.06, 0)); k.add(box(0.05, 0.035, 0.035, MAT.gold, 0.04, 0.12, 0));
+  k.add(sph(0.035, MAT.honey, 0, 0.36, 0));
+  g.userData.k = k;
+  return g;
+}
+function makeGate() {
+  const g = new THREE.Group();
+  g.add(rbox(0.12, 0.9, 0.12, MAT.gateWood, -0.42, 0.45, 0), rbox(0.12, 0.9, 0.12, MAT.gateWood, 0.42, 0.45, 0));
+  const door = new THREE.Group(); g.add(door);
+  for (let i = 0; i < 4; i++) door.add(rbox(0.16, 0.7, 0.06, MAT.woodLight, -0.27 + i * 0.18, 0.4, 0));
+  door.add(box(0.74, 0.08, 0.08, MAT.gateWood, 0, 0.62, 0.02), box(0.74, 0.08, 0.08, MAT.gateWood, 0, 0.2, 0.02));
+  const lock = new THREE.Group(); lock.position.set(0, 0.42, 0.08); door.add(lock);
+  lock.add(rbox(0.16, 0.14, 0.06, MAT.gold, 0, 0, 0));
+  const sh = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 8, 16, Math.PI), MAT.silver); sh.position.y = 0.07; lock.add(sh);
+  g.userData.door = door;
+  return g;
+}
+function makePlate(kind) {
+  const g = new THREE.Group();
+  g.add(rbox(0.8, 0.08, 0.8, MAT.stone, 0, 0.04, 0));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 8, 6), kind === '=' ? MAT.gold.clone() : MAT.silver.clone());
+  ring.rotation.x = Math.PI / 2; ring.position.y = 0.09; g.add(ring);
+  g.userData.ring = ring;
+  return g;
+}
+function makeBridgeBlock(kind, h) {
+  const g = new THREE.Group();
+  const mat = kind === 'Y' ? MAT.gold : MAT.silver;
+  const m = rmesh(roundedGeo(0.94, h + 1, 0.94, 0.14, 0.06), [mat, mat]); m.position.y = -1; g.add(m);
+  // honeycomb pattern on top
+  for (let i = 0; i < 3; i++) {
+    const c = cyl(0.12, 0.12, 0.03, MAT.honeyDeep, -0.22 + i * 0.22, h + 0.005, i % 2 ? 0.12 : -0.08, 6);
+    g.add(c);
+  }
+  return g;
+}
+function makeAcorn() {
+  const g = new THREE.Group();
+  g.add(sph(0.13, MAT.gold, 0, 0.15, 0, 1, 1.25, 1));
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT.gateWood);
+  cap.position.y = 0.25; cap.scale.y = 0.6; cap.castShadow = true; g.add(cap);
+  g.add(cyl(0.02, 0.02, 0.08, MAT.gateWood, 0, 0.36, 0, 8));
+  g.add(sph(0.025, MAT.spec, 0.05, 0.2, 0.1));
+  return g;
+}
+function makeLilyPad() {
+  const g = new THREE.Group();
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.05, 28, 1, false, 0.35, Math.PI * 2 - 0.7), MAT.lily);
+  pad.castShadow = true; pad.receiveShadow = true; g.add(pad);
+  g.add(sph(0.06, MAT.petal, 0.18, 0.06, 0.1, 1, 0.6, 1));
+  g.add(sph(0.035, MAT.lamp, 0.18, 0.1, 0.1));
+  return g;
+}
+function makeCrumbleSlab(theme, h) {
+  const g = new THREE.Group();
+  const tint = { petals: 0xffd8e8, leaves: 0xe8a050, snow: 0xf4f8ff }[THEMES[theme].crumble] || 0xd8c8a8;
+  const top = LAM({ color: tint, map: crackTex });
+  const m = rmesh(roundedGeo(0.92, 0.3, 0.92, 0.14, 0.06), [top, LAM({ color: THEMES[theme].sideDark })]);
+  m.position.y = h - 0.3; g.add(m);
+  // little heap of petals / leaves / snow on top
+  seed = h * 7 + 3;
+  const decoMat = { petals: MAT.petal, leaves: MAT.leafOrange, snow: MAT.snow }[THEMES[theme].crumble] || MAT.leafOrange;
+  for (let i = 0; i < 6; i++) {
+    const d = sph(0.08, i % 2 && THEMES[theme].crumble === 'leaves' ? MAT.leafRed : decoMat, (rnd() - 0.5) * 0.6, h + 0.02, (rnd() - 0.5) * 0.6, 1, 0.3, 0.7);
+    d.rotation.y = rnd() * 3; g.add(d);
+  }
+  return g;
+}
+function makeTreeV2(kind) {
+  const g = new THREE.Group();
+  if (kind === 'pine') {
+    g.add(cyl(0.06, 0.08, 0.35, MAT.bark, 0, 0.17, 0, 10));
+    for (let i = 0; i < 3; i++) {
+      const c = new THREE.Mesh(new THREE.ConeGeometry(0.42 - i * 0.11, 0.42, 10), MAT.pine);
+      c.position.y = 0.42 + i * 0.27; c.castShadow = true; g.add(c);
+      const s = new THREE.Mesh(new THREE.ConeGeometry(0.3 - i * 0.08, 0.16, 10), MAT.snow);
+      s.position.y = 0.58 + i * 0.27; g.add(s);
+    }
+    return g;
+  }
+  g.add(cyl(0.06, 0.09, 0.5, MAT.bark, 0, 0.25, 0, 10));
+  const pal = kind === 'blossom' ? [MAT.blossom, MAT.blossomDeep, MAT.blossom] : kind === 'autumn' ? [MAT.leafOrange, MAT.leafRed, MAT.leafYellow] : [MAT.leaf, MAT.leafLight, MAT.leaf];
+  [[0, 0.72, 0, 0.32], [0.18, 0.62, 0.1, 0.22], [-0.17, 0.64, -0.06, 0.24], [0.04, 0.9, -0.05, 0.2]].forEach(([x, y, z, r], i) => g.add(sph(r, pal[i % 3], x, y, z)));
+  return g;
+}
+function makeIsland(theme, r) {
+  const g = new THREE.Group();
+  const th = THEMES[theme];
+  const rock = new THREE.Mesh(new THREE.ConeGeometry(r, r * 2.2, 7), LAM({ color: th.sideDark }));
+  rock.rotation.x = Math.PI; rock.position.y = -r * 1.1; g.add(rock);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.02, r, 0.25, 7), topMat(theme, 0)); top.position.y = 0.12; g.add(top);
+  const t = makeTreeV2(th.tree); t.scale.setScalar(r * 0.9); t.position.y = 0.24; g.add(t);
+  return g;
+}
+
+// --- Bear, now with a scarf for the cold, a bedroll, rosy cheeks, paw pads and blinking eyes ---
+function makeBearV2(theme) {
+  const th = THEMES[theme];
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(0.2, MAT.bear, 0, 0.3, 0, 1, 1.1, 0.95));
+  body.add(sph(0.13, MAT.bearLight, 0, 0.29, 0.1, 1, 1.1, 0.6));
+  body.add(sph(0.05, MAT.bear, 0, 0.18, -0.19));
+  const head = new THREE.Group(); head.position.y = 0.6; body.add(head);
+  head.add(sph(0.19, MAT.bear, 0, 0, 0, 1, 0.95, 0.95));
+  head.add(sph(0.075, MAT.bear, -0.14, 0.15, -0.02)); head.add(sph(0.075, MAT.bear, 0.14, 0.15, -0.02));
+  head.add(sph(0.042, MAT.pink, -0.14, 0.15, 0.03, 1, 1, 0.5)); head.add(sph(0.042, MAT.pink, 0.14, 0.15, 0.03, 1, 1, 0.5));
+  head.add(sph(0.088, MAT.bearLight, 0, -0.05, 0.15, 1.12, 0.85, 0.8));
+  head.add(sph(0.036, MAT.black, 0, -0.005, 0.225, 1.25, 0.9, 1));
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.006, 6, 12, Math.PI), MAT.black);
+  mouth.position.set(0, -0.075, 0.215); mouth.rotation.z = Math.PI; head.add(mouth);
+  head.add(sph(0.035, MAT.pink, -0.11, -0.04, 0.14, 1, 0.6, 0.4)); head.add(sph(0.035, MAT.pink, 0.11, -0.04, 0.14, 1, 0.6, 0.4));
+  const eyes = new THREE.Group(); head.add(eyes);
+  for (const s of [-1, 1]) {
+    const e = new THREE.Group(); e.position.set(0.075 * s, 0.05, 0.16); eyes.add(e);
+    e.add(sph(0.028, MAT.black, 0, 0, 0, 1, 1.15, 1));
+    e.add(sph(0.009, MAT.spec, 0.008, 0.012, 0.024));
+    const brow = box(0.05, 0.012, 0.012, MAT.bearDark, 0, 0.05, 0.005); brow.rotation.z = -0.25 * s; e.add(brow);
+  }
+  const band = cyl(0.195, 0.195, 0.04, MAT.pack, 0, 0.08, 0); band.scale.z = 0.98; head.add(band);
+  const lamp = cyl(0.05, 0.05, 0.05, MAT.lamp, 0, 0.1, 0.18); lamp.rotation.x = Math.PI / 2; head.add(lamp);
+  // backpack + bedroll + honey jar
+  body.add(rbox(0.27, 0.28, 0.14, MAT.pack, 0, 0.36, -0.21));
+  const roll = cyl(0.06, 0.06, 0.32, MAT.bedroll, 0, 0.53, -0.21, 14); roll.rotation.z = Math.PI / 2; body.add(roll);
+  const jar = cyl(0.045, 0.045, 0.08, MAT.honey, 0.16, 0.3, -0.2, 12); body.add(jar);
+  if (th.name === 'autumn' || th.name === 'winter' || th.name === 'night') {
+    const sc = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.045, 10, 24), MAT.scarf); sc.rotation.x = Math.PI / 2; sc.position.y = 0.47; sc.castShadow = true; body.add(sc);
+    const tail = rbox(0.08, 0.2, 0.04, MAT.scarf, 0.08, 0.36, 0.14); tail.rotation.z = 0.25; body.add(tail);
+    body.add(box(0.082, 0.025, 0.045, MAT.scarfStripe, 0.085, 0.32, 0.14));
+  }
+  const armL = sph(0.07, MAT.bear, -0.2, 0.33, 0.03, 1, 1.4, 1), armR = sph(0.07, MAT.bear, 0.2, 0.33, 0.03, 1, 1.4, 1);
+  body.add(armL, armR);
+  const legL = new THREE.Group(), legR = new THREE.Group();
+  for (const [lg, s] of [[legL, -1], [legR, 1]]) {
+    lg.position.set(0.09 * s, 0.08, 0.02);
+    lg.add(sph(0.08, MAT.bear, 0, 0, 0, 1, 0.9, 1.2));
+    lg.add(sph(0.04, MAT.bearLight, 0, -0.01, 0.085, 1, 1, 0.4));
+    g.add(lg);
+  }
+  g.userData = { body, head, eyes, armL, armR, legL, legR };
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 20), MAT.shadow);
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.01;
+  g.add(shadow);
+  if (th.night) {
+    const spot = new THREE.SpotLight(lin(0xfff0c0), 4, 8, 0.55, 0.6, 1.5);
+    spot.position.set(0, 0.72, 0.2);
+    const tgt = new THREE.Object3D(); tgt.position.set(0, 0, 2.5); g.add(tgt);
+    spot.target = tgt; head.add(spot);
+    g.userData.spot = spot;
+  }
+  return g;
+}
+
+// =====================================================================
+// GAME
+// =====================================================================
+let LV = null, ST = null, undoStack = [];
+let world = null, bearObj = null, cells = {}, crateMeshes = [], toggleMeshes = [], switchMeshes = [], potMeshes = [], starMesh = null, bees = [], clouds = [];
+let anim = [], animCur = null, holding = null, hearts = 3, inv = 0, levelIndex = 0, playing = false, won = false, facing = [0, 1];
+let flying = [], particles = [], winTimer = 0, waterMeshes = [], pollen = null, combLight = null;
+const cam = { yaw: 0, yawT: 0, pitch: 0.72, pitchT: 0.72, dist: 12, distT: 12, target: new THREE.Vector3() };
+
+function loadProgress() { try { return JSON.parse(localStorage.getItem('captain-bear-2') || '{}'); } catch (e) { return {}; } }
+function saveProgress(p) { try { localStorage.setItem('captain-bear-2', JSON.stringify(p)); } catch (e) { /* storage blocked */ } }
+let progress = loadProgress();
+
+const posOf = (x, z, y) => new THREE.Vector3(x, y, z);
+function standY(x, z, s = ST) {
+  const h = heightAt(LV, s, x, z), k = LV.kind[z][x];
+  return h + (k === 'pipe' ? 0.44 : 0) + (k === '!' ? 0.12 : 0) + (k === 'm' ? 0.36 : 0) + (k === '=' || k === '+' ? 0.08 : 0) + (LV.stairs[K(x, z)] || 0) * 0.5;
+}
+let crumbleMeshes = {}, gateMeshes = {}, keyMeshes = [], plateMeshes = [], bridgeMeshes = [], mushMeshes = {}, fallMeshes = [], weather = null, islands = [];
+let steps = 0, introT = 0;
+const introFrom = new THREE.Vector3();
+
+function applyTheme(th) {
+  skyDome.material = SkyShader(th.skyTop, th.horizon, th.below, th.night ? 0.3 : 1.2);
+  scene.environment = envFor(th);
+  scene.fog = new THREE.Fog(lin(th.horizon), 35, 120);
+  hemi.color = lin(th.night ? 0x6f86c8 : 0xeaf6ff); hemi.groundColor = lin(th.ground); hemi.intensity = th.hemiI;
+  sun.color = lin(th.sun); sun.intensity = th.sunI;
+  MAT.water.color = lin(th.water); MAT.waterSide.color = lin(th.water);
+  MAT.lamp.emissiveIntensity = th.night ? 4 : 2.2;
+  if (finalPass) { finalPass.uniforms.uTint.value.set(...th.tint); finalPass.uniforms.uSat.value = th.sat; }
+}
+
+// falling petals / leaves / snow, drifting pollen, blinking fireflies
+function makeWeather(kind) {
+  const conf = {
+    petals: { n: 140, color: 0xffb8d8, size: 0.11, fall: 0.35, sway: 0.6 },
+    leaves: { n: 110, color: 0xf08a30, size: 0.13, fall: 0.45, sway: 0.8 },
+    snow: { n: 260, color: 0xffffff, size: 0.09, fall: 0.6, sway: 0.3 },
+    pollen: { n: 90, color: 0xfff2c0, size: 0.09, fall: -0.08, sway: 0.15 },
+    fireflies: { n: 70, color: 0xd8ff7a, size: 0.16, fall: 0, sway: 0.4 }
+  }[kind];
+  const pos = new Float32Array(conf.n * 3), cx = (LV.w - 1) / 2, cz = (LV.d - 1) / 2;
+  seed = 77;
+  for (let j = 0; j < conf.n; j++) { pos[j * 3] = cx + (rnd() - 0.5) * (LV.w + 10); pos[j * 3 + 1] = rnd() * 9 - 1; pos[j * 3 + 2] = cz + (rnd() - 0.5) * (LV.d + 10); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mul = kind === 'fireflies' ? 3 : kind === 'pollen' ? 1.6 : 1.1;
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ map: glowTex, color: lin(conf.color).multiplyScalar(mul), size: conf.size, transparent: true, depthWrite: false, blending: kind === 'fireflies' || kind === 'pollen' ? THREE.AdditiveBlending : THREE.NormalBlending, opacity: kind === 'snow' ? 0.95 : 1 }));
+  pts.userData = { conf, kind, cx, cz };
+  return pts;
+}
+function tickWeather(dt) {
+  if (!weather) return;
+  const { conf, kind, cx, cz } = weather.userData, a = weather.geometry.attributes.position;
+  for (let j = 0; j < a.count; j++) {
+    let x = a.array[j * 3], y = a.array[j * 3 + 1], z = a.array[j * 3 + 2];
+    if (kind === 'fireflies') {
+      x += Math.sin(T * 0.7 + j * 1.3) * dt * 0.4; z += Math.cos(T * 0.6 + j * 2.1) * dt * 0.4; y = 0.8 + ((j * 37) % 30) / 10 + Math.sin(T + j) * 0.3;
+    } else {
+      y -= conf.fall * dt * (0.7 + (j % 5) * 0.12);
+      x += Math.sin(T * 0.9 + j) * conf.sway * dt; z += Math.cos(T * 0.7 + j * 0.5) * conf.sway * 0.5 * dt;
+      if (y < -1.5) y = 8; if (y > 8) y = -1;
+    }
+    a.array[j * 3] = x; a.array[j * 3 + 1] = y; a.array[j * 3 + 2] = z;
+  }
+  a.needsUpdate = true;
+  if (kind === 'fireflies') weather.material.opacity = 0.65 + Math.sin(T * 3) * 0.35;
+}
+
+function buildLevel(i) {
+  levelIndex = i;
+  clearTimeout(winTimer);
+  if (world) scene.remove(world);
+  world = new THREE.Group(); scene.add(world);
+  LV = parseLevel(LEVELS[i]);
+  ST = initState(LV);
+  undoStack = []; anim = []; animCur = null; holding = null; hearts = 3; inv = 0; won = false; flying = []; particles = [];
+  cells = {}; crateMeshes = []; toggleMeshes = []; switchMeshes = []; potMeshes = []; bees = []; clouds = [];
+  crumbleMeshes = {}; gateMeshes = {}; keyMeshes = []; plateMeshes = []; bridgeMeshes = []; mushMeshes = {}; fallMeshes = []; islands = [];
+  steps = 0; combLight = null;
+  const theme = LV.def.theme, th = THEMES[theme];
+  applyTheme(th);
+  const sideM = aoSideMat(theme), plainSide = sideMat(theme), lipSide = LAM({ color: th.lip });
+  const grassSpots = [], decorSpots = [], waterCells = [];
+  const waterCell = (x, z) => {
+    const dirt = rmesh(roundedGeo(0.96, 1, 0.96, 0.12, 0.05), [plainSide, plainSide]);
+    dirt.position.set(x, -1, z); world.add(dirt);
+    const water = new THREE.Mesh(new THREE.BoxGeometry(1, 0.44, 1), MAT.waterSide);
+    water.position.set(x, 0.22, z); water.userData.cell = [x, z]; world.add(water);
+    waterCells.push([x, z]);
+    return water;
+  };
+
+  // terrain
+  for (let z = 0; z < LV.d; z++) for (let x = 0; x < LV.w; x++) {
+    const h = LV.base[z][x], k = LV.kind[z][x], key = K(x, z);
+    if (k === 'A' || k === 'B') {
+      waterCell(x, z);
+      const g = new THREE.Group();
+      const m = rmesh(roundedGeo(0.96, h + 1, 0.96, 0.14, 0.06), [k === 'A' ? MAT.redTop : MAT.blueTop, k === 'A' ? MAT.red : MAT.blue]);
+      m.position.y = -1;
+      g.add(m); g.position.set(x, 0, z);
+      g.userData = { cell: [x, z], kind: k, h };
+      world.add(g); toggleMeshes.push(g);
+      cells[key] = g;
+      continue;
+    }
+    if (k === 'Y' || k === 'W') {
+      waterCell(x, z);
+      const g = makeBridgeBlock(k, h); g.position.set(x, 0, z);
+      g.userData = { cell: [x, z], kind: k, h };
+      world.add(g); bridgeMeshes.push(g); cells[key] = g;
+      continue;
+    }
+    if (h === 0) { cells[key] = waterCell(x, z); continue; }
+    if (k === 'x') {
+      cells[key] = waterCell(x, z);
+      const g = th.crumble === 'lily' ? makeLilyPad() : makeCrumbleSlab(theme, h);
+      if (th.crumble === 'lily') g.position.set(x, 0.5, z); else g.position.set(x, 0, z);
+      g.userData.cell = [x, z];
+      world.add(g); crumbleMeshes[key] = g;
+      continue;
+    }
+    const col = rmesh(aoColumnGeo(h), [sideM, sideM]);
+    col.position.set(x, -1, z);
+    col.userData.cell = [x, z];
+    world.add(col); cells[key] = col;
+    if (k === 'ice') {
+      const cap = rmesh(roundedGeo(1.0, 0.24, 1.0, 0.16, 0.08), [MAT.ice, MAT.iceSide]);
+      cap.position.set(x, h - 0.24, z); cap.userData.cell = [x, z]; world.add(cap);
+      continue;
+    }
+    const cap = rmesh(roundedGeo(1.0, 0.22, 1.0, 0.18, 0.08), [topMat(theme, (x + z) % 2), lipSide]);
+    cap.position.set(x, h - 0.22, z);
+    cap.userData.cell = [x, z];
+    world.add(cap);
+    if (k !== 'pipe' && k !== '!' && k !== '=' && k !== '+' && !LV.stairs[key]) grassSpots.push([x, h, z]);
+    if (k === '' && !LV.stairs[key] && !LV.crates.some(c => c[0] === x && c[1] === z) && !(x === LV.start[0] && z === LV.start[1])) decorSpots.push([x, h, z]);
+  }
+  // swaying grass blades (one instanced mesh for the whole world)
+  if (th.grassPer > 0) {
+    const per = th.grassPer;
+    const geo = new THREE.ConeGeometry(0.022, 0.16, 3);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+    mat.onBeforeCompile = sh => {
+      sh.uniforms.uTime = timeU;
+      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+        float hh = max(position.y + 0.08, 0.0);
+        #ifdef USE_INSTANCING
+        float ph = instanceMatrix[3].x * 2.1 + instanceMatrix[3].z * 1.7;
+        #else
+        float ph = 0.0;
+        #endif
+        transformed.x += sin(uTime * 2.2 + ph) * hh * 0.35;
+        transformed.z += cos(uTime * 1.7 + ph) * hh * 0.2;`);
+    };
+    mat.customProgramCacheKey = () => 'grass';
+    const inst = new THREE.InstancedMesh(geo, mat, Math.max(1, grassSpots.length * per));
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), base = lin(th.grass);
+    seed = 100 + i;
+    let c = 0;
+    for (const [gx, gh, gz] of grassSpots) for (let j = 0; j < per; j++) {
+      let ox = (rnd() - 0.5) * 0.86, oz = (rnd() - 0.5) * 0.86;
+      if (Math.abs(ox) < 0.2 && Math.abs(oz) < 0.2) ox += 0.3;
+      e.set((rnd() - 0.5) * 0.4, rnd() * 3, (rnd() - 0.5) * 0.4); q.setFromEuler(e);
+      const sc = 0.7 + rnd() * 0.8;
+      m4.compose(new THREE.Vector3(gx + ox, gh + 0.06 * sc, gz + oz), q, new THREE.Vector3(sc, sc, sc));
+      inst.setMatrixAt(c, m4);
+      inst.setColorAt(c, base.clone().multiplyScalar(0.7 + rnd() * 0.6));
+      c++;
+    }
+    inst.count = c; inst.castShadow = false; inst.receiveShadow = true;
+    world.add(inst);
+  }
+  // flowers / mushrooms / glowing mushrooms / snowballs dotted around (never on puzzle tiles)
+  {
+    seed = 300 + i;
+    const picks = decorSpots.filter(() => rnd() < 0.35);
+    const mk = th.decor;
+    const stemGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.14, 5), headGeo = new THREE.SphereGeometry(0.045, 10, 8);
+    const capGeo = new THREE.SphereGeometry(0.07, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), ballGeo = new THREE.SphereGeometry(0.08, 12, 10);
+    const cols = mk === 'flowers' ? [0xff5d8f, 0xffd23a, 0xffffff, 0x9a7aff] : mk === 'mushrooms' ? [0xd8402a, 0xb86a2a] : [0xffffff];
+    for (const [x, h, z] of picks) {
+      const n = 1 + Math.floor(rnd() * 3);
+      for (let j = 0; j < n; j++) {
+        const ox = x + (rnd() - 0.5) * 0.7, oz = z + (rnd() - 0.5) * 0.7;
+        if (Math.abs(ox - x) < 0.18 && Math.abs(oz - z) < 0.18) continue;
+        if (mk === 'flowers') {
+          const s = new THREE.Mesh(stemGeo, MAT.leaf); s.position.set(ox, h + 0.07, oz); world.add(s);
+          const f = new THREE.Mesh(headGeo, LAM({ color: cols[Math.floor(rnd() * cols.length)] })); f.position.set(ox, h + 0.15, oz); f.scale.y = 0.6; world.add(f);
+        } else if (mk === 'mushrooms' || mk === 'glowshrooms') {
+          const s = new THREE.Mesh(stemGeo, MAT.mushStem); s.position.set(ox, h + 0.05, oz); s.scale.y = 0.7; world.add(s);
+          const c = new THREE.Mesh(capGeo, mk === 'glowshrooms' ? MAT.glowMush : LAM({ color: cols[Math.floor(rnd() * cols.length)] })); c.position.set(ox, h + 0.1, oz); world.add(c);
+        } else {
+          const b = new THREE.Mesh(ballGeo, MAT.snow); b.position.set(ox, h + 0.05, oz); b.scale.y = 0.7; world.add(b);
+        }
+      }
+    }
+  }
+  // living water surface + waterfalls spilling off the edge of the world
+  waterMeshes = [];
+  for (const [x, z] of waterCells) {
+    const geo = new THREE.PlaneGeometry(1, 1, 5, 5);
+    geo.rotateX(-Math.PI / 2);
+    const wm = new THREE.Mesh(geo, theme === 'winter' ? MAT.ice : MAT.water);
+    wm.position.set(x, 0.46, z);
+    wm.receiveShadow = true;
+    world.add(wm); waterMeshes.push(wm);
+    if (theme === 'winter') continue;
+    for (const [dx, dz] of DIRS) {
+      if (inb(LV, x + dx, z + dz)) continue;
+      const f = new THREE.Mesh(new THREE.PlaneGeometry(1, 4.2), MAT.falls);
+      f.position.set(x + dx * 0.52, 0.46 - 2.1, z + dz * 0.52);
+      f.rotation.y = Math.atan2(dx, dz);
+      world.add(f); fallMeshes.push(f);
+    }
+  }
+  // underside rock to make it feel like a floating diorama, with hanging roots
+  {
+    const R = Math.max(LV.w, LV.d) * 0.55;
+    const geo = new THREE.ConeGeometry(1, 1, 14, 6);
+    const pos = geo.attributes.position;
+    seed = 700 + i;
+    for (let j = 0; j < pos.count; j++) {
+      const y = pos.getY(j);
+      if (y < 0.49) { const n = 0.82 + rnd() * 0.36; pos.setX(j, pos.getX(j) * n); pos.setZ(j, pos.getZ(j) * n); pos.setY(j, y + (rnd() - 0.5) * 0.06); }
+    }
+    geo.computeVertexNormals();
+    const under = new THREE.Mesh(geo, LAM({ color: th.sideDark }));
+    under.rotation.x = Math.PI;
+    under.scale.set(LV.w * 0.5, 5.5, LV.d * 0.5);
+    under.position.set((LV.w - 1) / 2, -3.85, (LV.d - 1) / 2);
+    world.add(under);
+    seed = 500 + i;
+    for (let n = 0; n < 14; n++) {
+      const a = rnd() * Math.PI * 2, r = R * (0.3 + rnd() * 0.6), len = 0.6 + rnd() * 1.6;
+      const root = cyl(0.03, 0.01, len, theme === 'winter' ? MAT.ice : MAT.bark, (LV.w - 1) / 2 + Math.cos(a) * r, -1 - len / 2 - rnd() * 1.5, (LV.d - 1) / 2 + Math.sin(a) * r, 5);
+      world.add(root);
+    }
+  }
+  // links
+  for (const [x1, z1, x2, z2, type] of LV.def.links || []) {
+    const h1 = LV.base[z1][x1], h2 = LV.base[z2][x2];
+    const [lx, lz, hx, hz, lh, hh] = h1 < h2 ? [x1, z1, x2, z2, h1, h2] : [x2, z2, x1, z1, h2, h1];
+    const dx = hx - lx, dz = hz - lz;
+    if (type === 'stairs') {
+      const s = makeStairs(dx, dz);
+      s.position.set(lx, lh, lz);
+      s.scale.y = (hh - lh);
+      world.add(s);
+    } else {
+      const l = makeLadder(hh - lh + 0.1);
+      l.position.set(hx - dx * 0.53, lh, hz - dz * 0.53);
+      l.rotation.y = Math.atan2(dx, dz);
+      world.add(l);
+    }
+  }
+  // objects
+  for (let z = 0; z < LV.d; z++) for (let x = 0; x < LV.w; x++) {
+    const k = LV.kind[z][x], h = LV.base[z][x], key = K(x, z);
+    if (k === 'h') {
+      const t = LV.treats[LV.potIndex[key]];
+      const p = t === 'f' ? makeSalmon() : t === 'r' ? makeBerries() : t === 'a' ? makeAcorn() : makePot();
+      p.scale.setScalar(t === 'f' ? 1.9 : t === 'r' ? 1.8 : t === 'a' ? 1.3 : 1.15);
+      p.position.set(x, h + 0.08, z); p.userData.idx = LV.potIndex[key]; p.userData.baseY = h + 0.08; p.userData.s0 = p.scale.x;
+      world.add(p); potMeshes.push(p);
+    }
+    if (k === 'G') {
+      starMesh = makeHoneycomb(); starMesh.scale.setScalar(1.3);
+      combLight = new THREE.PointLight(lin(0xffb030), th.night ? 4 : 2.5, 4, 2); combLight.position.set(x, h + 0.8, z); world.add(combLight);
+      starMesh.position.set(x, h + 0.6, z); world.add(starMesh);
+    }
+    if (k === 't') { const s = makeConePile(); s.position.set(x, h + 0.03, z); world.add(s); }
+    if (k === '!') { const s = makeSwitch(); s.position.set(x, h, z); world.add(s); switchMeshes.push(s); }
+    if (k === 'pipe') { const p = makeStump(); p.position.set(x, h, z); world.add(p); }
+    if (k === 'm') { const m = makeMushroom(); m.position.set(x, h, z); world.add(m); mushMeshes[key] = m; }
+    if (k === 'k') { const m = makeKey(); m.position.set(x, h + 0.1, z); m.userData.idx = LV.keyIndex[key]; m.userData.baseY = h + 0.1; world.add(m); keyMeshes.push(m); }
+    if (k === 'L') {
+      const m = makeGate(); m.position.set(x, h, z);
+      const horiz = inb(LV, x - 1, z) && LV.base[z][x - 1] > 0 || inb(LV, x + 1, z) && LV.base[z][x + 1] > 0;
+      m.rotation.y = horiz ? Math.PI / 2 : 0;
+      world.add(m); gateMeshes[key] = m;
+    }
+    if (k === '=' || k === '+') { const m = makePlate(k); m.position.set(x, h, z); m.userData.kind = k; world.add(m); plateMeshes.push(m); }
+  }
+  for (const c of LV.crates) {
+    const m = rbox(0.92, 0.92, 0.92, MAT.crate, c[0], LV.base[c[1]][c[0]] + 0.46, c[1]);
+    m.userData.cell = c.slice();
+    world.add(m); crateMeshes.push({ mesh: m, x: c[0], z: c[1], filled: false });
+  }
+  // scenery: trees on little pillars around the edge, floating islands in the distance, clouds
+  seed = 900 + i;
+  for (let n = 0; n < 10; n++) {
+    const side = n % 4, along = rnd();
+    const tx = side === 0 ? -1.3 : side === 1 ? LV.w + 0.3 : along * LV.w, tz = side === 2 ? -1.3 : side === 3 ? LV.d + 0.3 : along * LV.d;
+    const holder = new THREE.Group();
+    const hc = rmesh(aoColumnGeo(1), [sideM, sideM]); hc.position.y = -2.2; holder.add(hc);
+    const hcap = rmesh(roundedGeo(0.9, 0.2, 0.9, 0.16, 0.07), [topMat(theme, 0), lipSide]); hcap.position.y = -0.2; holder.add(hcap);
+    const t = makeTreeV2(th.tree); t.scale.setScalar(0.9 + rnd() * 0.5); holder.add(t);
+    holder.position.set(tx, 0.2 + rnd() * 0.9, tz);
+    world.add(holder);
+  }
+  for (let n = 0; n < 5; n++) {
+    const a = n / 5 * Math.PI * 2 + 0.4, r = Math.max(LV.w, LV.d) * 1.3 + 6;
+    const isl = makeIsland(theme, 1.2 + (n % 3) * 0.5);
+    isl.position.set((LV.w - 1) / 2 + Math.cos(a) * r, -2 + (n % 3) * 2, (LV.d - 1) / 2 + Math.sin(a) * r);
+    isl.userData.y0 = isl.position.y; isl.userData.ph = n;
+    world.add(isl); islands.push(isl);
+  }
+  for (let n = 0; n < 7; n++) {
+    const c = new THREE.Group();
+    c.add(sph(0.9, MAT.cloud, 0, 0, 0, 1.5, 0.6, 1), sph(0.7, MAT.cloud, 0.9, 0.2, 0, 1.3, 0.75, 1), sph(0.6, MAT.cloud, -0.9, 0.05, 0.1), sph(0.5, MAT.cloud, 0.2, 0.35, -0.3));
+    c.children.forEach(o => { o.castShadow = false; });
+    c.position.set(-10 + n * 6, n % 2 ? 7 + (n % 3) : -5 - (n % 3), -6 - (n % 3) * 5);
+    if (th.night) c.visible = false;
+    world.add(c); clouds.push(c);
+  }
+  if (th.night) {
+    // a big moon and a sky full of stars
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(3, 32, 20), new THREE.MeshBasicMaterial({ color: lin(0xfff6d8).multiplyScalar(2.2) }));
+    moon.position.set(LV.w + 20, 22, -30); world.add(moon);
+    const n = 500, pos = new Float32Array(n * 3);
+    seed = 12;
+    for (let j = 0; j < n; j++) { const a = rnd() * Math.PI * 2, b = rnd() * 1.2 + 0.1, r = 90; pos[j * 3] = Math.cos(a) * Math.cos(b) * r; pos[j * 3 + 1] = Math.sin(b) * r; pos[j * 3 + 2] = Math.sin(a) * Math.cos(b) * r; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    world.add(new THREE.Points(g, new THREE.PointsMaterial({ map: glowTex, color: lin(0xffffff).multiplyScalar(2), size: 0.9, transparent: true, depthWrite: false, fog: false })));
+  }
+
+  // bees
+  for (const bd of LV.bees) {
+    const cellsPath = [];
+    for (let j = 0; j < bd.path.length - 1; j++) {
+      const [ax, az] = bd.path[j], [bx, bz] = bd.path[j + 1];
+      const n = Math.max(Math.abs(bx - ax), Math.abs(bz - az));
+      for (let s = 0; s < n; s++) cellsPath.push([ax + Math.sign(bx - ax) * s, az + Math.sign(bz - az) * s]);
+    }
+    cellsPath.push(bd.path[bd.path.length - 1]);
+    const m = makeBee();
+    world.add(m);
+    bees.push({ mesh: m, path: cellsPath, y: bd.y + 0.45, pos: 0, dir: 1, alive: true, t: Math.random() * 6 });
+  }
+
+  bearObj = makeBearV2(theme);
+  bearObj.scale.setScalar(1.15);
+  world.add(bearObj);
+  placeBear();
+  facing = [0, 1];
+  bearObj.rotation.y = 0;
+
+  weather = makeWeather(th.weather); world.add(weather);
+  pollen = null;
+
+  // intro flyover: start high above the whole world, swoop down to Bear
+  introT = 2.6;
+  introFrom.set((LV.w - 1) / 2, 0, (LV.d - 1) / 2);
+  cam.target.copy(introFrom);
+  cam.dist = 34; cam.distT = 12;
+  cam.yaw = -1.1; cam.yawT = 0;
+  cam.pitch = 1.15; cam.pitchT = 0.8;
+  const ext = 12;
+  Object.assign(sun.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext });
+  sun.shadow.camera.updateProjectionMatrix();
+
+  syncToggles(true);
+  updateHUD();
+  document.getElementById('lvlNum').textContent = CHAPTERS[LV.def.chapter].name + ' ' + (i % 3 + 1);
+  document.getElementById('lvlName').textContent = LV.def.name;
+  toast(LV.def.tip, 6500);
+}
+function placeBear() {
+  bearObj.position.set(ST.x, standY(ST.x, ST.z), ST.z);
+}
+function syncToggles(instant) {
+  for (const t of toggleMeshes) {
+    const up = (t.userData.kind === 'A') === (ST.mode === 0);
+    t.userData.targetY = up ? 0 : -t.userData.h + 0.06;
+    if (instant) t.position.y = t.userData.targetY;
+  }
+  for (const s of switchMeshes) s.userData.btn.material = ST.mode === 0 ? MAT.red : MAT.blue;
+  const gold = plateDown(LV, ST, '='), silver = plateDown(LV, ST, '+');
+  for (const b of bridgeMeshes) {
+    const up = b.userData.kind === 'Y' ? gold : silver;
+    b.userData.targetY = up ? 0 : -b.userData.h + 0.06;
+    if (instant) b.position.y = b.userData.targetY;
+  }
+  for (const p of plateMeshes) {
+    const on = plateDown(LV, ST, p.userData.kind);
+    p.userData.ring.material.emissiveIntensity = on ? 2.5 : 0.4;
+  }
+  for (const k of Object.keys(crumbleMeshes)) {
+    const m = crumbleMeshes[k];
+    if (ST.gone[k] && !m.userData.falling) { m.userData.falling = instant ? 9 : 0.001; if (instant) m.visible = false; }
+    if (!ST.gone[k] && m.userData.falling) { m.userData.falling = 0; m.visible = true; m.position.y = THEMES[LV.def.theme].crumble === 'lily' ? 0.5 : 0; m.rotation.set(0, 0, 0); }
+  }
+  for (const k of Object.keys(gateMeshes)) {
+    const g = gateMeshes[k], open = !!ST.open[k];
+    g.userData.door.rotation.x = open ? -Math.PI / 2 + 0.05 : 0;
+    g.userData.door.position.y = open ? 0.02 : 0;
+  }
+  for (const m of keyMeshes) m.visible = !(ST.got & (1 << m.userData.idx));
+}
+
+// ---- HUD ----
+const TREAT_SVG = {
+  h: on => `<svg viewBox="0 0 24 24" aria-label="honey"><path d="M6 6h12v2c3 2 3 9 0 12H6C3 17 3 10 6 8z" fill="${on ? '#ffb81c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><rect x="5" y="3" width="14" height="4" rx="1.5" fill="${on ? '#fff' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"/></svg>`,
+  f: on => `<svg viewBox="0 0 24 24" aria-label="salmon"><path d="M2 12c4-6 11-6 15 0-4 6-11 6-15 0z" fill="${on ? '#f47a5a' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><path d="M17 12l5-4v8z" fill="${on ? '#f47a5a' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="11" r="1.3" fill="#3b2412"/></svg>`,
+  r: on => `<svg viewBox="0 0 24 24" aria-label="berries"><g fill="${on ? '#5a5ad6' : '#fff8ea'}" stroke="#3b2412" stroke-width="2"><circle cx="8" cy="15" r="4"/><circle cx="16" cy="15" r="4"/><circle cx="12" cy="9" r="4"/></g><path d="M12 5l3-3" stroke="#3b2412" stroke-width="2" stroke-linecap="round"/></svg>`,
+  a: on => `<svg viewBox="0 0 24 24" aria-label="golden acorn"><path d="M6 11h12c0 6-3 10-6 11-3-1-6-5-6-11z" fill="${on ? '#ffc93a' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><path d="M4 11c0-4 4-6 8-6s8 2 8 6z" fill="${on ? '#8a5428' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/><path d="M12 5V2" stroke="#3b2412" stroke-width="2" stroke-linecap="round"/></svg>`
+};
+const treatSVG = (t, on) => (TREAT_SVG[t] || TREAT_SVG.h)(on);
+const keySVG = `<svg viewBox="0 0 24 24" aria-label="honey key"><circle cx="7" cy="12" r="4.5" fill="#ffc93a" stroke="#3b2412" stroke-width="2"/><path d="M11 12h10M17 12v4M20 12v3" stroke="#3b2412" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+const TREAT_NAME = { h: 'Honey', f: 'Salmon', r: 'Berries', a: 'The golden acorn' };
+const heartSVG = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${on ? '#e8453c' : '#fff8ea'}" stroke="#3b2412" stroke-width="2" stroke-linejoin="round"/></svg>`;
+function updateHUD() {
+  let p = '';
+  for (let i = 0; i < LV.pots; i++) p += treatSVG(LV.treats[i], ST.pots & (1 << i));
+  document.getElementById('pots').innerHTML = p;
+  let h = '';
+  for (let i = 0; i < 3; i++) h += heartSVG(i < hearts);
+  document.getElementById('hearts').innerHTML = h;
+  document.getElementById('keysHud').innerHTML = ST.keys > 0 ? keySVG + '<b>' + ST.keys + '</b>' : '';
+  document.getElementById('stepsHud').textContent = steps + ' steps';
+}
+let toastTimer = 0;
+const toastEl = document.getElementById('toast');
+function toast(msg, ms = 2500) {
+  toastEl.textContent = msg; toastEl.classList.remove('hide');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.add('hide'), ms);
+}
+
+// ---- animation queue ----
+// each segment: { pts:[Vector3...], dur, onStart, onEnd, hop }
+function queue(seg) { anim.push(seg); }
+function busy() { return !!animCur || anim.length > 0; }
+let speed = 1;
+function tickAnim(dt) {
+  dt *= speed;
+  if (!animCur && anim.length) { animCur = anim.shift(); animCur.t = 0; animCur.onStart && animCur.onStart(); }
+  if (!animCur) return;
+  const a = animCur;
+  a.t += dt;
+  const k = Math.min(1, a.t / a.dur);
+  if (a.pts) {
+    const n = a.pts.length - 1, f = k * n, i = Math.min(n - 1, Math.floor(f)), r = f - i;
+    const p = a.pts[i].clone().lerp(a.pts[i + 1], r);
+    if (a.hop) p.y += Math.sin(k * Math.PI) * a.hop;
+    bearObj.position.copy(p);
+  }
+  a.onTick && a.onTick(k);
+  if (k >= 1) { animCur = null; a.onEnd && a.onEnd(); }
+}
+
+function faceDir(dx, dz) { facing = [dx, dz]; bearObj.userData.faceT = Math.atan2(dx, dz); }
+// Swing the world round so the camera looks the way Bear is walking.
+// Walking back toward the camera leaves the view alone, so it never flips.
+let camFollow = true;
+function followTurn(dx, dz) {
+  if (!camFollow) return;
+  const fx = -Math.sin(cam.yawT), fz = -Math.cos(cam.yawT);
+  if (fx * dx + fz * dz < -0.5) return;
+  let d = Math.atan2(-dx, -dz) - cam.yawT;
+  d = Math.atan2(Math.sin(d), Math.cos(d));
+  cam.yawT += d;
+}
+
+function tryStep(dx, dz) {
+  if (!playing || won || busy()) return false;
+  introT = 0;
+  faceDir(dx, dz);
+  const r = step(LV, ST, dx, dz);
+  if (!r) {
+    const k = inb(LV, ST.x + dx, ST.z + dz) ? LV.kind[ST.z + dz][ST.x + dx] : '';
+    if (k === 'L' && !ST.open[K(ST.x + dx, ST.z + dz)] && ST.keys <= 0) toast('This gate is locked. Find a honey key!', 1600);
+    sfx('bump'); queue({ pts: [bearObj.position.clone(), bearObj.position.clone().add(new THREE.Vector3(dx * 0.12, 0, dz * 0.12)), bearObj.position.clone()], dur: 0.14 }); return false;
+  }
+  undoStack.push({ st: ST, holding, steps });
+  followTurn(dx, dz);
+  if (undoStack.length > 400) undoStack.shift();
+  const prev = ST;
+  ST = r.s;
+  steps++;
+  animateStep(prev, r.ev);
+  return true;
+}
+function squash() { queue({ dur: 0.16, onTick: k => { const s = 1 - Math.sin(k * Math.PI) * 0.18; bearObj.scale.set(1.15 * (2 - s), 1.15 * s, 1.15 * (2 - s)); }, onEnd: () => bearObj.scale.setScalar(1.15) }); }
+function animateStep(prev, ev) {
+  const [ax, az] = ev.from, [bx, bz] = ev.to, dx = ev.dx, dz = ev.dz;
+  const ya = bearObj.position.y;
+  // where Bear stands on the first tile, using the state before slides / bounces moved him on
+  const mid = cloneState(ST); mid.x = bx; mid.z = bz;
+  const yb = standY(bx, bz, mid);
+  const A = posOf(ax, az, ya), B = posOf(bx, bz, yb);
+  const P = (f, y) => posOf(ax + dx * f, az + dz * f, y);
+  if (ev.crumble) queue({ dur: 0.001, onEnd: () => crumbleFall(ev.crumble) });
+  if (ev.gate) queue({ dur: 0.3, onStart: () => { sfx('door'); toast('Unlocked!', 1000); }, onTick: k => { const g = gateMeshes[K(...ev.gate)]; g.userData.door.rotation.x = -k * (Math.PI / 2 - 0.05); }, onEnd: () => updateHUD() });
+  if (ev.kind === 'walk' || ev.kind === 'push') {
+    queue({ pts: [A, B], dur: ev.kind === 'push' ? 0.3 : 0.2, onStart: () => { sfx(ev.kind === 'push' ? 'push' : 'step'); if (ev.kind === 'walk') dust(A); } });
+    if (ev.push) animateCrate(ev.push, dx, dz);
+  } else if (ev.kind === 'stairs') {
+    queue({ pts: [A, P(0.5, (ya + yb) / 2), B], dur: 0.32, onStart: () => sfx('climb') });
+  } else if (ev.kind === 'ladder') {
+    if (yb > ya) queue({ pts: [A, P(0.3, ya), P(0.3, yb), P(0.6, yb + 0.05), B], dur: 0.25 + 0.18 * (yb - ya), onStart: () => sfx('climb') });
+    else queue({ pts: [A, P(0.45, ya + 0.05), P(0.7, ya), P(0.7, yb), B], dur: 0.25 + 0.18 * (ya - yb), onStart: () => sfx('climb') });
+  } else if (ev.kind === 'drop') {
+    queue({ pts: [A, P(0.55, ya + 0.25), P(0.85, yb + 0.3), B], dur: 0.3 + 0.06 * (ya - yb), onStart: () => sfx('drop'), onEnd: squash });
+  }
+  // slides across ice and bounces off mushrooms
+  for (const m of ev.extra) {
+    const [fx, fz] = m.from, [tx, tz] = m.to;
+    const y0 = standY(fx, fz, mid), y1 = standY(tx, tz, ST);
+    if (m.type === 'slide') queue({ pts: [posOf(fx, fz, y0), posOf(tx, tz, y1)], dur: 0.11, onStart: () => { tone(900, 700, 0.08, 'sine', 0.04); iceSpark(fx, fz, y0); } });
+    else queue({ pts: [posOf(fx, fz, y0), posOf((fx + tx) / 2, (fz + tz) / 2, Math.max(y0, y1) + 1.4), posOf(tx, tz, y1)], dur: 0.5,
+      onStart: () => { sfx('pogo'); const mm = mushMeshes[K(fx, fz)]; if (mm) mm.userData.boing = 0.001; }, onEnd: squash });
+  }
+  // landing events
+  queue({ dur: 0.001, onEnd: () => {
+    if (ev.sw) { sfx('sw'); syncToggles(false); toast(ST.mode === 0 ? 'Red blocks up!' : 'Blue blocks up!', 1500); }
+    if (ev.push) syncToggles(false);
+    if (ev.pots) ev.pots.forEach(collectPot);
+    if (ev.keyGot) { sfx('key'); keyMeshes.forEach(m => { if (ev.keyGot.includes(m.userData.idx)) { m.userData.taken = 0.001; burst(m.position.clone().add(new THREE.Vector3(0, 0.4, 0)), 0xffc93a, 18); } }); toast('Got a honey key! It opens one gate.', 1600); }
+    updateHUD();
+    if (ev.goal) winLevel();
+  } });
+  if (ev.pipe) {
+    const [px, pz] = ev.pipe;
+    const top = standY(px, pz);
+    queue({ dur: 0.3, onStart: () => sfx('pipe'), onTick: k => { bearObj.position.y = yb - k * 0.8; bearObj.scale.setScalar(1.15 * (1 - k * 0.5)); } });
+    queue({ dur: 0.35, onStart: () => { bearObj.position.set(px, top - 0.8, pz); }, onTick: k => { bearObj.position.y = top - 0.8 + k * 0.8 + Math.sin(k * Math.PI) * 0.4; bearObj.scale.setScalar(1.15 * (0.5 + k * 0.5)); } });
+    queue({ dur: 0.001, onEnd: () => { bearObj.scale.setScalar(1.15); bearObj.position.set(px, top, pz); } });
+  }
+}
+function crumbleFall([x, z]) {
+  const m = crumbleMeshes[K(x, z)];
+  if (!m) return;
+  m.userData.falling = 0.001;
+  tone(240, 90, 0.35, 'triangle', 0.08);
+  const col = { petals: 0xffb8d8, leaves: 0xf08a30, snow: 0xffffff, lily: 0x7ad866 }[THEMES[LV.def.theme].crumble] || 0xffffff;
+  burst(new THREE.Vector3(x, LV.base[z][x], z), col, 14);
+}
+function animateCrate(push, dx, dz) {
+  const c = crateMeshes.find(o => !o.filled && o.x === push.from[0] && o.z === push.from[1]);
+  if (!c) return;
+  const pts = [c.mesh.position.clone()];
+  for (const [x, z] of push.path) pts.push(new THREE.Vector3(x, push.y + 0.46, z));
+  let land = null;
+  if (push.fill) { pts.push(new THREE.Vector3(push.fill[0], push.y + 0.46, push.fill[1])); land = push.land + 0.5; c.filled = true; c.x = push.fill[0]; c.z = push.fill[1]; }
+  else { const e = push.path[push.path.length - 1]; c.x = e[0]; c.z = e[1]; }
+  c.anim = { t: 0, dur: 0.18 + 0.1 * (pts.length - 1), pts, land };
+  c.mesh.userData.cell = [c.x, c.z];
+}
+function tickCrates(dt) {
+  dt *= speed;
+  for (const c of crateMeshes) {
+    const a = c.anim;
+    if (!a) continue;
+    a.t += dt;
+    if (a.t <= a.dur) {
+      const n = a.pts.length - 1, f = a.t / a.dur * n, i = Math.min(n - 1, Math.floor(f));
+      c.mesh.position.lerpVectors(a.pts[i], a.pts[i + 1], f - i);
+    } else if (a.land !== null) {
+      // drop into the gap and become ground
+      const to = a.pts[a.pts.length - 1], ft = Math.min(1, (a.t - a.dur) / 0.25);
+      c.mesh.position.set(to.x, to.y + (a.land - to.y) * ft * ft, to.z);
+      c.mesh.scale.set(1.065, 1.065, 1.065);
+      if (ft >= 1) {
+        c.anim = null;
+        sfx('splash');
+        burst(new THREE.Vector3(to.x, a.land + 0.5, to.z), 0x9ee8ff, 14);
+        cells[K(c.x, c.z)] = c.mesh;
+      }
+    } else { c.mesh.position.copy(a.pts[a.pts.length - 1]); c.anim = null; }
+  }
+}
+function collectPot(i) {
+  const m = potMeshes.find(p => p.userData.idx === i);
+  if (m) { m.userData.taken = 0.001; burst(m.position.clone().add(new THREE.Vector3(0, 0.3, 0)), LV.treats[i] === 'a' ? 0xffd23a : 0xffb81c, 22); }
+  sfx('pot');
+  updateHUD();
+  const got = ST.pots.toString(2).split('1').length - 1;
+  toast(LV.treats[i] === 'a' ? 'You found the secret golden acorn!' : got === LV.pots ? 'Yum! Everything found! Now get the golden honeycomb.' : 'Yum, ' + TREAT_NAME[LV.treats[i]].toLowerCase() + '! ' + got + ' of ' + LV.pots + '.', 1800);
+}
+function winLevel() {
+  won = true;
+  sfx('star');
+  burst(starMesh.position.clone(), 0xffd23a, 40);
+  starMesh.userData.fly = 0.001;
+  const got = ST.pots.toString(2).split('1').length - 1;
+  const best = progress[levelIndex] || {};
+  const badge = steps <= (LV.def.par || 9999);
+  progress[levelIndex] = { got: Math.max(best.got || 0, got), badge: !!(best.badge || badge), best: Math.min(best.best || 9999, steps) };
+  progress.unlocked = Math.max(progress.unlocked || 0, levelIndex + 1);
+  saveProgress(progress);
+  clearTimeout(winTimer);
+  winTimer = setTimeout(() => {
+    document.getElementById('clearPots').innerHTML = LV.treats.map((t, i) => treatSVG(t, ST.pots & (1 << i))).join('');
+    let msg = got === LV.pots ? 'Bear found everything, even the golden acorn!' : 'You found ' + got + ' of ' + LV.pots + '. Can you find them all?';
+    document.getElementById('clearChallenge').innerHTML = (badge ? '<span class="badge on">Challenge done</span>' : '<span class="badge">Challenge</span>') + ' Finish in ' + LV.def.par + ' steps or fewer. You took ' + steps + '.';
+    if (levelIndex >= LEVELS.length - 1) msg += ' Bear is home, cozy and full. Sweet dreams until spring!';
+    document.getElementById('clearMsg').textContent = msg;
+    document.getElementById('bNext').hidden = levelIndex >= LEVELS.length - 1;
+    show('clear');
+  }, 1800);
+}
+
+function undo() {
+  if (!playing || won || busy() || !undoStack.length) return;
+  const u = undoStack.pop();
+  ST = u.st; holding = u.holding; steps = u.steps;
+  rebuildFromState();
+  sfx('undo');
+}
+function rebuildFromState() {
+  // put crates, treats, keys, gates, crumbling tiles, toggles and Bear back to match ST
+  for (const c of crateMeshes) world.remove(c.mesh);
+  crateMeshes = [];
+  for (const c of ST.crates) {
+    const m = rbox(0.92, 0.92, 0.92, MAT.crate, c[0], heightAt(LV, ST, c[0], c[1]) + 0.46, c[1]);
+    m.userData.cell = c.slice(); world.add(m); crateMeshes.push({ mesh: m, x: c[0], z: c[1], filled: false });
+  }
+  for (const k of Object.keys(ST.add)) {
+    const [x, z] = k.split(',').map(Number);
+    for (let n = 0; n < ST.add[k]; n++) {
+      const m = rbox(0.98, 0.98, 0.98, MAT.crate, x, LV.base[z][x] + n + 0.5, z);
+      m.userData.cell = [x, z]; world.add(m); crateMeshes.push({ mesh: m, x, z, filled: true });
+      cells[k] = m;
+    }
+  }
+  for (const p of potMeshes) {
+    const taken = ST.pots & (1 << p.userData.idx);
+    p.visible = !taken; p.userData.taken = 0; p.scale.setScalar(p.userData.s0 || 1);
+  }
+  for (const m of keyMeshes) { m.userData.taken = 0; m.scale.setScalar(1); m.position.y = m.userData.baseY; }
+  syncToggles(false);
+  placeBear(); bearObj.scale.setScalar(1.15);
+  updateHUD();
+}
+function restart() { if (!playing) return; buildLevel(levelIndex); introT = 0.6; sfx('undo'); }
+function dust(at) {
+  const m = new THREE.MeshBasicMaterial({ color: lin(THEMES[LV.def.theme].name === 'winter' ? 0xffffff : 0xe8d8b8), transparent: true, opacity: 0.7 });
+  for (let i = 0; i < 4; i++) {
+    const p = new THREE.Mesh(partGeo, m);
+    p.position.copy(at).add(new THREE.Vector3((Math.random() - 0.5) * 0.3, 0.05, (Math.random() - 0.5) * 0.3));
+    p.userData.v = new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.6 + Math.random() * 0.4, (Math.random() - 0.5) * 0.6);
+    p.userData.life = 0.35; p.userData.g = 1.5;
+    world.add(p); particles.push(p);
+  }
+}
+function iceSpark(x, z, y) {
+  const m = new THREE.MeshBasicMaterial({ color: lin(0xdff6ff).multiplyScalar(2.5) });
+  for (let i = 0; i < 3; i++) {
+    const p = new THREE.Mesh(partGeo, m);
+    p.position.set(x + (Math.random() - 0.5) * 0.4, y + 0.05, z + (Math.random() - 0.5) * 0.4);
+    p.userData.v = new THREE.Vector3((Math.random() - 0.5), 1 + Math.random(), (Math.random() - 0.5));
+    p.userData.life = 0.4;
+    world.add(p); particles.push(p);
+  }
+}
+
+// ---- pinecones & bees ----
+function grab() {
+  if (!playing || won || busy()) return;
+  if (holding) { throwCone(); return; }
+  if (LV.kind[ST.z][ST.x] === 't') {
+    holding = makePinecone();
+    world.add(holding);
+    sfx('pluck');
+    queue({ dur: 0.35, onTick: k => { bearObj.userData.body.position.y = -Math.sin(k * Math.PI) * 0.1; } });
+    return;
+  }
+  toast('Find a pinecone pile to pick up a pinecone.', 1500);
+  sfx('bump');
+}
+function throwCone() {
+  const [dx, dz] = facing;
+  const h0 = heightAt(LV, ST, ST.x, ST.z);
+  let x = ST.x, z = ST.z, hit = null, n = 0;
+  for (n = 1; n <= 7; n++) {
+    const nx = ST.x + dx * n, nz = ST.z + dz * n;
+    if (inb(LV, nx, nz) && heightAt(LV, ST, nx, nz) > h0 + 0.5) { n--; break; }
+    x = nx; z = nz;
+    hit = bees.find(b => b.alive && beeCell(b)[0] === nx && beeCell(b)[1] === nz && Math.abs(b.y - (h0 + 0.8)) < 1.3);
+    if (hit) break;
+  }
+  if (n > 7) n = 7;
+  const t = holding; holding = null;
+  const from = t.position.clone();
+  const to = new THREE.Vector3(ST.x + dx * Math.max(n, 0.6), hit ? hit.y : h0 + 0.2, ST.z + dz * Math.max(n, 0.6));
+  flying.push({ mesh: t, from, to, t: 0, dur: 0.12 + 0.06 * n, hit });
+  sfx('throw');
+}
+function beeCell(b) {
+  const i = Math.round(b.pos);
+  return b.path[Math.max(0, Math.min(b.path.length - 1, i))];
+}
+function beeWorld(b) {
+  const i = Math.floor(b.pos), f = b.pos - i;
+  const a = b.path[Math.max(0, Math.min(b.path.length - 1, i))], c = b.path[Math.max(0, Math.min(b.path.length - 1, i + 1))];
+  return new THREE.Vector3(a[0] + (c[0] - a[0]) * f, b.y, a[1] + (c[1] - a[1]) * f);
+}
+function tickBees(dt) {
+  for (const b of bees) {
+    if (!b.alive) {
+      if (b.mesh.visible) { b.mesh.position.y -= dt * 3; b.mesh.rotation.z += dt * 10; if (b.mesh.position.y < -3) b.mesh.visible = false; }
+      continue;
+    }
+    b.t += dt;
+    if (b.path.length > 1) {
+      b.pos += b.dir * dt * 1.1;
+      if (b.pos >= b.path.length - 1) { b.pos = b.path.length - 1; b.dir = -1; }
+      if (b.pos <= 0) { b.pos = 0; b.dir = 1; }
+    }
+    const p = beeWorld(b);
+    b.mesh.position.set(p.x, p.y + Math.sin(b.t * 4) * 0.08, p.z);
+    const i = Math.floor(b.pos), c0 = b.path[i], c1 = b.path[Math.min(b.path.length - 1, i + 1)];
+    const ddx = (c1[0] - c0[0]) * b.dir, ddz = (c1[1] - c0[1]) * b.dir;
+    if (ddx || ddz) b.mesh.rotation.y = Math.atan2(ddx, ddz);
+    const flap = Math.sin(b.t * 40) * 0.6;
+    b.mesh.userData.wl.rotation.y = flap; b.mesh.userData.wr.rotation.y = -flap;
+    // bump into the bear?
+    if (playing && !won && inv <= 0) {
+      const bp = bearObj.position;
+      if (Math.hypot(bp.x - p.x, bp.z - p.z) < 0.55 && Math.abs(bp.y + 0.4 - p.y) < 0.6) hurtBear();
+    }
+  }
+}
+function hurtBear() {
+  hearts--; inv = 1.6; sfx('hurt');
+  updateHUD();
+  burst(bearObj.position.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xff6f63, 10);
+  if (hearts <= 0) {
+    toast('Ouch! The bees got you. Try again!', 2500);
+    playing = false;
+    setTimeout(() => { playing = true; buildLevel(levelIndex); }, 1200);
+    return;
+  }
+  toast('Ouch! Watch out for bees.', 1500);
+  // step back to where we came from
+  if (animCur) { animCur = null; anim = []; }
+  if (undoStack.length) {
+    const u = undoStack.pop();
+    ST = u.st; holding = holding || u.holding;
+    rebuildFromState();
+  }
+}
+function tickFlying(dt) {
+  for (const f of flying) {
+    f.t += dt;
+    const k = Math.min(1, f.t / f.dur);
+    f.mesh.position.lerpVectors(f.from, f.to, k);
+    f.mesh.position.y += Math.sin(k * Math.PI) * 0.4;
+    f.mesh.rotation.x += dt * 14;
+    if (k >= 1 && !f.done) {
+      f.done = true;
+      world.remove(f.mesh);
+      burst(f.to.clone(), 0xffffff, 10);
+      if (f.hit && f.hit.alive) { f.hit.alive = false; sfx('poof'); burst(f.to.clone(), 0xffcf1f, 16); toast('Bonk! Bee knocked out.', 1300); }
+      else sfx('bump');
+    }
+  }
+  flying = flying.filter(f => !f.done);
+}
+
+// ---- particles ----
+const partGeo = new THREE.SphereGeometry(0.05, 8, 6);
+function burst(at, color, n) {
+  const m = new THREE.MeshBasicMaterial({ color: lin(color).multiplyScalar(3) });
+  for (let i = 0; i < n; i++) {
+    const p = new THREE.Mesh(partGeo, m);
+    p.position.copy(at);
+    const a = Math.random() * Math.PI * 2, s = 1 + Math.random() * 2;
+    p.userData.v = new THREE.Vector3(Math.cos(a) * s, 2 + Math.random() * 2, Math.sin(a) * s);
+    p.userData.life = 0.6 + Math.random() * 0.4;
+    world.add(p); particles.push(p);
+  }
+}
+function tickParticles(dt) {
+  for (const p of particles) {
+    p.userData.v.y -= 9 * dt;
+    p.position.addScaledVector(p.userData.v, dt);
+    p.userData.life -= dt;
+    p.scale.setScalar(Math.max(0.01, p.userData.life));
+    if (p.userData.life <= 0) world.remove(p);
+  }
+  particles = particles.filter(p => p.userData.life > 0);
+}
+
+// =====================================================================
+// CAMERA & INPUT
+// =====================================================================
+function camDirs() {
+  // forward on the ground = from camera toward the target
+  const fx = -Math.sin(cam.yawT), fz = -Math.cos(cam.yawT);
+  return { f: [fx, fz], r: [-fz, fx] };
+}
+function snap(v) { return Math.abs(v[0]) > Math.abs(v[1]) ? [Math.sign(v[0]), 0] : [0, Math.sign(v[1])]; }
+function inputDir(name) {
+  const { f, r } = camDirs();
+  const v = name === 'up' ? f : name === 'down' ? [-f[0], -f[1]] : name === 'right' ? r : [-r[0], -r[1]];
+  return snap(v);
+}
+const heldDirs = [];
+const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+addEventListener('keydown', e => {
+  initAudio();
+  if (introT > 0.3) introT = 0.3;
+  if (KEYS[e.code]) {
+    e.preventDefault();
+    const d = KEYS[e.code];
+    if (!heldDirs.some(h => h.name === d)) heldDirs.push({ name: d, dir: inputDir(d) });
+    return;
+  }
+  if (e.repeat) return;
+  if (e.code === 'Space' || e.code === 'KeyX' || e.code === 'Enter') { e.preventDefault(); if (playing) grab(); }
+  else if (e.code === 'KeyQ') rotateCam(-1);
+  else if (e.code === 'KeyE') rotateCam(1);
+  else if (e.code === 'KeyZ' || e.code === 'Backspace') undo();
+  else if (e.code === 'KeyR') restart();
+  else if (e.code === 'KeyM') toggleSound();
+  else if (e.code === 'Equal' || e.code === 'NumpadAdd') cam.distT = Math.max(6, cam.distT - 1.5);
+  else if (e.code === 'Minus' || e.code === 'NumpadSubtract') cam.distT = Math.min(30, cam.distT + 1.5);
+});
+const releaseDir = d => { const i = heldDirs.findIndex(h => h.name === d); if (i >= 0) heldDirs.splice(i, 1); };
+addEventListener('keyup', e => { const d = KEYS[e.code]; if (d) releaseDir(d); });
+addEventListener('blur', () => { heldDirs.length = 0; });
+function rotateCam(s) { cam.yawT += s * Math.PI / 4; }
+
+// touch buttons
+function enableTouch() { document.body.classList.add('touch'); }
+if (matchMedia('(pointer: coarse)').matches) enableTouch();
+addEventListener('touchstart', enableTouch, { passive: true });
+document.querySelectorAll('#dpad button').forEach(b => {
+  const d = b.dataset.d;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); b.classList.add('on'); if (!heldDirs.some(h => h.name === d)) heldDirs.push({ name: d, dir: inputDir(d) }); });
+  const up = () => { b.classList.remove('on'); releaseDir(d); };
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => b.addEventListener(t, up));
+});
+document.querySelectorAll('#acts .rot').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); rotateCam(+b.dataset.r); }));
+document.getElementById('bGrab').addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); grab(); });
+
+// drag to look, pinch / wheel to zoom, tap a tile to walk there
+const pointers = new Map();
+let dragInfo = null, pinch0 = 0;
+const cvs = renderer.domElement;
+cvs.addEventListener('pointerdown', e => {
+  initAudio();
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  cvs.setPointerCapture(e.pointerId);
+  if (pointers.size === 1) dragInfo = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false };
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); dragInfo = null; }
+});
+cvs.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch0) cam.distT = Math.max(6, Math.min(30, cam.distT * pinch0 / d));
+    pinch0 = d;
+    return;
+  }
+  if (!dragInfo) return;
+  const dx = e.clientX - dragInfo.x, dy = e.clientY - dragInfo.y;
+  if (Math.hypot(e.clientX - dragInfo.sx, e.clientY - dragInfo.sy) > 8) dragInfo.moved = true;
+  if (dragInfo.moved) {
+    cam.yawT -= dx * 0.008; cam.yaw = cam.yawT;
+    cam.pitchT = Math.max(0.25, Math.min(1.35, cam.pitchT + dy * 0.006)); cam.pitch = cam.pitchT;
+  }
+  dragInfo.x = e.clientX; dragInfo.y = e.clientY;
+});
+function endPointer(e) {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if (dragInfo && !dragInfo.moved && performance.now() - dragInfo.t < 500 && pointers.size === 0) tapAt(e.clientX, e.clientY);
+  if (dragInfo && dragInfo.moved) cam.yawT = Math.round(cam.yawT / (Math.PI / 4)) * (Math.PI / 4);
+  dragInfo = null;
+  if (pointers.size < 2) pinch0 = 0;
+}
+cvs.addEventListener('pointerup', endPointer);
+cvs.addEventListener('pointercancel', endPointer);
+cvs.addEventListener('wheel', e => { e.preventDefault(); cam.distT = Math.max(6, Math.min(30, cam.distT + e.deltaY * 0.01)); }, { passive: false });
+
+const ray = new THREE.Raycaster();
+let pathQueue = [];
+function tapAt(cx, cy) {
+  if (!playing || won) return;
+  const rect = cvs.getBoundingClientRect();
+  const v = new THREE.Vector2((cx - rect.left) / rect.width * 2 - 1, -(cy - rect.top) / rect.height * 2 + 1);
+  ray.setFromCamera(v, camera);
+  const hits = ray.intersectObjects(world.children, true);
+  for (const h of hits) {
+    let o = h.object;
+    if (bearObj && isChildOf(o, bearObj)) { grab(); return; }
+    while (o && !(o.userData && o.userData.cell)) o = o.parent;
+    if (!o) continue;
+    const [tx, tz] = o.userData.cell;
+    if (tx === ST.x && tz === ST.z) { grab(); return; }
+    // tapping a neighbouring crate pushes it
+    if (Math.abs(tx - ST.x) + Math.abs(tz - ST.z) === 1) { pathQueue = [[tx - ST.x, tz - ST.z]]; return; }
+    const path = findPath(tx, tz);
+    if (path) pathQueue = path; else { sfx('bump'); toast("Bear can't get there from here.", 1300); }
+    return;
+  }
+}
+function isChildOf(o, p) { while (o) { if (o === p) return true; o = o.parent; } return false; }
+function findPath(tx, tz) {
+  const startK = K(ST.x, ST.z);
+  const prev = new Map([[startK, null]]);
+  let frontier = [ST];
+  while (frontier.length) {
+    const next = [];
+    for (const s of frontier) for (const [dx, dz] of DIRS) {
+      const r = step(LV, s, dx, dz);
+      if (!r) continue;
+      const k = K(r.s.x, r.s.z);
+      if (prev.has(k)) continue;
+      const isDest = r.ev.to[0] === tx && r.ev.to[1] === tz;
+      prev.set(k, { from: K(s.x, s.z), d: [dx, dz] });
+      if (isDest || (r.s.x === tx && r.s.z === tz)) {
+        const out = []; let c = k;
+        while (prev.get(c)) { out.unshift(prev.get(c).d); c = prev.get(c).from; }
+        return out;
+      }
+      if (r.ev.push || r.ev.sw || r.ev.pipe || r.ev.goal || r.ev.extra.length || r.ev.gate || r.ev.crumble) continue; // only walk plain routes
+      next.push(r.s);
+    }
+    frontier = next;
+  }
+  return null;
+}
+
+// =====================================================================
+// SCREENS
+// =====================================================================
+const screens = ['title', 'select', 'clear'];
+function show(id) {
+  screens.forEach(s => { document.getElementById(s).hidden = s !== id; });
+  const inGame = id === null;
+  document.getElementById('hud').hidden = !inGame;
+  document.getElementById('dpad').hidden = !inGame;
+  document.getElementById('acts').hidden = !inGame;
+  document.getElementById('keys').hidden = !inGame;
+  playing = inGame;
+  if (!inGame) toastEl.classList.add('hide');
+}
+function renderSelect() {
+  const wrap = document.getElementById('levelGrid');
+  wrap.innerHTML = '';
+  CHAPTERS.forEach((ch, ci) => {
+    const sec = document.createElement('section'); sec.className = 'chapter';
+    sec.innerHTML = `<h3>${ch.name} <small>${ch.blurb}</small></h3><div class="grid"></div>`;
+    const grid = sec.querySelector('.grid');
+    LEVELS.forEach((L, i) => {
+      if (L.chapter !== ci) return;
+      const b = document.createElement('button');
+      b.className = 'lv'; b.type = 'button'; b.id = 'lv' + i;
+      const unlocked = i <= (progress.unlocked || 0);
+      b.disabled = !unlocked;
+      const pr = progress[i] || {}, got = pr.got || 0, kinds = L.O.join('').match(/[hfra]/g) || [];
+      b.innerHTML = `<b>${i + 1}</b>${L.name}<span class="mini pots">${kinds.map((t, k) => treatSVG(t, k < got)).join('')}</span>${pr.badge ? '<span class="medal">Challenge</span>' : ''}${unlocked ? '' : '<small>Locked</small>'}`;
+      b.addEventListener('click', () => { initAudio(); startLevel(i); });
+      grid.appendChild(b);
+    });
+    wrap.appendChild(sec);
+  });
+}
+function startLevel(i) { buildLevel(i); show(null); }
+document.getElementById('bPlay').addEventListener('click', () => { initAudio(); renderSelect(); show('select'); });
+document.getElementById('bTitle').addEventListener('click', () => show('title'));
+document.getElementById('bMenu').addEventListener('click', () => { renderSelect(); show('select'); });
+document.getElementById('bLevels').addEventListener('click', () => { renderSelect(); show('select'); });
+document.getElementById('bReplay').addEventListener('click', () => startLevel(levelIndex));
+document.getElementById('bNext').addEventListener('click', () => startLevel(Math.min(LEVELS.length - 1, levelIndex + 1)));
+document.getElementById('bUndo').addEventListener('click', e => { undo(); e.currentTarget.blur(); });
+document.getElementById('bRestart').addEventListener('click', e => { restart(); e.currentTarget.blur(); });
+const bSound = document.getElementById('bSound');
+function toggleSound() { muted = !muted; bSound.textContent = muted ? 'Sound off' : 'Sound on'; }
+document.getElementById('bCam').addEventListener('click', e => { camFollow = !camFollow; e.currentTarget.textContent = camFollow ? 'Camera: follow' : 'Camera: free'; e.currentTarget.blur(); });
+bSound.addEventListener('click', e => { initAudio(); toggleSound(); e.currentTarget.blur(); });
+
+// =====================================================================
+// MAIN LOOP
+// =====================================================================
+let last = performance.now(), T = 0;
+const perf = { t: 0, n: 0 };
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  if (inv > 0) inv -= dt;
+
+  if (playing && !won && !busy()) {
+    if (heldDirs.length) { pathQueue = []; const [dx, dz] = heldDirs[heldDirs.length - 1].dir; tryStep(dx, dz); }
+    else if (pathQueue.length) { const [dx, dz] = pathQueue.shift(); if (!tryStep(dx, dz)) pathQueue = []; }
+  }
+  tickAnim(dt);
+  tickCrates(dt);
+  tickBees(dt);
+  tickFlying(dt);
+  tickParticles(dt);
+  tickWeather(dt);
+
+  if (world) {
+    // bear pose
+    const u = bearObj.userData;
+    const cur = bearObj.rotation.y, tgt = u.faceT ?? 0;
+    let d = tgt - cur; d = Math.atan2(Math.sin(d), Math.cos(d));
+    bearObj.rotation.y = cur + d * Math.min(1, dt * 14);
+    const moving = !!(animCur && animCur.pts);
+    const sw = moving ? Math.sin(T * 18) : 0;
+    u.legL.position.z = 0.02 + sw * 0.07; u.legR.position.z = 0.02 - sw * 0.07;
+    u.body.position.y = moving ? Math.abs(sw) * 0.03 : u.body.position.y * 0.8 + Math.sin(T * 2) * 0.004;
+    u.head.rotation.z = Math.sin(T * 1.5) * 0.04;
+    u.eyes.scale.y = (T % 3.7) < 0.12 ? 0.12 : 1;
+    u.head.rotation.y = !moving && !holding && !won ? Math.sin(T * 0.6) * 0.3 : u.head.rotation.y * 0.85;
+    const lift = holding ? 1 : 0;
+    u.armL.position.y = 0.33 + lift * 0.25; u.armR.position.y = 0.33 + lift * 0.25;
+    u.armL.position.x = -0.2 + lift * 0.04; u.armR.position.x = 0.2 - lift * 0.04;
+    bearObj.visible = inv <= 0 || Math.floor(T * 12) % 2 === 0;
+    if (won) { bearObj.rotation.y += dt * 8; }
+    if (holding) {
+      holding.position.copy(bearObj.position).add(new THREE.Vector3(0, 0.82, 0));
+      holding.rotation.y = bearObj.rotation.y;
+    }
+    // collectibles
+    for (const p of potMeshes) {
+      if (p.userData.taken) {
+        p.userData.taken += dt;
+        p.position.y += dt * 2; p.scale.setScalar(Math.max(0.01, (p.userData.s0 || 1) * (1 - p.userData.taken * 2)));
+        if (p.userData.taken > 0.5) p.visible = false;
+      } else if (p.userData.fish) { p.userData.fish.rotation.z = Math.sin(T * 6 + p.position.x) * 0.5; p.rotation.y += dt * 0.6; p.position.y = p.userData.baseY + Math.abs(Math.sin(T * 3 + p.position.z)) * 0.12; } else { p.rotation.y += dt * 1.5; }
+    }
+    if (starMesh) {
+      starMesh.rotation.y += dt * (starMesh.userData.fly ? 12 : 2);
+      if (starMesh.userData.fly) starMesh.position.y += dt * 2;
+      else starMesh.position.y = LV.base[LV.goal[1]][LV.goal[0]] + 0.6 + Math.sin(T * 2) * 0.08;
+    }
+    for (const t of toggleMeshes) t.position.y += (t.userData.targetY - t.position.y) * Math.min(1, dt * 10);
+    clouds.forEach((c, i) => { c.position.x += dt * 0.2; if (c.position.x > LV.w + 10) c.position.x = -10; });
+    for (const wm of waterMeshes) {
+      const a = wm.geometry.attributes.position;
+      for (let j = 0; j < a.count; j++) {
+        const x = a.array[j * 3] + wm.position.x, z = a.array[j * 3 + 2] + wm.position.z;
+        a.array[j * 3 + 1] = Math.sin(x * 2.4 + T * 1.6) * 0.025 + Math.cos(z * 2.1 + T * 1.3) * 0.02 + Math.sin((x + z) * 4 + T * 2.5) * 0.008;
+      }
+      a.needsUpdate = true;
+      wm.geometry.computeVertexNormals();
+    }
+    if (pollen) {
+      const a = pollen.geometry.attributes.position;
+      for (let j = 0; j < a.count; j++) {
+        a.array[j * 3] += Math.sin(T * 0.5 + j) * dt * 0.15;
+        a.array[j * 3 + 1] += dt * 0.08 * (1 + (j % 3) * 0.3);
+        if (a.array[j * 3 + 1] > 6) a.array[j * 3 + 1] = 0.5;
+      }
+      a.needsUpdate = true;
+    }
+    if (combLight) combLight.intensity = won ? 0 : (THEMES[LV.def.theme].night ? 3.6 : 2.2) + Math.sin(T * 3) * 0.5;
+    for (const k in crumbleMeshes) {
+      const m = crumbleMeshes[k], f = m.userData.falling;
+      if (!f || f >= 9) continue;
+      m.userData.falling += dt;
+      m.position.y -= dt * 2.2 * m.userData.falling * 3;
+      m.rotation.x += dt * 1.5; m.rotation.z += dt;
+      if (m.userData.falling > 1.2) { m.visible = false; m.userData.falling = 9; }
+    }
+    for (const k in mushMeshes) {
+      const m = mushMeshes[k];
+      if (!m.userData.boing) { m.userData.cap.scale.set(1, 1 + Math.sin(T * 2 + m.position.x) * 0.03, 1); continue; }
+      m.userData.boing += dt;
+      const b = m.userData.boing, s = 1 - Math.sin(Math.min(1, b / 0.5) * Math.PI * 3) * 0.3 * (1 - b / 0.5);
+      m.userData.cap.scale.set(2 - s, s, 2 - s);
+      if (b > 0.5) { m.userData.boing = 0; m.userData.cap.scale.set(1, 1, 1); }
+    }
+    for (const m of keyMeshes) {
+      if (m.userData.taken) {
+        m.userData.taken += dt; m.position.y += dt * 2.5; m.scale.setScalar(Math.max(0.01, 1 - m.userData.taken * 2));
+        if (m.userData.taken > 0.5) { m.visible = false; m.userData.taken = 0; }
+      } else if (m.visible) { m.userData.k.rotation.y += dt * 2; m.position.y = m.userData.baseY + Math.sin(T * 2.5 + m.position.x) * 0.06; }
+    }
+    for (const b of bridgeMeshes) b.position.y += (b.userData.targetY - b.position.y) * Math.min(1, dt * 8);
+    for (const isl of islands) { isl.position.y = isl.userData.y0 + Math.sin(T * 0.4 + isl.userData.ph) * 0.4; isl.rotation.y += dt * 0.03; }
+    fallsTex.offset.y = (fallsTex.offset.y - dt * 1.4) % 1;
+  }
+
+  // camera
+  if (introT > 0 && playing) introT -= dt;
+  if (world && bearObj && playing) {
+    const bp = bearObj.position;
+    if (introT > 0) {
+      const k = 1 - introT / 2.6, e = k * k * (3 - 2 * k);
+      cam.target.set(introFrom.x + (bp.x - introFrom.x) * e, introFrom.y + (bp.y + 0.5 - introFrom.y) * e, introFrom.z + (bp.z - introFrom.z) * e);
+    }
+    if (introT <= 0) {
+      cam.target.x += (bp.x - cam.target.x) * Math.min(1, dt * 3);
+      cam.target.y += (bp.y + 0.5 - cam.target.y) * Math.min(1, dt * 3);
+      cam.target.z += (bp.z - cam.target.z) * Math.min(1, dt * 3);
+    }
+    sun.target.position.copy(cam.target);
+    sun.position.set(cam.target.x + 6, cam.target.y + 14, cam.target.z + 8);
+  }
+  const slow = introT > 0 && playing ? 0.32 : 1;
+  cam.yaw += (cam.yawT - cam.yaw) * Math.min(1, dt * 3.5 * slow);
+  cam.pitch += (cam.pitchT - cam.pitch) * Math.min(1, dt * 8 * slow * 0.5);
+  cam.dist += (cam.distT - cam.dist) * Math.min(1, dt * 4 * slow * 0.6);
+  const tgt = cam.target;
+  if (!world) { cam.yawT += dt * 0.2; }
+  camera.position.set(
+    tgt.x + Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist,
+    tgt.y + Math.sin(cam.pitch) * cam.dist,
+    tgt.z + Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist
+  );
+  camera.lookAt(tgt);
+  timeU.value = T;
+  if (composer) {
+    if (bearObj) {
+      const v = bearObj.position.clone(); v.y += 0.4; v.project(camera);
+      const f = finalPass.uniforms.uFocus;
+      f.value += ((v.y * 0.5 + 0.5) - f.value) * Math.min(1, dt * 4);
+    }
+    composer.render();
+  } else renderer.render(scene, camera);
+  // keep things smooth on slower tablets
+  perf.t += dt; perf.n++;
+  if (perf.t > 2.5) {
+    const ms = perf.t / perf.n * 1000;
+    if (ms > 30 && pixelRatio > 1) { pixelRatio = Math.max(1, pixelRatio - 0.5); resize(); }
+    else if (ms > 40 && composer) {
+      // still struggling: drop the post effects and use the lighter direct renderer
+      composer = null;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.95;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      sun.shadow.mapSize.set(1024, 1024);
+      if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+      scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
+    }
+    perf.t = 0; perf.n = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+// title backdrop: show world 1 spinning slowly behind the menu
+buildLevel(0);
+introT = 0; cam.target.set((LV.w - 1) / 2, 1, (LV.d - 1) / 2); cam.distT = 24; cam.pitchT = 0.85;
+toastEl.classList.add('hide');
+playing = false;
+show('title');
+const spin = () => { if (!playing) cam.yawT += 0.002; requestAnimationFrame(spin); };
+spin();
+requestAnimationFrame(t => { last = t; frame(t); });
+
+// hooks for automated testing
+window.__bear = { setSpeed: v => { speed = v; }, lowGfx: () => { composer = null; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputEncoding = THREE.sRGBEncoding; renderer.shadowMap.enabled = false; renderer.setPixelRatio(0.5); scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); }); }, solveExact, get steps() { return steps; }, solve, step, parseLevel, initState, LEVELS, get ST() { return ST; }, get LV() { return LV; }, startLevel, tryStep, grab, get busy() { return busy(); }, get won() { return won; }, get hearts() { return hearts; }, bees: () => bees };
+})();
+</script>
