@@ -65,7 +65,7 @@ It is a self-contained folder: the 3D engine (three.js r128), its bloom post-pro
 - Landmarks: La Concha, the Rock of Gibraltar, Africa across the Strait, Tarifa castle, a Guadiana-style cable-stayed bridge into Portugal, Algarve sea stacks, Cabo de São Vicente, windmills, Sintra's Pena Palace, Lisbon's red suspension bridge and Cristo Rei, the Giralda in Seville, Ronda.
 - **Graphics setting** in Settings: LOW (older phones), MEDIUM (real shadows) or HIGH (shadows, glow, colour grading and speed blur). Animated water, textured ground, headlight beams at night.
 - **Menus**: Play, How to play, Records (best time and score per car), Settings (graphics, music and effects volume, km/h or mph, camera, auto-accelerate, vibration), Credits, plus a pause menu and medals on the results screen.
-- **App Store / Google Play**: the native project is in `app/` (Capacitor). See `app/README.md` to build, and `app/store/listing.md` and `app/store/screenshots/` for the store listing. The privacy policy is `marbella-run/privacy.html`.
+- **App Store / Google Play**: the native project is in `marbella-run-app/` (Capacitor). See `marbella-run-app/README.md` to build, and `marbella-run-app/store/listing.md` and `marbella-run-app/store/screenshots/` for the store listing. The privacy policy is `marbella-run/privacy.html`.
 
 | Key | Action |
 | --- | --- |
