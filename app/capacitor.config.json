@@ -1,0 +1,20 @@
+{
+  "appId": "com.sellermatrix.captainbear2",
+  "appName": "Captain Bear 2",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#8fd3ff",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1400,
+      "launchAutoHide": true,
+      "backgroundColor": "#8fd3ff",
+      "showSpinner": false
+    },
+    "StatusBar": { "overlaysWebView": true, "style": "DARK" }
+  }
+}

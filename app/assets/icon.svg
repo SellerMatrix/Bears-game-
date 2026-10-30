@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#ffe27a"/><stop offset="0.55" stop-color="#ffb81c"/><stop offset="1" stop-color="#d97a00"/></radialGradient>
+    <radialGradient id="fur" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#c98a4e"/><stop offset="1" stop-color="#8a5328"/></radialGradient>
+    <radialGradient id="muz" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#fbe2bd"/><stop offset="1" stop-color="#e3b783"/></radialGradient>
+    <radialGradient id="lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fffbe0"/><stop offset="0.5" stop-color="#ffe066"/><stop offset="1" stop-color="#ffb000"/></radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6c8" stop-opacity="0.9"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></radialGradient>
+    <pattern id="hex" width="92" height="160" patternUnits="userSpaceOnUse" patternTransform="scale(0.9)">
+      <path d="M46 0l46 26v53L46 106 0 79V26zM46 106l46 27v53M46 106 0 133" fill="none" stroke="#fff3c4" stroke-opacity="0.35" stroke-width="6"/>
+    </pattern>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#hex)"/>
+  <circle cx="512" cy="300" r="250" fill="url(#glow)"/>
+  <!-- ears -->
+  <circle cx="262" cy="330" r="118" fill="url(#fur)" stroke="#3b2412" stroke-width="22"/>
+  <circle cx="762" cy="330" r="118" fill="url(#fur)" stroke="#3b2412" stroke-width="22"/>
+  <circle cx="262" cy="336" r="62" fill="#f2a6a0"/>
+  <circle cx="762" cy="336" r="62" fill="#f2a6a0"/>
+  <!-- head -->
+  <ellipse cx="512" cy="590" rx="330" ry="310" fill="url(#fur)" stroke="#3b2412" stroke-width="24"/>
+  <!-- headband + lamp -->
+  <path d="M196 470 Q512 330 828 470" fill="none" stroke="#d8432f" stroke-width="62" stroke-linecap="round"/>
+  <path d="M196 470 Q512 330 828 470" fill="none" stroke="#3b2412" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 0" opacity="0.25"/>
+  <circle cx="512" cy="392" r="78" fill="#3b2412"/>
+  <circle cx="512" cy="392" r="60" fill="url(#lamp)"/>
+  <circle cx="490" cy="370" r="16" fill="#fff"/>
+  <!-- eyes -->
+  <ellipse cx="392" cy="575" rx="40" ry="48" fill="#24150a"/>
+  <ellipse cx="632" cy="575" rx="40" ry="48" fill="#24150a"/>
+  <circle cx="405" cy="557" r="14" fill="#fff"/>
+  <circle cx="645" cy="557" r="14" fill="#fff"/>
+  <path d="M345 505 Q392 480 438 500" fill="none" stroke="#5a3418" stroke-width="16" stroke-linecap="round"/>
+  <path d="M586 500 Q632 480 679 505" fill="none" stroke="#5a3418" stroke-width="16" stroke-linecap="round"/>
+  <!-- cheeks -->
+  <ellipse cx="318" cy="690" rx="56" ry="34" fill="#ff8f8a" opacity="0.6"/>
+  <ellipse cx="706" cy="690" rx="56" ry="34" fill="#ff8f8a" opacity="0.6"/>
+  <!-- muzzle -->
+  <ellipse cx="512" cy="712" rx="150" ry="118" fill="url(#muz)" stroke="#3b2412" stroke-width="16"/>
+  <ellipse cx="512" cy="664" rx="56" ry="40" fill="#24150a"/>
+  <ellipse cx="496" cy="652" rx="16" ry="9" fill="#fff" opacity="0.8"/>
+  <path d="M512 704 v24 M462 742 Q512 790 562 742" fill="none" stroke="#24150a" stroke-width="16" stroke-linecap="round"/>
+  <!-- honey drip at the bottom -->
+  <path d="M0 960 Q120 910 220 960 Q260 1024 300 960 Q420 900 540 955 Q570 1010 600 955 Q760 905 1024 960 V1024 H0z" fill="#e88a00" opacity="0.9"/>
+</svg>
