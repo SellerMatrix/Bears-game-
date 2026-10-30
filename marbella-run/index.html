@@ -80,11 +80,6 @@ body {
 #speedo { display: flex; align-items: baseline; gap: 6px; }
 #speed { font-family: var(--font-title); font-size: 56px; line-height: 1; color: #fff; -webkit-text-stroke: 2px #000; text-shadow: 0 4px 0 #000; }
 #speedo .unit { font-size: 12px; color: var(--cyan); }
-#tach { display: flex; gap: 3px; margin-top: 6px; }
-#tach i { display: block; width: 8px; height: 14px; background: rgba(255,255,255,.18); transform: skewX(-15deg); }
-#tach i.on { background: var(--cyan); }
-#tach i.on.hi { background: var(--hot); }
-#tach i.on.max { background: var(--red); }
 #thrustBox { text-align: right; }
 #thrust { width: min(220px, 40vw); height: 16px; border: 3px solid #fff; background: rgba(0,0,0,.4); position: relative; margin-top: 6px; transform: skewX(-15deg); }
 #thrust b { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #ff3b00, var(--sun)); }
@@ -162,8 +157,6 @@ button.go:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
 .pad button.boost { border-color: var(--hot); }
 body:not(.touch) .pad { display: none; }
 body.touch .keys { display: none; }
-#muteBtn { position: fixed; top: calc(130px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
-  font-family: var(--font-hud); font-size: 9px; background: rgba(0,0,0,.4); color: #fff; border: 2px solid #fff; border-radius: 6px; padding: 6px 8px; cursor: pointer; }
 
 @media (max-width: 560px) {
   #time { font-size: 40px; }
@@ -173,6 +166,114 @@ body.touch .keys { display: none; }
   #route .town { font-size: 6px; }
   .stations { grid-template-columns: 1fr; }
 }
+/* ===== v1.0 UI ===== */
+.hudcard { background: linear-gradient(180deg, rgba(20,6,40,.62), rgba(20,6,40,.35)); border: 1px solid rgba(255,255,255,.18); border-radius: 10px; padding: 7px 10px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); text-shadow: 2px 2px 0 #000; }
+.hudcard .lbl { font-size: 8px; }
+.hudcard .val { font-size: 13px; margin: 3px 0 5px; }
+.hudcard .val.small { font-size: 10px; margin-bottom: 0; }
+.hudcard.left { justify-self: start; }
+.hudright { justify-self: end; display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+.hudcard.right { text-align: right; min-width: 0; }
+.iconbtn { pointer-events: auto; width: 42px; height: 42px; border-radius: 10px; border: 2px solid rgba(255,255,255,.8); background: rgba(20,6,40,.55); color: #fff; font-family: var(--font-hud); font-size: 12px; cursor: pointer; }
+#timeBox { position: relative; }
+#timeBonus { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-family: var(--font-title); font-size: 26px; color: var(--cyan); -webkit-text-stroke: 1px #003; opacity: 0; white-space: nowrap; }
+#timeBonus.show { animation: bonus 1.6s ease-out; }
+@keyframes bonus { 0% { opacity: 0; transform: translate(-50%, -10px) scale(1.6); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 18px); } }
+#stageCard { position: absolute; left: 0; top: 30%; padding: 14px 28px 14px max(20px, env(safe-area-inset-left, 0px)); background: linear-gradient(90deg, rgba(255,42,58,.92), rgba(255,79,184,.85) 70%, rgba(255,79,184,0)); clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%); min-width: min(440px, 80vw); box-sizing: border-box; text-shadow: 2px 2px 0 rgba(0,0,0,.4); }
+#stageCard.show { animation: card 3s ease-in-out forwards; }
+@keyframes card { 0% { transform: translateX(-105%); } 12%, 85% { transform: translateX(0); } 100% { transform: translateX(-105%); } }
+.sc-num { font-size: 10px; color: #ffe; letter-spacing: 2px; }
+.sc-name { font-family: var(--font-title); font-size: clamp(28px, 7vw, 48px); line-height: 1.05; transform: skewX(-8deg); }
+.sc-sub { font-size: 9px; margin-top: 4px; color: #fff; }
+#msg .big { font-size: clamp(26px, 6.5vw, 56px); }
+/* dial speedometer */
+#dial { position: relative; width: clamp(118px, 26vw, 150px); aspect-ratio: 1; }
+#dial canvas { width: 100%; height: 100%; }
+#dial .dval { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 10%; }
+#speed { font-family: var(--font-title); font-size: clamp(30px, 7vw, 42px); line-height: 1; color: #fff; -webkit-text-stroke: 1px #000; text-shadow: 0 3px 0 #000; }
+#dial .unit { font-size: 8px; color: var(--cyan); margin-top: 4px; }
+#thrustBox { text-align: right; text-shadow: 2px 2px 0 #000; padding-bottom: 6px; }
+#thrust { width: min(220px, 38vw); height: 18px; border: 2px solid rgba(255,255,255,.9); border-radius: 4px; background: rgba(0,0,0,.45); position: relative; margin-top: 6px; transform: skewX(-15deg); overflow: hidden; }
+#thrust b { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #ff3b00, var(--sun)); transition: width .08s linear; }
+#thrust i { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,.5); }
+#thrust i:nth-of-type(1) { left: 25%; } #thrust i:nth-of-type(2) { left: 50%; } #thrust i:nth-of-type(3) { left: 75%; }
+#thrust.full { box-shadow: 0 0 14px var(--sun); }
+.tready { font-size: 8px; color: var(--sun); margin-top: 6px; opacity: 0; }
+#thrust.full + .tready { opacity: 1; animation: blink 1s steps(2) infinite; }
+/* screens */
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box; overflow-y: auto; }
+.screen.dim { background: rgba(8,2,20,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#title { background: linear-gradient(180deg, rgba(20,6,40,0) 40%, rgba(20,6,40,.55)); }
+.menu { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; width: min(320px, 100%); }
+.menu button, .go, .setrow { font-family: var(--font-hud); font-size: 12px; color: #fff; background: rgba(20,6,40,.62); border: 2px solid rgba(255,255,255,.55); border-radius: 8px;
+  padding: 13px 16px; cursor: pointer; transform: skewX(-8deg); transition: transform .12s, background .12s, border-color .12s; }
+.menu button.primary, .go { color: #1a0620; background: linear-gradient(180deg, #ffe680, var(--sun) 50%, #ff9a1a); border-color: #1a0620; box-shadow: 0 5px 0 #1a0620; }
+.menu button:focus-visible, .menu button:hover, .go:focus-visible, .go:hover, .setrow:focus-visible, .setrow:hover { outline: none; border-color: var(--cyan); transform: skewX(-8deg) scale(1.04); box-shadow: 0 0 0 3px rgba(62,240,255,.35), 0 5px 0 #1a0620; }
+.menu button:active, .go:active { transform: skewX(-8deg) translateY(3px); }
+.go.ghost { color: #fff; background: rgba(20,6,40,.62); border-color: rgba(255,255,255,.55); box-shadow: none; }
+.row2 { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+.row2 .go { margin-top: 0; flex: 1; max-width: 200px; }
+.panel { background: linear-gradient(180deg, rgba(42,22,64,.94), rgba(18,8,32,.94)); border: 3px solid var(--pink); border-radius: 14px; padding: 18px; width: min(460px, 100%); box-sizing: border-box; box-shadow: 0 10px 0 rgba(0,0,0,.5); }
+.panel.wide { width: min(640px, 100%); }
+.panel.scroll { max-height: 100%; overflow-y: auto; }
+.panel h2 { font-family: var(--font-title); font-weight: normal; color: var(--sun); margin: 0 0 14px; font-size: clamp(22px, 6vw, 36px); transform: skewX(-8deg); }
+.ver { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); font-size: 8px; color: rgba(255,255,255,.5); }
+.setlist { display: flex; flex-direction: column; gap: 8px; }
+.setrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; font-size: 10px; padding: 11px 14px; }
+.setrow span:last-child { color: var(--sun); white-space: nowrap; }
+.hint { font-size: 8px; color: #bbb; margin-top: 12px; line-height: 1.6; }
+.howgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: left; }
+.how { background: rgba(0,0,0,.3); border-radius: 8px; padding: 10px; font-size: 8px; line-height: 1.7; color: #ddd; }
+.how b { display: block; color: var(--sun); font-size: 10px; margin-bottom: 4px; font-weight: normal; }
+.how em { color: var(--cyan); font-style: normal; }
+.ctrls { margin-top: 12px; text-align: left; font-size: 8px; line-height: 1.8; color: #ccc; display: flex; flex-direction: column; gap: 6px; }
+.ctrls b { color: var(--cyan); font-weight: normal; margin-right: 6px; }
+.rectable { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px 10px; font-size: 9px; text-align: left; }
+.rectable .h { color: var(--cyan); }
+.rectable .n { color: var(--sun); }
+.credits { font-size: 9px; line-height: 1.8; color: #ddd; }
+.credits b { color: var(--sun); font-weight: normal; }
+.grec { font-size: 8px; color: #ccc; margin-top: 10px; }
+.gname .arrow { font-family: var(--font-hud); font-size: 16px; color: #000; background: var(--sun); border: 3px solid #000; border-radius: 8px; width: 48px; height: 44px; cursor: pointer; }
+.medal { width: 78px; height: 78px; margin: -52px auto 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-title); font-size: 30px; color: #1a0620; border: 4px solid #1a0620; box-shadow: 0 5px 0 rgba(0,0,0,.4); }
+.medal.gold { background: radial-gradient(circle at 35% 30%, #fff6c0, #ffcc22 45%, #c88a00); }
+.medal.silver { background: radial-gradient(circle at 35% 30%, #fff, #d8dde8 45%, #8a90a0); }
+.medal.bronze { background: radial-gradient(circle at 35% 30%, #ffe0c0, #d8894a 45%, #8a4a1a); }
+.medal.none { display: none; }
+#result .panel { margin-top: 40px; }
+#result .rows { font-size: 10px; line-height: 2.1; }
+.newrec { font-family: var(--font-title); color: var(--cyan); font-size: 22px; margin-top: 6px; animation: blink .8s steps(2) infinite; }
+/* touch pads */
+.pad { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); align-items: flex-end; }
+body:not(.playing) .pad { display: none; }
+.pad.l { gap: 12px; }
+.pad.l button { width: 82px; height: 82px; border-radius: 22px; }
+.pad.l svg { width: 38px; height: 38px; }
+.pad.r { width: 200px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; justify-items: end; align-items: end; }
+.pad button { border-radius: 20px; background: rgba(20,6,40,.42); border: 2px solid rgba(255,255,255,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.pad button.small { width: 72px; height: 54px; font-size: 9px; }
+.pad button.boost { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--hot); background: radial-gradient(circle, rgba(255,120,30,.55), rgba(120,20,0,.35)); font-size: 10px; }
+.pad button.gas { width: 90px; height: 90px; border-radius: 18px; font-size: 10px; }
+body.autogas .pad button.gas { display: none; }
+body.autogas .pad.r { grid-template-columns: 1fr 1fr; }
+.pad button.on { background: rgba(255,210,58,.65); color: #000; }
+#hud .bottom { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+body.touch.playing #hud .bottom { bottom: calc(126px + env(safe-area-inset-bottom, 0px)); }
+body.touch.playing #thrustBox { margin-right: 0; }
+@media (max-width: 560px) {
+  .howgrid { grid-template-columns: 1fr; }
+  .hudcard .val { font-size: 10px; }
+  .pad.l button { width: 70px; height: 70px; }
+  .pad.r { width: 168px; }
+  .pad button.boost, .pad button.gas { width: 78px; height: 78px; }
+}
+@media (orientation: landscape) {
+  body.touch.playing #thrustBox { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); text-align: center; }
+  body.touch.playing #thrust { width: min(220px, 26vw); }
+  body.touch.playing #hud .bottom { bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { #stageCard.show, #timeBonus.show, .press, .newrec { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -182,72 +283,145 @@ body.touch .keys { display: none; }
 
 <div id="hud" hidden>
   <div class="top">
-    <div class="shadowtxt"><div class="lbl">SCORE</div><div class="val" id="score">0</div>
-      <div class="lbl" style="margin-top:8px">LAP</div><div class="val" id="lap">0'00"00</div></div>
-    <div id="timeBox" class="shadowtxt"><div class="lbl">TIME</div><div id="time">70</div></div>
-    <div id="stageBox" class="shadowtxt"><div class="lbl" id="stageNum">STAGE 1</div><div class="val" id="stageName">MARBELLA</div></div>
+    <div class="hudcard left">
+      <div class="lbl">SCORE</div><div class="val" id="score">0</div>
+      <div class="lbl">LAP</div><div class="val small" id="lap">0'00"00</div>
+    </div>
+    <div id="timeBox"><div class="lbl">TIME</div><div id="time">70</div><div id="timeBonus"></div></div>
+    <div class="hudright">
+      <div class="hudcard right"><div class="lbl" id="stageNum">STAGE 1</div><div class="val" id="stageName">MARBELLA</div></div>
+      <button id="pauseBtn" class="iconbtn" aria-label="Pause">II</button>
+    </div>
   </div>
   <div id="route"><div class="line"></div><div class="fill" id="routeFill"></div></div>
-  <div id="msg" class="shadowtxt"></div>
+  <div id="msg"></div>
+  <div id="stageCard" hidden><div class="sc-num" id="scNum">STAGE 1</div><div class="sc-name" id="scName">MARBELLA</div><div class="sc-sub" id="scSub"></div></div>
   <div class="bottom">
-    <div class="shadowtxt">
-      <div id="speedo"><span id="speed">0</span><span class="unit">KM/H</span></div>
-      <div id="tach"></div>
-    </div>
-    <div id="thrustBox" class="shadowtxt"><div class="lbl" id="thrustLbl">ROCKET THRUST</div><div id="thrust"><b id="thrustFill"></b></div></div>
+    <div id="dial"><canvas id="dialCv" width="300" height="300"></canvas><div class="dval"><span id="speed">0</span><span class="unit" id="unit">KM/H</span></div></div>
+    <div id="thrustBox"><div class="lbl" id="thrustLbl">ROCKETS</div><div id="thrust"><b id="thrustFill"></b><i></i><i></i><i></i></div><div class="tready" id="tReady">READY</div></div>
   </div>
 </div>
-<button id="muteBtn" hidden>SOUND ON</button>
 
-<div id="title" class="overlay">
+<div id="title" class="screen">
   <div class="logo">MARBELLA<small>RUN</small></div>
-  <div class="tag">MARBELLA · TARIFA · ALGARVE · LISBOA · HOME<br>8 STAGES · 3 ROCKET CARS</div>
-  <div class="press" id="pressStart">PRESS ENTER / TAP TO START</div>
-  <div class="keys">
-    <b>UP/W</b> GAS &nbsp; <b>DOWN/S</b> BRAKE &nbsp; <b>LEFT RIGHT/AD</b> STEER<br>
-    <b>SPACE</b> ROCKET BOOST &nbsp; <b>SHIFT/C</b> THRUSTER HOP<br>
-    LOOPS &amp; CORKSCREWS NEED <b>270 KM/H</b> — BOOST INTO THEM!<br>
-    KEEP <b>RIGHT</b> AFTER BANÚS FOR THE AP-7 · KEEP <b>LEFT</b> AT SOTOGRANDE FOR THE MARINA<br>
-    <b>P</b> PAUSE &nbsp; <b>M</b> MUTE &nbsp; <b>R</b> RESTART
-  </div>
-  <button class="gfx" id="gfxBtn">GRAPHICS: HIGH</button>
+  <div class="tag">MARBELLA · TARIFA · ALGARVE · LISBOA · HOME</div>
+  <nav class="menu">
+    <button data-nav data-act="play" class="primary">PLAY</button>
+    <button data-nav data-act="howto">HOW TO PLAY</button>
+    <button data-nav data-act="records">RECORDS</button>
+    <button data-nav data-act="settings">SETTINGS</button>
+    <button data-nav data-act="credits">CREDITS</button>
+  </nav>
   <div class="best" id="bestTxt"></div>
+  <div class="ver">v1.0</div>
 </div>
 
-<div id="garage" class="overlay" hidden>
+<div id="settings" class="screen" hidden>
+  <div class="panel wide">
+    <h2>SETTINGS</h2>
+    <div class="setlist" id="setList"></div>
+    <div class="hint" id="setHint">LEFT/RIGHT OR TAP TO CHANGE</div>
+    <button data-nav data-act="back" class="go">BACK</button>
+  </div>
+</div>
+
+<div id="howto" class="screen" hidden>
+  <div class="panel wide scroll">
+    <h2>HOW TO PLAY</h2>
+    <div class="howgrid">
+      <div class="how"><b>DRIVE</b>Reach each checkpoint before the clock hits zero. Every checkpoint adds time. 8 stages, 41 km, Marbella back to Marbella.</div>
+      <div class="how"><b>ROCKETS</b>Boost past 260 km/h. The tank refills slowly, and fully at every checkpoint.</div>
+      <div class="how"><b>LOOPS</b>You need 270 km/h to stay on the road upside down. Fire the rockets <em>before</em> the loop or you fall off.</div>
+      <div class="how"><b>HOP</b>The underside thrusters jump you over traffic. Costs a little rocket fuel.</div>
+      <div class="how"><b>AP-7</b>After Puerto Banús keep RIGHT for the toll motorway: no traffic, much higher top speed.</div>
+      <div class="how"><b>MARINA</b>At Sotogrande keep LEFT for the marina road. Look for the slipway...</div>
+    </div>
+    <div class="ctrls">
+      <div><b>KEYBOARD</b>UP/W gas · DOWN/S brake · LEFT/RIGHT steer · SPACE rockets · SHIFT hop · P pause · M mute</div>
+      <div><b>TOUCH</b>Left side: steer. Right side: rockets, hop, brake (gas is automatic, can be changed in Settings)</div>
+      <div><b>GAMEPAD</b>Stick/D-pad steer · A/RT gas · X/LT brake · B/RB rockets · Y/LB hop · START pause</div>
+    </div>
+    <button data-nav data-act="back" class="go">BACK</button>
+  </div>
+</div>
+
+<div id="records" class="screen" hidden>
+  <div class="panel wide">
+    <h2>RECORDS</h2>
+    <div class="rectable" id="recTable"></div>
+    <button data-nav data-act="back" class="go">BACK</button>
+  </div>
+</div>
+
+<div id="credits" class="screen" hidden>
+  <div class="panel wide">
+    <h2>CREDITS</h2>
+    <div class="credits">
+      <p><b>MARBELLA RUN</b><br>An arcade road trip along the Costa del Sol, the Algarve and Lisbon.</p>
+      <p><b>3D ENGINE</b><br>three.js · MIT licence · © three.js authors</p>
+      <p><b>FONTS</b><br>Bungee and Press Start 2P · SIL Open Font Licence 1.1</p>
+      <p><b>MUSIC &amp; SOUND</b><br>Synthesised live by the game</p>
+      <p>No ads. No tracking. No data leaves your device.</p>
+    </div>
+    <button data-nav data-act="back" class="go">BACK</button>
+  </div>
+</div>
+
+<div id="garage" class="screen" hidden>
   <div class="gpanel">
     <h2>CHOOSE YOUR CAR</h2>
-    <div class="gname"><button id="gPrev" aria-label="Previous car">◀</button><span id="gName"></span><button id="gNext" aria-label="Next car">▶</button></div>
+    <div class="gname"><button id="gPrev" class="arrow" aria-label="Previous car">◀</button><span id="gName"></span><button id="gNext" class="arrow" aria-label="Next car">▶</button></div>
     <div class="gtag" id="gTag"></div>
     <div class="gstats" id="gStats"></div>
-    <button class="go" id="gGo">SELECT</button>
-    <div class="hint">LEFT/RIGHT TO BROWSE · ENTER TO SELECT</div>
+    <div class="grec" id="gRec"></div>
+    <div class="row2"><button data-nav data-act="back" class="go ghost">BACK</button><button data-nav data-act="pickcar" class="go" data-default>SELECT</button></div>
   </div>
 </div>
 
-<div id="radio" class="overlay" hidden>
+<div id="radio" class="screen" hidden>
   <div class="panel">
     <h2>SELECT MUSIC</h2>
     <div class="stations" id="stations"></div>
     <div class="eq" id="eq"></div>
-    <div class="hint">LEFT/RIGHT TO TUNE · ENTER / TAP AGAIN TO DRIVE</div>
+    <div class="row2"><button data-nav data-act="back" class="go ghost">BACK</button><button data-nav data-act="drive" class="go" data-default>DRIVE!</button></div>
   </div>
 </div>
 
-<div id="result" class="overlay" hidden>
+<div id="pause" class="screen dim" hidden>
   <div class="panel">
+    <h2>PAUSED</h2>
+    <nav class="menu">
+      <button data-nav data-act="resume" class="primary">RESUME</button>
+      <button data-nav data-act="restart">RESTART</button>
+      <button data-nav data-act="settings">SETTINGS</button>
+      <button data-nav data-act="quit">QUIT TO MENU</button>
+    </nav>
+  </div>
+</div>
+
+<div id="result" class="screen dim" hidden>
+  <div class="panel">
+    <div class="medal" id="medal"></div>
     <h2 id="resTitle">GOAL!</h2>
     <div class="rows" id="resRows"></div>
-    <button class="go" id="againBtn">DRIVE AGAIN</button>
+    <div class="newrec" id="newRec" hidden>NEW RECORD!</div>
+    <nav class="menu">
+      <button data-nav data-act="retry" class="primary">DRIVE AGAIN</button>
+      <button data-nav data-act="garage">CHANGE CAR</button>
+      <button data-nav data-act="quit">MENU</button>
+    </nav>
   </div>
 </div>
 
 <div class="pad l">
-  <button data-k="left">◀</button><button data-k="right">▶</button>
+  <button data-k="left" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button data-k="right" aria-label="Steer right"><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
 <div class="pad r">
-  <button data-k="hop">HOP</button><button data-k="boost" class="boost">ROCKET</button>
-  <button data-k="brake">BRAKE</button><button data-k="gas">GAS</button>
+  <button data-k="hop" class="small">HOP</button>
+  <button data-k="boost" class="boost">ROCKET</button>
+  <button data-k="brake" class="small">BRAKE</button>
+  <button data-k="gas" class="gas">GAS</button>
 </div>
 <div id="fade"></div>
 
@@ -319,11 +493,38 @@ function setupPost() {
   composer = new THREE.EffectComposer(renderer, rt);
   composer.addPass(new THREE.RenderPass(scene, camera));
   composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.28, 0.4, 0.985));
+  gradePass = new THREE.ShaderPass(GRADE_SHADER); composer.addPass(gradePass);
 }
+// final look: gentle contrast + saturation, vignette, and radial motion blur + lens fringing at speed
+let gradePass = null;
+const GRADE_SHADER = {
+  uniforms: { tDiffuse: { value: null }, blur: { value: 0 }, sat: { value: 1.12 }, contrast: { value: 1.06 }, aspect: { value: 1 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float blur; uniform float sat; uniform float contrast; uniform float aspect; varying vec2 vUv;
+    void main() {
+      vec2 c = vec2(0.5, 0.55), d = vUv - c;
+      float r = length(d * vec2(aspect, 1.0));
+      vec3 col = texture2D(tDiffuse, vUv).rgb;
+      if (blur > 0.001) {
+        float k = blur * smoothstep(0.12, 0.7, r);
+        vec3 acc = col;
+        for (int i = 1; i < 8; i++) acc += texture2D(tDiffuse, vUv - d * k * float(i) * 0.012).rgb;
+        col = acc / 8.0;
+        col.r = mix(col.r, texture2D(tDiffuse, vUv + d * k * 0.012).r, 0.6);
+        col.b = mix(col.b, texture2D(tDiffuse, vUv - d * k * 0.012).b, 0.6);
+      }
+      float l = dot(col, vec3(0.299, 0.587, 0.114));
+      col = mix(vec3(l), col, sat);
+      col = (col - 0.5) * contrast + 0.5;
+      col *= 1.0 - smoothstep(0.55, 1.15, r) * 0.38;
+      gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+    }`,
+};
 const render = () => composer ? composer.render() : renderer.render(scene, camera);
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   if (composer) composer.setSize(innerWidth, innerHeight);
+  if (gradePass) gradePass.uniforms.aspect.value = innerWidth / innerHeight;
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
 });
 
@@ -536,15 +737,22 @@ const tmpA = newFrame(), tmpB = newFrame(), tmpC = newFrame();
 /* boat course: parallel to the Sotogrande→Gibraltar coast, out in the bay */
 function buildBoatTrack() {
   const s0 = SECRET_S, s1 = stageStart[4] - 60;
+  // smooth the coastline heavily first (moving average over 300 m), then offset it out to sea:
+  // offsetting the raw road would fold over itself in the tighter bends
+  const pad = 300, G = [];
+  // sample by distance along the ground (inside loops the road runs 200 m over almost no ground)
+  for (let s = s0 - pad; s <= s1 + pad; s += DS) { const g = main.frame(s, tmpA).G.clone().setY(0); if (!G.length || g.distanceTo(G[G.length - 1]) >= DS * 0.9) G.push(g); }
+  const win = 75, SM = G.map((_, i) => { const acc = new V3(); let n = 0; for (let j = Math.max(0, i - win); j <= Math.min(G.length - 1, i + win); j++) { acc.add(G[j]); n++; } return acc.multiplyScalar(1 / n); });
+  const g0 = main.frame(s0, tmpA).G.clone().setY(0), g1 = main.frame(s1, tmpA).G.clone().setY(0);
+  const nearest = q => { let bi = 0, bd = 1e9; G.forEach((g, i) => { const d = g.distanceTo(q); if (d < bd) { bd = d; bi = i; } }); return bi; };
+  const k0 = nearest(g0), k1 = nearest(g1);
   const raw = [];
-  for (let s = s0; s <= s1; s += DS) {
-    const fr = main.frame(s, tmpA);
-    const k = clamp((s - s0) / 380, 0, 1);
-    const off = lerp(140, 240, smooth(k));
-    raw.push(new V3(fr.G.x - fr.GR.x * off, SEA_Y, fr.G.z - fr.GR.z * off));
+  for (let k = k0; k <= k1; k++) {
+    const t = new V3().subVectors(SM[Math.min(SM.length - 1, k + 2)], SM[Math.max(0, k - 2)]).normalize();
+    const kk = clamp((k - k0) * DS / 380, 0, 1), off = lerp(140, 175, smooth(kk));
+    raw.push(new V3(SM[k].x + t.z * off, SEA_Y, SM[k].z - t.x * off));   // left of travel = -GR = (Fz, 0, -Fx)
   }
-  // smooth then resample at DS spacing
-  for (let pass = 0; pass < 6; pass++) for (let i = 1; i < raw.length - 1; i++) raw[i].lerpVectors(raw[i - 1], raw[i + 1], 0.5).lerp(raw[i], 0.5);
+  for (let pass = 0; pass < 10; pass++) for (let i = 1; i < raw.length - 1; i++) raw[i].lerpVectors(raw[i - 1], raw[i + 1], 0.5).lerp(raw[i], 0.5);
   const cum = [0];
   for (let i = 1; i < raw.length; i++) cum.push(cum[i - 1] + raw[i].distanceTo(raw[i - 1]));
   const total = cum[cum.length - 1], pts = [];
@@ -560,7 +768,7 @@ function buildBoatTrack() {
     const f = new V3().subVectors(b, a).setY(0).normalize();
     const yaw = Math.atan2(f.x, f.z);
     let c = 0;
-    if (prevYaw !== null) { let d = yaw - prevYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); c = -d / DS; }
+    if (prevYaw !== null) { let d = yaw - prevYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); c = clamp(-d / DS, -0.008, 0.008); }
     prevYaw = yaw;
     q.f = f; q.u = new V3(0, 1, 0); q.r = new V3().crossVectors(f, q.u).normalize(); q.gr = q.r.clone();
     q.g = q.p.clone(); q.curve = c; q.special = 0; q.phase = 0; q.stage = 3;
@@ -689,63 +897,125 @@ function groundAt(T, i, off) {
 const trackYaw = (T, i) => Math.atan2(T.F[i * 3], T.F[i * 3 + 2]) || Math.atan2(T.GR[i * 3 + 2], -T.GR[i * 3]);
 
 /* ---------------- textures ---------------- */
-const roadTex = canvasTex(256, 256, (g, w, h) => {
-  g.fillStyle = '#4b4e57'; g.fillRect(0, 0, w, h);
+const roadTex = canvasTex(512, 1024, (g, w, h) => {
+  g.fillStyle = '#4a4d56'; g.fillRect(0, 0, w, h);
   const r = rng(7);
-  for (let i = 0; i < 1400; i++) { g.fillStyle = r() < .5 ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.08)'; g.fillRect(r() * w, r() * h, 2, 2); }
-  const kerb = 1.2 / (2 * W) * w;
-  for (let y = 0; y < h; y += 32) {
-    g.fillStyle = (y / 32) % 2 ? '#ffffff' : '#e3262f';
-    g.fillRect(0, y, kerb, 32); g.fillRect(w - kerb, y, kerb, 32);
+  // patched repairs and darker tyre-worn lanes
+  for (let i = 0; i < 7; i++) { g.fillStyle = r() < .5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.035)'; g.fillRect(r() * w, r() * h, 40 + r() * 120, 60 + r() * 200); }
+  for (const lx of [-7.5, -2.5, 2.5, 7.5]) for (const t of [-0.9, 0.9]) {
+    const px = (lx + t + W) / (2 * W) * w; const gr = g.createLinearGradient(px - 14, 0, px + 14, 0);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(0,0,0,.13)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(px - 14, 0, 28, h);
   }
-  g.fillStyle = '#f4f4f4';
-  g.fillRect(kerb + 3, 0, 5, h); g.fillRect(w - kerb - 8, 0, 5, h);
-  for (const lx of [-5, 0, 5]) { const px = (lx + W) / (2 * W) * w; g.fillRect(px - 2.5, 0, 5, 128); }
+  // aggregate speckle
+  for (let i = 0; i < 26000; i++) { const v = r(); g.fillStyle = v < .45 ? 'rgba(255,255,255,.09)' : v < .9 ? 'rgba(0,0,0,.12)' : 'rgba(200,190,170,.18)'; g.fillRect(r() * w, r() * h, 1 + (r() * 2 | 0), 1 + (r() * 2 | 0)); }
+  // hairline cracks
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 1.2;
+  for (let i = 0; i < 10; i++) { let x = r() * w, y = r() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (r() - .5) * 30; y += r() * 26; g.lineTo(x, y); } g.stroke(); }
+  const kerb = 1.2 / (2 * W) * w;
+  for (let y = 0; y < h; y += 64) {
+    g.fillStyle = (y / 64) % 2 ? '#f4f4f4' : '#e0262f';
+    g.fillRect(0, y, kerb, 64); g.fillRect(w - kerb, y, kerb, 64);
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(kerb - 3, y, 3, 64); g.fillRect(w - kerb, y, 3, 64);
+  }
+  g.fillStyle = '#f2f2ee';
+  g.fillRect(kerb + 6, 0, 9, h); g.fillRect(w - kerb - 15, 0, 9, h);
+  for (const lx of [-5, 0, 5]) { const px = (lx + W) / (2 * W) * w; g.fillRect(px - 4, 0, 8, 512); }
+  // worn paint: speckle over the markings
+  for (let i = 0; i < 2500; i++) { g.fillStyle = 'rgba(74,77,86,.5)'; g.fillRect(r() * w, r() * h, 2, 2); }
+  // cat's eyes between lanes
+  for (const lx of [-5, 0, 5]) { const px = (lx + W) / (2 * W) * w; g.fillStyle = '#ffe9a0'; g.fillRect(px - 3, 760, 6, 8); }
 });
 roadTex.wrapS = THREE.ClampToEdgeWrapping; roadTex.wrapT = THREE.RepeatWrapping;
 const roadMat = new THREE.MeshToonMaterial({ map: roadTex, gradientMap: gradTex, side: THREE.DoubleSide });
 const concreteMat = toon(0xa7a2b5, { side: THREE.DoubleSide });
 // branch roads are drawn on top of the main road where the two overlap at a fork
 const branchRoadMat = roadMat.clone(); branchRoadMat.polygonOffset = true; branchRoadMat.polygonOffsetFactor = -2; branchRoadMat.polygonOffsetUnits = -6;
-const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex });
-
-const seaTex = canvasTex(256, 256, (g, w, h) => {
-  g.fillStyle = '#2a9fd8'; g.fillRect(0, 0, w, h);
-  const r = rng(3);
-  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 3; g.lineCap = 'round';
-  for (let i = 0; i < 26; i++) {
-    const x = r() * w, y = r() * h, l = 10 + r() * 18;
-    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + l / 2, y - 5, x + l, y); g.stroke();
-  }
-  g.fillStyle = 'rgba(120,220,255,.25)';
-  for (let i = 0; i < 40; i++) g.fillRect(r() * w, r() * h, 6, 2);
+// ground detail: speckled grass/sand texture multiplied over the vertex colours (world-space UVs)
+const groundTex = canvasTex(512, 512, (g, w, h) => {
+  g.fillStyle = '#e8e8e8'; g.fillRect(0, 0, w, h);
+  const r = rng(31);
+  for (let i = 0; i < 9000; i++) { const v = 200 + r() * 55 | 0; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(r() * w, r() * h, 2 + r() * 3, 2 + r() * 3); }
+  for (let i = 0; i < 2600; i++) { const x = r() * w, y = r() * h, v = 150 + r() * 70 | 0; g.strokeStyle = `rgb(${v},${v},${v})`; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - .5) * 5, y - 4 - r() * 6); g.stroke(); }
+  for (let i = 0; i < 40; i++) { const gr = g.createRadialGradient(0, 0, 0, 0, 0, 40 + r() * 60); gr.addColorStop(0, 'rgba(255,255,255,.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.save(); g.translate(r() * w, r() * h); g.fillStyle = gr; g.fillRect(-100, -100, 200, 200); g.restore(); }
 });
-seaTex.wrapS = seaTex.wrapT = THREE.RepeatWrapping; seaTex.repeat.set(400, 400);
-const seaMat = new THREE.MeshToonMaterial({ map: seaTex, gradientMap: gradTex, color: 0xffffff });
-const sea = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), seaMat);
+groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex, map: groundTex });
+
+// Stylised ocean: layered moving waves give a normal per pixel, which drives a fresnel blend
+// between deep water and sky colour, a sharp cartoon sun glint, and foam on the crests.
+const seaMat = new THREE.ShaderMaterial({
+  fog: true,
+  uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
+    time: { value: 0 }, sunDir: { value: new V3(0, 0.3, 1) }, sunCol: { value: new THREE.Color(0xfff2c0) }, skyCol: { value: new THREE.Color(0xbfe6ff) },
+    tint: { value: new THREE.Color(0xffffff) }, camPos: { value: new V3() }, night: { value: 0 }, detail: { value: 1 },
+  }]),
+  vertexShader: `varying vec3 vW;
+    #include <fog_pars_vertex>
+    void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+      #include <fog_vertex>
+    }`,
+  fragmentShader: `uniform float time; uniform vec3 sunDir; uniform vec3 sunCol; uniform vec3 skyCol; uniform vec3 tint; uniform vec3 camPos; uniform float night; uniform float detail;
+    varying vec3 vW;
+    #include <fog_pars_fragment>
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float noise(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y); }
+    float waves(vec2 p) {
+      float h = 0.0;
+      h += sin(dot(p, vec2(0.12, 0.05)) + time * 1.1) * 0.55;
+      h += sin(dot(p, vec2(-0.07, 0.15)) + time * 1.4) * 0.4;
+      h += sin(dot(p, vec2(0.21, -0.13)) + time * 2.0) * 0.22;
+      h += (noise(p * 0.18 + vec2(time * 0.35, time * 0.2)) - 0.5) * 0.9 * detail;
+      h += (noise(p * 0.55 - vec2(time * 0.6, 0.0)) - 0.5) * 0.35 * detail;
+      return h;
+    }
+    void main() {
+      vec2 p = vW.xz;
+      float e = 0.6, h = waves(p);
+      vec3 n = normalize(vec3(-(waves(p + vec2(e, 0.0)) - h) / e * 0.9, 1.0, -(waves(p + vec2(0.0, e)) - h) / e * 0.9));
+      vec3 v = normalize(camPos - vW);
+      float fres = pow(1.0 - max(dot(n, v), 0.0), 4.0);
+      vec3 deep = vec3(0.03, 0.36, 0.58), shallow = vec3(0.12, 0.66, 0.82);
+      vec3 col = mix(deep, shallow, smoothstep(-0.6, 0.9, h)) * tint;
+      col = mix(col, skyCol, clamp(0.12 + fres * 0.85, 0.0, 0.9));
+      vec3 r = reflect(-v, n);
+      float sd = max(dot(r, normalize(sunDir)), 0.0);
+      col += sunCol * (smoothstep(0.9925, 0.996, sd) * 1.6 + pow(sd, 60.0) * 0.35) * (1.0 - night * 0.6);
+      float foam = smoothstep(0.82, 1.05, h + (noise(p * 1.3 + time) - 0.5) * 0.35);
+      col = mix(col, vec3(0.96, 0.98, 1.0), foam * 0.75);
+      col = mix(col, col * vec3(0.35, 0.4, 0.65), night * 0.55);
+      gl_FragColor = vec4(col, 1.0);
+      #include <fog_fragment>
+    }`,
+});
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), seaMat);
 sea.rotation.x = -Math.PI / 2; sea.position.y = SEA_Y; scene.add(sea);
 
-// a path of sparkles on the water leading towards the sun
-const glitterTex = canvasTex(128, 512, (g, w, h) => {
-  const r = rng(12);
-  for (let i = 0; i < 1600; i++) {
-    const y = r() * h, x = w / 2 + (r() - .5) * w * (0.25 + 0.75 * y / h), a = 0.25 + r() * 0.75;
-    g.fillStyle = `rgba(255,${230 + r() * 25 | 0},${170 + r() * 60 | 0},${a})`;
-    g.fillRect(x, y, 1 + r() * 3, 1);
-  }
-  const fade = g.createLinearGradient(0, 0, 0, h); fade.addColorStop(0, 'rgba(0,0,0,1)'); fade.addColorStop(0.15, 'rgba(0,0,0,0)'); fade.addColorStop(0.85, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
-  g.globalCompositeOperation = 'destination-out'; g.fillStyle = fade; g.fillRect(0, 0, w, h);
-});
-glitterTex.wrapT = THREE.RepeatWrapping;
-const glitterPivot = new THREE.Group(); scene.add(glitterPivot);
-const glitter = new THREE.Mesh(new THREE.PlaneGeometry(90, 1700), new THREE.MeshBasicMaterial({ map: glitterTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-glitter.rotation.x = -Math.PI / 2; glitter.position.set(0, 0, 880); glitterPivot.add(glitter);
 const blobTex = canvasTex(64, 64, (g) => {
   const gr = g.createRadialGradient(32, 32, 2, 32, 32, 31);
   gr.addColorStop(0, 'rgba(0,0,0,.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
 });
 const blobMat = new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false });
+// warm pool of headlight on the road ahead at night
+const poolTex = canvasTex(64, 128, (g) => {
+  const gr = g.createRadialGradient(32, 80, 2, 32, 80, 64); gr.addColorStop(0, 'rgba(255,240,200,.9)'); gr.addColorStop(1, 'rgba(255,240,200,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 128);
+});
+const lightPool = new THREE.Mesh(new THREE.PlaneGeometry(9, 26), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+lightPool.renderOrder = 2; scene.add(lightPool);
+function updateNightLights() {
+  const n = clamp(stageGlow * 1.3 - 0.15, 0, 1), on = n > 0.02 && mode !== 'boat' && !P.fall;
+  R.beams.visible = on; R.beamMat.opacity = 0.09 * n;
+  lightPool.visible = on;
+  if (on) {
+    const f = track.frame(P.s + 11, tmpC);
+    lightPool.position.copy(f.P).addScaledVector(f.R, P.x).addScaledVector(f.U, 0.07);
+    tmpV2.crossVectors(f.U, f.F); tmpM.makeBasis(tmpV2, f.U, f.F);
+    lightPool.quaternion.setFromRotationMatrix(tmpM).multiply(tmpQ.setFromAxisAngle(new V3(1, 0, 0), -Math.PI / 2));
+    lightPool.material.opacity = 0.55 * n;
+  }
+}
 function blob(w, l) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), blobMat); m.rotation.x = -Math.PI / 2; m.renderOrder = 1; return m; }
 
 /* ---------------- sky ---------------- */
@@ -800,7 +1070,9 @@ function applyPalette(stageF) {
   lerpHex(A.hor, B.hor, t, skyMat.uniforms.hor.value);
   lerpHex(A.sun, B.sun, t, skyMat.uniforms.sunCol.value);
   scene.fog.color.copy(skyMat.uniforms.hor.value);
-  lerpHex(A.sea, B.sea, t, seaMat.color);
+  lerpHex(A.sea, B.sea, t, seaMat.uniforms.tint.value);
+  seaMat.uniforms.skyCol.value.copy(skyMat.uniforms.hor.value).lerp(skyMat.uniforms.top.value, 0.25);
+  seaMat.uniforms.sunCol.value.copy(skyMat.uniforms.sunCol.value);
   const el = lerp(A.el, B.el, t);
   // the sun sits roughly ahead (we are heading west into the sunset)
   SUN_DIR.set(-0.55, el, 0.85).normalize();
@@ -830,7 +1102,7 @@ function buildRoadChunk(T, i0, i1) {
     const depth = T.special[i] ? 0.9 : T.bridge[i] > 0 ? 2.2 : 0.6;
     const br = tr.clone().addScaledVector(u, -depth), bl = tl.clone().addScaledVector(u, -depth);
     [tl, tr, tl, tr, br, bl].forEach((v, j) => pos.set([v.x, v.y, v.z], (k * 6 + j) * 3));
-    const v = s / 16;
+    const v = s / 32;
     uv.set([0, v, 1, v, 0, v, 1, v, 1, v, 0, v], k * 12);
   }
   for (let k = 0; k < n - 1; k++) { const a = k * 6, b = a + 6; idx.push(a, a + 1, b, a + 1, b + 1, b); }
@@ -867,7 +1139,7 @@ const _ca = new THREE.Color(), _cb = new THREE.Color();
 function buildTerrainChunk(T, i0, i1) {
   const pr = {}; profile(T, i0, pr);
   const n = i1 - i0 + 1, P = pr.offs.length, EL = pr.offs.indexOf(-(W + 0.4)), ER = pr.offs.indexOf(W + 0.4);
-  const pos = new Float32Array(n * P * 3), col = new Float32Array(n * P * 3), idx = [];
+  const pos = new Float32Array(n * P * 3), col = new Float32Array(n * P * 3), tuv = new Float32Array(n * P * 2), idx = [];
   for (let k = 0; k < n; k++) {
     const i = Math.min(i0 + k, T.n - 1), a = i * 3;
     const th = STAGES[T.stage[i]].theme;
@@ -879,7 +1151,7 @@ function buildTerrainChunk(T, i0, i1) {
         const sgn = j === EL ? -1 : 1;
         x = T.P[a] + T.R[a] * sgn * (W + 0.3); y = T.P[a + 1] + T.R[a + 1] * sgn * (W + 0.3) - 0.25; z = T.P[a + 2] + T.R[a + 2] * sgn * (W + 0.3);
       }
-      pos.set([x, y, z], (k * P + j) * 3);
+      pos.set([x, y, z], (k * P + j) * 3); tuv.set([x / 9, z / 9], (k * P + j) * 2);
       if (pr.cols) _ca.set(pr.cols[j]);
       else if (j < 4) _ca.set(coastC[j]).lerp(_cb.set(landC[j]), pr.inl);
       else _ca.set([0xc9b98a, 0x8a8478, 0xc9b98a, th.grass, th.scrub, th.hill, th.top][j - 4]);
@@ -893,7 +1165,7 @@ function buildTerrainChunk(T, i0, i1) {
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.BufferAttribute(tuv, 2));
   g.setIndex(idx); g.computeVertexNormals();
   const m = new THREE.Mesh(g, terrainMat); m.receiveShadow = true;
   return m;
@@ -924,6 +1196,13 @@ function defType(name, parts) { TYPES[name] = parts.map(([list, mat]) => ({ geo:
     [[[geo.cyl(0.3, 0.5, 6.5, 6), M(0, 3.2, 0, 0, 0, 0.08)]], toon(0x7a5a3c)],
     [[[geo.sph(4.2, 10, 6), M(0.4, 7.2, 0, 0, 0, 0, 1, 0.42, 1)], [geo.sph(2.8, 9, 6), M(-2.4, 6.6, 1, 0, 0, 0, 1, 0.45, 1)]], toon(0x3f6e30)],
   ]);
+  const blades = [];
+  for (let k = 0; k < 7; k++) blades.push([geo.cone(0.09, 0.9 + (k % 3) * 0.25, 3), M(Math.sin(k * 2.4) * 0.3, 0.45, Math.cos(k * 1.7) * 0.3, Math.sin(k) * 0.35, k, Math.cos(k * 1.3) * 0.35)]);
+  defType('tuft', [[blades, toon(0x7da83e)]]);
+  defType('dunegrass', [[blades, toon(0xc8b46a)]]);
+  const petals = [];
+  for (let k = 0; k < 6; k++) petals.push([geo.sph(0.13, 5, 4), M(Math.sin(k * 2.1) * 0.45, 0.45 + (k % 2) * 0.12, Math.cos(k * 1.9) * 0.45)]);
+  defType('flowers', [[[[geo.cone(0.25, 0.5, 4), M(0, 0.2, 0)]], toon(0x5d8a34)], [petals.filter((_, k) => k % 2), toon(0xf2d23a)], [petals.filter((_, k) => !(k % 2)), toon(0xe8508a)]]);
   defType('pillar', [[[[geo.cyl(1.5, 1.9, 1, 8), M(0, 0.5, 0)]], toon(0xb8b4c4)]]);
   defType('cypress', [[[[geo.cone(1.1, 9.5, 7), M(0, 4.9, 0)]], toon(0x2f5a2c)]]);
   defType('olive', [
@@ -1372,6 +1651,12 @@ function populateMain() {
       if (st >= 3 && (s % 900) < 12) add('bull', sd * (W + 110), { face: true });
       if ((s % 240) < 12) add('mountain', sd * (W + 380 + r() * 260), { yaw: r() * TAU, scale: [180 + r() * 160, 150 + r() * 210, 180 + r() * 160] });
     }
+    // verges: grass tufts and wildflowers close to the road
+    for (let q = 0; q < 3; q++) {
+      add('tuft', W + 1.5 + r() * 14, { yaw: r() * TAU, scale: 0.8 + r() * 0.6 });
+      add(inl ? 'tuft' : 'dunegrass', -(W + 1.5 + r() * (inl ? 14 : 8)), { yaw: r() * TAU, scale: 0.8 + r() * 0.6 });
+    }
+    if (r() < 0.45) add('flowers', (r() < 0.6 ? 1 : (inl ? -1 : 1)) * (W + 3 + r() * 10), { yaw: r() * TAU, scale: 0.9 + r() * 0.5 });
     // left side: the beach and the sea
     if (inl || marina || Math.abs(s - SECRET_S) < 70) continue;
     if (!banus) {
@@ -1778,9 +2063,9 @@ const CARS = [
   { id: 'roadster', name: 'ROCKET ROADSTER', tag: 'WEDGE SUPERCAR · GLASS CANOPY · ALL-ROUNDER', paint: 0xd00818, skyAmt: 0.22, wheel: 'turbine', flameX: -2.36, build: bodyRoadster,
     stats: { top: 72, boost: 108, accel: 1, grip: 1, tank: 1 } },
   { id: 'spider', name: 'SOL SPIDER', tag: '80s OPEN-TOP CRUISER · BEST GRIP · BIG ROCKET TANK', paint: 0xffb21c, skyAmt: 0.2, wheel: 'star', flameX: -2.44, build: bodySpider,
-    stats: { top: 66, boost: 102, accel: 1.15, grip: 1.3, tank: 1.45 } },
+    stats: { top: 70, boost: 104, accel: 1.15, grip: 1.3, tank: 1.45 } },
   { id: 'aero', name: 'AERO-X', tag: 'LONG-TAIL HYPERCAR · FASTEST · TWITCHY & THIRSTY', paint: 0xdfe6ee, skyAmt: 0.35, wheel: 'aero', flameX: -2.86, build: bodyAero,
-    stats: { top: 80, boost: 120, accel: 0.95, grip: 0.82, tank: 0.8 } },
+    stats: { top: 74, boost: 116, accel: 0.95, grip: 0.82, tank: 0.8 } },
 ];
 function buildCar(D) {
   const car = new THREE.Group();
@@ -1851,8 +2136,15 @@ function buildCar(D) {
   kit.visible = false;
   mergeChildren(body);
   car.traverse(o => { if (o.isMesh && o.material !== outlineMat && !o.material.transparent) o.castShadow = true; });
+  // headlight beams (shown at dusk/night)
+  const beams = new THREE.Group(); car.add(beams);
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  for (const x of [0.62, -0.62]) {
+    const b = new THREE.Mesh(new THREE.ConeGeometry(2.4, 16, 16, 1, true).rotateX(-Math.PI / 2).translate(0, 0, 8), beamMat);
+    b.position.set(x, 0.5, 2.1); b.rotation.x = 0.04; beams.add(b);
+  }
   const shadow = blob(2.7, 5.4);
-  return { car, wheels, flame, hovers, kit, shadow, fo, fi, diamonds, flameGlow, tailGlows, headGlows };
+  return { car, wheels, beams, beamMat, flame, hovers, kit, shadow, fo, fi, diamonds, flameGlow, tailGlows, headGlows };
 }
 let R = null, carSel = 0;
 const carModels = [];
@@ -1949,7 +2241,7 @@ function updateParticles(dt) {
 
 /* ---------------- audio: synthwave radio + electric motor ---------------- */
 const Audio = (() => {
-  let ctx = null, master, music, sfx, muted = false, noiseBuf;
+  let ctx = null, master, music, sfx, muted = false, noiseBuf, volM = 0.7, volE = 0.8, ducked = false;
   let eng = null, timer = null, song = 0, step = 0, nextT = 0;
   const NOTE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
   const midi = n => { const m = /^([A-G])(#|b)?(\d)$/.exec(n); return 12 * (+m[3] + 1) + NOTE[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0); };
@@ -1992,8 +2284,8 @@ const Audio = (() => {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC();
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.8; master.connect(ctx.destination);
-    music = ctx.createGain(); music.gain.value = 0.32; music.connect(master);
-    sfx = ctx.createGain(); sfx.gain.value = 0.7; sfx.connect(master);
+    music = ctx.createGain(); music.gain.value = 0.32 * volM; music.connect(master);
+    sfx = ctx.createGain(); sfx.gain.value = 0.7 * volE; sfx.connect(master);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     // electric motor: a low saw plus two slightly detuned triangles (no single pure tone to drone),
@@ -2075,10 +2367,17 @@ const Audio = (() => {
       if (name === 'splash') noise(t, 0.9, 0.9, 1200, 'lowpass', sfx);
       if (name === 'ring') [0, 12].forEach((n, i) => tone(t + i * 0.07, hz(84 + n), 0.2, 'triangle', 0.25, sfx));
       if (name === 'beep') tone(t, 660, 0.18, 'square', 0.2, sfx);
+      if (name === 'tick') tone(t, 1200, 0.05, 'square', 0.06, sfx, 3000);
+      if (name === 'select') { tone(t, 880, 0.08, 'square', 0.1, sfx, 3000); tone(t + 0.06, 1320, 0.1, 'square', 0.1, sfx, 3000); }
       if (name === 'go') tone(t, 1320, 0.5, 'square', 0.22, sfx);
       if (name === 'fall') { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(90, t + 1); g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 1.1); o.type = 'square'; o.connect(g); g.connect(sfx); o.start(t); o.stop(t + 1.2); }
     },
     toggleMute() { muted = !muted; if (master) master.gain.value = muted ? 0 : 0.8; return muted; },
+    setVolumes(m, e) { volM = m; volE = e; if (music) music.gain.value = 0.32 * volM * (ducked ? 0.35 : 1); if (sfx) sfx.gain.value = 0.7 * volE; },
+    pauseAll(on) {
+      ducked = on; if (music) music.gain.value = 0.32 * volM * (on ? 0.35 : 1);
+      if (on && eng) { const t = ctx.currentTime; for (const g of [eng.og, eng.wg, eng.rg, eng.sg]) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.03); } }
+    },
   };
 })();
 
@@ -2089,6 +2388,7 @@ const KEYMAP = { ArrowUp: 'gas', KeyW: 'gas', ArrowDown: 'brake', KeyS: 'brake',
   Space: 'boost', ShiftLeft: 'hop', ShiftRight: 'hop', KeyC: 'hop', KeyX: 'boost' };
 addEventListener('keydown', e => {
   if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = true; e.preventDefault(); }
+  if ((e.code === 'Enter' || e.code === 'Backspace') && screen) e.preventDefault();
   if (!e.repeat) onPress(e.code);
 });
 for (const ev of ['touchend', 'click', 'keydown', 'pointerup', 'mousedown']) addEventListener(ev, () => Audio.unlock(), { capture: true, passive: true });
@@ -2106,24 +2406,34 @@ let padPrev = {};
 function readInput() {
   const inp = { gas: !!(keys.gas || touch.gas), brake: !!(keys.brake || touch.brake), steer: (keys.right || touch.right ? 1 : 0) - (keys.left || touch.left ? 1 : 0),
     boost: !!(keys.boost || touch.boost), hop: !!(keys.hop || touch.hop) };
+  if (SET.autogas && (mode === 'race' || mode === 'boat') && !inp.brake) inp.gas = true;
   const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(Boolean) : null;
   if (gp) {
     const ax = gp.axes[0] || 0; if (Math.abs(ax) > 0.15) inp.steer = clamp(ax * 1.2, -1, 1);
     const b = i => gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.3);
     if (b(0) || b(7)) inp.gas = true; if (b(2) || b(6)) inp.brake = true; if (b(1) || b(5)) inp.boost = true; if (b(3) || b(4)) inp.hop = true;
     if (b(14)) inp.steer = -1; if (b(15)) inp.steer = 1;
-    if (b(9) && !padPrev[9]) onPress('Enter');
-    if (b(0) && !padPrev[0] && mode !== 'race' && mode !== 'boat') onPress('Enter');
-    if (b(14) && !padPrev[14]) onPress('ArrowLeft');
-    if (b(15) && !padPrev[15]) onPress('ArrowRight');
-    padPrev = { 9: b(9), 0: b(0), 14: b(14), 15: b(15) };
+    const edge = i => b(i) && !padPrev[i];
+    if (edge(9)) onPress(screen ? 'Enter' : 'GamepadStart');
+    if (screen) {
+      if (edge(0)) onPress('Enter');
+      if (edge(1)) onPress('Escape');
+      if (edge(12)) onPress('ArrowUp');
+      if (edge(13)) onPress('ArrowDown');
+      if (edge(14)) onPress('ArrowLeft');
+      if (edge(15)) onPress('ArrowRight');
+      const ay = gp.axes[1] || 0, ax2 = gp.axes[0] || 0;
+      if (Math.abs(ay) > 0.6 && !padPrev.ay) onPress(ay > 0 ? 'ArrowDown' : 'ArrowUp');
+      if (Math.abs(ax2) > 0.6 && !padPrev.ax) onPress(ax2 > 0 ? 'ArrowRight' : 'ArrowLeft');
+    }
+    padPrev = {}; for (const i of [0, 1, 9, 12, 13, 14, 15]) padPrev[i] = b(i);
+    padPrev.ay = Math.abs(gp.axes[1] || 0) > 0.6; padPrev.ax = Math.abs(gp.axes[0] || 0) > 0.6;
   }
   return inp;
 }
 
 /* ---------------- HUD ---------------- */
 const $ = id => document.getElementById(id);
-const tach = $('tach'); for (let k = 0; k < 16; k++) tach.appendChild(document.createElement('i'));
 const routeEl = $('route');
 const TOTAL = FINISH_S;
 STAGES.forEach((st, k) => {
@@ -2140,10 +2450,6 @@ function showMsg(big, small = '', dur = 2.2) {
   m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); msgTimer = dur;
 }
 const fmtLap = t => { const m = Math.floor(t / 60), s = Math.floor(t % 60), c = Math.floor((t * 100) % 100); return `${m}'${String(s).padStart(2, '0')}"${String(c).padStart(2, '0')}`; };
-function loadBest() { try { return JSON.parse(localStorage.getItem('marbellarun') || 'null'); } catch (e) { return null; } }
-function saveBest(b) { try { localStorage.setItem('marbellarun', JSON.stringify(b)); } catch (e) { } }
-function refreshBest() { const b = loadBest(); $('bestTxt').textContent = b ? `BEST SCORE ${b.score.toLocaleString()}${b.time ? ' · BEST TIME ' + fmtLap(b.time) : ''}` : ''; }
-refreshBest();
 
 /* ---------------- game state ---------------- */
 let mode = 'title';           // title | radio | count | race | boat | over | finish
@@ -2154,91 +2460,234 @@ let secretFound = false, loopsDone = 0, transition = null, clock = 0, overTimer 
 const camPos = new V3(), camUp = new V3(0, 1, 0), camLook = new V3();
 
 function resetRace() {
-  track = main; mode = 'count'; countdown = 3.6;
+  track = main; mode = 'count'; countdown = 3.6; countBeep = 4;
   Object.assign(P, { s: 30, x: 2.5, v: 0, h: 0, hv: 0, fuel: 1, crash: 0, fall: null, invuln: 0, spinYaw: 0, boosting: 0 });
   timeLeft = START_TIME; lapTime = 0; score = 0; stageIdx = 0; secretFound = false; loopsDone = 0; clock = 0;
   setBoatMode(false);
   for (const rg of boatThings.rings) { rg.got = false; rg.obj.visible = true; }
   traffic.forEach((t, k) => respawnTraffic(t, 140 + k * 170 + Math.random() * 60));
-  $('hud').hidden = false; $('title').hidden = true; $('radio').hidden = true; $('result').hidden = true; $('muteBtn').hidden = false;
+  paused = false; transition = null; $('fade').style.opacity = 0; msgTimer = 0; $('msg').innerHTML = '';
+  $('hud').hidden = false; showScreen(null);
   $('stageNum').textContent = 'STAGE 1/' + STAGES.length; $('stageName').textContent = STAGES[0].name;
+  stageCard(0);
   snapCamera();
 }
 function setBoatMode(on) {
   R.kit.visible = on; R.wheels.forEach(w => w.steer.visible = !on);
   traffic.forEach(t => t.g.visible = !on);
 }
+/* ---------------- settings, records, menus ---------------- */
+const SET = Object.assign({ music: 7, sfx: 8, units: 'kmh', camera: 'near', autogas: document.body.classList.contains('touch'), haptics: true },
+  (() => { try { return JSON.parse(localStorage.getItem('marbellarun-settings') || '{}'); } catch (e) { return {}; } })());
+function saveSet() { try { localStorage.setItem('marbellarun-settings', JSON.stringify(SET)); } catch (e) { } applySet(); }
+function applySet() {
+  Audio.setVolumes(SET.music / 10, SET.sfx / 10);
+  document.body.classList.toggle('autogas', !!SET.autogas);
+  $('unit').textContent = SET.units === 'mph' ? 'MPH' : 'KM/H';
+}
+const fmtSpeed = v => SET.units === 'mph' ? Math.round(v * 2.23694) : Math.round(v * KMH);
+const unitName = () => SET.units === 'mph' ? 'MPH' : 'KM/H';
+function buzz(ms) { if (SET.haptics && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) { } }
+const SETTING_ROWS = [
+  { k: 'gfx', label: 'GRAPHICS', vals: [0, 1, 2], show: v => QUALITY_NAMES[v] + (v !== QUALITY ? ' *' : '') },
+  { k: 'music', label: 'MUSIC VOLUME', vals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], show: v => v ? '■'.repeat(Math.ceil(v / 2)) + ' ' + v : 'OFF' },
+  { k: 'sfx', label: 'SOUND EFFECTS', vals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], show: v => v ? '■'.repeat(Math.ceil(v / 2)) + ' ' + v : 'OFF' },
+  { k: 'units', label: 'SPEED UNITS', vals: ['kmh', 'mph'], show: v => v === 'mph' ? 'MPH' : 'KM/H' },
+  { k: 'camera', label: 'CAMERA', vals: ['near', 'far'], show: v => v.toUpperCase() },
+  { k: 'autogas', label: 'AUTO-ACCELERATE', vals: [false, true], show: v => v ? 'ON' : 'OFF' },
+  { k: 'haptics', label: 'VIBRATION', vals: [false, true], show: v => v ? 'ON' : 'OFF' },
+];
+let gfxPending = QUALITY;
+function setValue(row) { return row.k === 'gfx' ? gfxPending : SET[row.k]; }
+function stepSetting(row, d) {
+  const i = row.vals.indexOf(setValue(row)), v = row.vals[(i + d + row.vals.length) % row.vals.length];
+  if (row.k === 'gfx') { gfxPending = v; try { localStorage.setItem('marbellarun-gfx', String(v)); } catch (e) { } }
+  else SET[row.k] = v;
+  saveSet(); renderSettings(row.k);
+  Audio.sfx('tick');
+}
+function renderSettings(focusKey) {
+  const el = $('setList'); el.innerHTML = '';
+  for (const row of SETTING_ROWS) {
+    const b = document.createElement('button'); b.className = 'setrow'; b.setAttribute('data-nav', ''); b.dataset.key = row.k;
+    b.innerHTML = `<span>${row.label}</span><span>◀ ${row.show(setValue(row))} ▶</span>`;
+    b.addEventListener('click', () => stepSetting(row, 1));
+    b.stepSetting = d => stepSetting(row, d);
+    el.appendChild(b);
+    if (row.k === focusKey) b.focus({ preventScroll: true });
+  }
+  $('setHint').textContent = gfxPending !== QUALITY ? (backTo === 'title' ? '* GRAPHICS CHANGE APPLIES WHEN YOU GO BACK' : '* GRAPHICS CHANGE APPLIES WHEN YOU RETURN TO THE MENU') : 'LEFT/RIGHT OR TAP TO CHANGE';
+}
+// records: best time and score per car
+function loadRec() { try { return JSON.parse(localStorage.getItem('marbellarun-records') || '{}'); } catch (e) { return {}; } }
+function saveRec(r) { try { localStorage.setItem('marbellarun-records', JSON.stringify(r)); } catch (e) { } }
+function refreshBest() {
+  const r = loadRec(); let bs = 0; for (const k in r) bs = Math.max(bs, r[k].score || 0);
+  $('bestTxt').textContent = bs ? `BEST SCORE ${bs.toLocaleString()}` : '';
+}
+function renderRecords() {
+  const r = loadRec();
+  $('recTable').innerHTML = '<span class="h">CAR</span><span class="h">BEST TIME</span><span class="h">BEST SCORE</span>' +
+    CARS.map(c => { const q = r[c.id] || {}; return `<span>${c.name}</span><span class="n">${q.time ? fmtLap(q.time) : '--'}</span><span class="n">${q.score ? q.score.toLocaleString() : '--'}</span>`; }).join('') +
+    `<span class="h">STAGES REACHED</span><span class="n" style="grid-column: span 2">${Math.max(0, ...CARS.map(c => (r[c.id] || {}).stage || 0))} / ${STAGES.length}</span>` +
+    `<span class="h">SECRET MARINA</span><span class="n" style="grid-column: span 2">${CARS.some(c => (r[c.id] || {}).secret) ? 'FOUND ⚓' : 'NOT YET'}</span>`;
+}
+
+// screen stack: which overlay is up, and where BACK goes
+const SCREENS = ['title', 'settings', 'howto', 'records', 'credits', 'garage', 'radio', 'pause', 'result'];
+let screen = 'title', backTo = 'title';
+function showScreen(id) {
+  screen = id;
+  for (const k of SCREENS) $(k).hidden = k !== id;
+  const playing = !id && (mode === 'race' || mode === 'boat' || mode === 'count');
+  document.body.classList.toggle('playing', playing);
+  if (typeof keepAwake === 'function') keepAwake(playing);
+  if (id) setTimeout(() => {
+    if ($(id).contains(document.activeElement)) return;
+    const el = (lastFocus[id] && $(id).contains(lastFocus[id]) && lastFocus[id]) || $(id).querySelector('[data-default]') || $(id).querySelector('[data-nav]');
+    if (el) el.focus({ preventScroll: true });
+  }, 30);
+}
+const lastFocus = {};
+document.addEventListener('focusin', e => { if (screen && $(screen).contains(e.target)) lastFocus[screen] = e.target; });
+function navItems() { return screen ? [...$(screen).querySelectorAll('[data-nav]')].filter(e => e.offsetParent) : []; }
+function navMove(d) {
+  const items = navItems(); if (!items.length) return;
+  let i = items.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + items.length) % items.length;
+  items[i].focus({ preventScroll: true }); Audio.sfx('tick');
+}
+function startMenu() {
+  if (gfxPending !== QUALITY) { location.reload(); return; }
+  paused = false; mode = 'title'; transition = null; $('fade').style.opacity = 0;
+  track = main; Object.assign(P, { s: 30, x: 0, v: 0, h: 0, hv: 0, fall: null, crash: 0, boosting: 0 }); setBoatMode(false);
+  $('hud').hidden = true; refreshBest(); delete lastFocus.title; delete lastFocus.result; delete lastFocus.pause; showScreen('title'); msgTimer = 0; $('msg').innerHTML = '';
+}
+function act(a) {
+  Audio.init(); Audio.sfx('select');
+  switch (a) {
+    case 'play': openGarage(); break;
+    case 'howto': backTo = 'title'; showScreen('howto'); break;
+    case 'records': backTo = 'title'; renderRecords(); showScreen('records'); break;
+    case 'credits': backTo = 'title'; showScreen('credits'); break;
+    case 'settings': backTo = screen; renderSettings(); showScreen('settings'); break;
+    case 'back':
+      if (screen === 'settings' && gfxPending !== QUALITY && backTo === 'title') { location.reload(); return; }
+      if (screen === 'garage') { startMenu(); break; }
+      if (screen === 'radio') { openGarage(); break; }
+      showScreen(backTo); if (backTo === 'title') backTo = 'title'; break;
+    case 'pickcar': openRadio(); break;
+    case 'drive': resetRace(); break;
+    case 'resume': setPaused(false); break;
+    case 'restart': setPaused(false); resetRace(); break;
+    case 'retry': resetRace(); break;
+    case 'garage': openGarage(); break;
+    case 'quit': setPaused(false); startMenu(); break;
+  }
+}
+document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); act(b.dataset.act); }));
+function setPaused(on) {
+  if (on === paused) return;
+  if (on && !(mode === 'race' || mode === 'boat' || mode === 'count')) return;
+  paused = on;
+  for (const k in touch) touch[k] = false;
+  for (const k in keys) keys[k] = false;
+  document.querySelectorAll('.pad button.on').forEach(b => b.classList.remove('on'));
+  if (on) { backTo = 'pause'; delete lastFocus.pause; showScreen('pause'); Audio.pauseAll(true); }
+  else { showScreen(null); Audio.pauseAll(false); last = performance.now(); }
+}
+$('pauseBtn').addEventListener('click', e => { e.stopPropagation(); setPaused(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
+addEventListener('blur', () => setPaused(true));
+
 function onPress(code) {
   Audio.init();
-  if (code === 'KeyM') { $('muteBtn').textContent = Audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; return; }
-  if (mode === 'title' && (code === 'Enter' || code === 'Space' || code === 'tap')) { openGarage(); return; }
-  if (mode === 'garage') {
-    if (code === 'ArrowLeft' || code === 'KeyA') { setCar(carSel - 1); renderGarage(); }
-    if (code === 'ArrowRight' || code === 'KeyD') { setCar(carSel + 1); renderGarage(); }
-    if (code === 'Enter' || code === 'Space') openRadio();
+  if (code === 'KeyM') { Audio.toggleMute(); return; }
+  if (screen) { // a menu is showing
+    if (code === 'ArrowUp' || code === 'KeyW') { navMove(-1); return; }
+    if (code === 'ArrowDown' || code === 'KeyS') { navMove(1); return; }
+    const lr = code === 'ArrowLeft' || code === 'KeyA' ? -1 : code === 'ArrowRight' || code === 'KeyD' ? 1 : 0;
+    if (lr && screen === 'garage') { setCar(carSel + lr); renderGarage(); Audio.sfx('tick'); return; }
+    if (lr && screen === 'radio') { radioSel = (radioSel + lr + 3) % 3; renderRadio(); Audio.play(radioSel); return; }
+    if (lr && screen === 'settings' && document.activeElement && document.activeElement.stepSetting) { document.activeElement.stepSetting(lr); return; }
+    if (lr) { navMove(lr); return; }
+    if (code === 'Enter' || code === 'Space') {
+      if (screen === 'result' && overTimer < 1.2) return;
+      const el = document.activeElement;
+      if (el && $(screen).contains(el) && el.click) el.click(); else { const f = navItems()[0]; if (f) f.click(); }
+      return;
+    }
+    if (code === 'Escape' || code === 'Backspace') {
+      if (screen === 'pause') act('resume');
+      else if (screen !== 'title' && screen !== 'result') act('back');
+      return;
+    }
     return;
   }
-  if (mode === 'radio') {
-    if (code === 'ArrowLeft' || code === 'KeyA') { radioSel = (radioSel + 2) % 3; renderRadio(); Audio.play(radioSel); }
-    if (code === 'ArrowRight' || code === 'KeyD') { radioSel = (radioSel + 1) % 3; renderRadio(); Audio.play(radioSel); }
-    if (code === 'Enter' || code === 'Space') resetRace();
-    return;
-  }
-  if ((mode === 'over' || mode === 'finish') && overTimer > 1.5 && (code === 'Enter' || code === 'Space')) { openGarage(); return; }
-  if (code === 'KeyP' || code === 'Escape') { if (mode === 'race' || mode === 'boat') { paused = !paused; if (paused) showMsg('PAUSE', 'P TO CONTINUE', 9999); else msgTimer = 0; } }
+  if (code === 'KeyP' || code === 'Escape' || code === 'GamepadStart') { setPaused(true); return; }
   if (code === 'KeyR' && (mode === 'race' || mode === 'boat' || mode === 'count')) resetRace();
 }
 function openGarage() {
-  mode = 'garage'; $('title').hidden = true; $('result').hidden = true; $('hud').hidden = true; $('radio').hidden = true; $('garage').hidden = false;
-  track = main; P.s = 30; P.x = 0; P.v = 0; setBoatMode(false);
-  renderGarage();
+  paused = false; mode = 'garage'; $('hud').hidden = true;
+  track = main; Object.assign(P, { s: 30, x: 0, v: 0, h: 0, hv: 0, fall: null, crash: 0, boosting: 0 }); setBoatMode(false);
+  renderGarage(); showScreen('garage');
 }
 function renderGarage() {
-  const D = CARS[carSel], S = D.stats;
+  const D = CARS[carSel], S = D.stats, r = loadRec()[D.id] || {};
   $('gName').textContent = D.name; $('gTag').textContent = D.tag;
-  const rows = [['TOP SPEED', S.top / 80, Math.round(S.top * KMH) + ' KM/H'], ['ROCKETS', S.boost / 120, Math.round(S.boost * KMH) + ' KM/H'],
+  const rows = [['TOP SPEED', S.top / 80, fmtSpeed(S.top) + ' ' + unitName()], ['ROCKETS', S.boost / 120, fmtSpeed(S.boost) + ' ' + unitName()],
     ['GRIP', S.grip / 1.3, ''], ['ACCEL', S.accel / 1.15, ''], ['TANK', S.tank / 1.45, '']];
   $('gStats').innerHTML = rows.map(([l, v, n]) => `<span>${l}</span><div class="bar"><b style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></b></div><span class="num">${n}</span>`).join('');
+  $('gRec').textContent = r.time ? `BEST ${fmtLap(r.time)} · ${r.score.toLocaleString()} PTS` : r.score ? `BEST SCORE ${r.score.toLocaleString()}` : 'NO RECORD YET';
 }
 function openRadio() {
-  $('garage').hidden = true;
-  mode = 'radio'; $('title').hidden = true; $('result').hidden = true; $('hud').hidden = true; $('radio').hidden = false;
-  renderRadio(); Audio.play(radioSel);
+  mode = 'radio'; $('hud').hidden = true;
+  renderRadio(); showScreen('radio'); Audio.play(radioSel);
 }
 function renderRadio() {
   const el = $('stations'); el.innerHTML = '';
   Audio.SONGS.forEach((s, k) => {
-    const b = document.createElement('div'); b.className = 'station' + (k === radioSel ? ' sel' : '');
+    const b = document.createElement('button'); b.className = 'station' + (k === radioSel ? ' sel' : '');
     b.innerHTML = `<span class="fm">FM ${s.fm}</span>${s.name}`;
-    b.addEventListener('pointerdown', e => { e.stopPropagation(); Audio.init(); if (radioSel === k) resetRace(); else { radioSel = k; renderRadio(); Audio.play(k); } });
+    b.addEventListener('click', e => { e.stopPropagation(); Audio.init(); if (radioSel === k) resetRace(); else { radioSel = k; renderRadio(); Audio.play(k); } });
     el.appendChild(b);
   });
 }
 { const eq = $('eq'); for (let k = 0; k < 14; k++) { const i = document.createElement('i'); i.style.animationDelay = (k * 0.07 % 0.5) + 's'; eq.appendChild(i); } }
-$('title').addEventListener('pointerdown', () => onPress('tap'));
-$('againBtn').addEventListener('click', () => { Audio.init(); openGarage(); });
-$('gfxBtn').textContent = 'GRAPHICS: ' + QUALITY_NAMES[QUALITY];
-$('gfxBtn').addEventListener('pointerdown', e => e.stopPropagation());
-$('gfxBtn').addEventListener('click', e => { e.stopPropagation(); try { localStorage.setItem('marbellarun-gfx', String((QUALITY + 1) % 3)); } catch (er) { } location.reload(); });
 $('gPrev').addEventListener('click', e => { e.stopPropagation(); setCar(carSel - 1); renderGarage(); });
 $('gNext').addEventListener('click', e => { e.stopPropagation(); setCar(carSel + 1); renderGarage(); });
-$('gGo').addEventListener('click', e => { e.stopPropagation(); openRadio(); });
-$('muteBtn').addEventListener('click', () => { Audio.init(); $('muteBtn').textContent = Audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; });
 
+function medalFor(win) {
+  if (!win) return 'none';
+  return timeLeft >= 60 ? 'gold' : timeLeft >= 25 ? 'silver' : 'bronze';
+}
 function endGame(win) {
+  if (mode === 'finish' || mode === 'over') return;
   mode = win ? 'finish' : 'over'; overTimer = 0;
-  if (win) score += Math.round(timeLeft * 10000);
-  const best = loadBest() || { score: 0, time: 0 };
-  const nb = { score: Math.max(best.score, score), time: win ? (best.time ? Math.min(best.time, lapTime) : lapTime) : best.time };
-  saveBest(nb); refreshBest();
+  const bonus = win ? Math.round(timeLeft * 1000) : 0;
+  score += bonus;
+  const medal = medalFor(win), id = CARS[carSel].id;
+  const recs = loadRec(), r = recs[id] || {};
+  let newRec = false;
+  if (score > (r.score || 0)) { r.score = score; newRec = true; }
+  if (win && (!r.time || lapTime < r.time)) { r.time = lapTime; newRec = true; }
+  r.stage = Math.max(r.stage || 0, win ? STAGES.length : stageIdx + 1);
+  if (secretFound) r.secret = true;
+  recs[id] = r; saveRec(recs); refreshBest();
+  buzz(win ? [60, 60, 120] : 200);
+  const prog = Math.round(clamp(mainS(track, P.s) / FINISH_S, 0, 1) * 100);
   setTimeout(() => {
-    $('result').hidden = false;
-    $('resTitle').textContent = win ? '¡GOAL! MARBELLA' : 'GAME OVER';
-    $('resRows').innerHTML = `SCORE <span>${score.toLocaleString()}</span><br>TIME <span>${fmtLap(lapTime)}</span><br>` +
-      `CAR <span>${CARS[carSel].name}</span><br>REACHED <span>${win ? 'MARBELLA · FULL LOOP' : STAGES[stageIdx].name}</span><br>LOOPS &amp; CORKSCREWS <span>${loopsDone}</span><br>` +
-      `SECRET MARINA <span>${secretFound ? 'FOUND ⚓' : '???'}</span><br>BEST <span>${nb.score.toLocaleString()}</span>`;
-  }, win ? 2600 : 1600);
-  showMsg(win ? 'GOAL!' : 'TIME UP', win ? 'MARBELLA · TARIFA · LISBOA · MARBELLA' : '', 3);
+    if (mode !== 'finish' && mode !== 'over') return;
+    $('hud').hidden = true;
+    $('medal').className = 'medal ' + medal; $('medal').textContent = medal === 'gold' ? '1' : medal === 'silver' ? '2' : '3';
+    $('resTitle').textContent = win ? '¡META! MARBELLA' : 'GAME OVER';
+    $('resRows').innerHTML = `SCORE <span>${score.toLocaleString()}</span>${bonus ? ` <span style="color:#aaa">(+${bonus.toLocaleString()} TIME BONUS)</span>` : ''}<br>` +
+      `TIME <span>${fmtLap(lapTime)}</span><br>CAR <span>${CARS[carSel].name}</span><br>` +
+      (win ? `MEDAL <span>${medal.toUpperCase()}</span><br>` : `REACHED <span>${STAGES[stageIdx].name} · ${prog}%</span><br>`) +
+      `LOOPS &amp; CORKSCREWS <span>${loopsDone}</span> · MARINA <span>${secretFound ? 'FOUND ⚓' : '???'}</span>`;
+    $('newRec').hidden = !newRec;
+    showScreen('result');
+  }, win ? 2600 : 1800);
+  showMsg(win ? '¡META!' : 'TIME UP', win ? 'MARBELLA · TARIFA · LISBOA · MARBELLA' : '', 3);
 }
 
 function startTransition(text, sub, onMid) { transition = { t: 0, onMid, done: false }; showMsg(text, sub, 3); }
@@ -2246,11 +2695,42 @@ function startTransition(text, sub, onMid) { transition = { t: 0, onMid, done: f
 /* ---------------- physics ---------------- */
 const fr = newFrame();
 const tmpV = new V3(), tmpV2 = new V3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4();
+// forks, checkpoints, finish and fork hints, given where the car was last frame
+function progress(prevTrack, prevS, onBoat) {
+  // forks: take a branch by being on its side when the two surfaces separate; rejoin at its end
+  if (track === main && mode === 'race') {
+    for (const b of BRANCHES) {
+      const dec = b.s0 + b.decide;
+      if (prevS < dec && P.s >= dec && b.side * P.x > 5) {
+        track = b; P.s = b.decideIdx * DS + (P.s - dec); P.x -= b.decideOff;
+        if (b === AP7) showMsg('AP-7 AUTOPISTA', 'TOLL ROAD · NO TRAFFIC · TOP SPEED +38%', 2.4);
+        else showMsg('PUERTO SOTOGRANDE', 'MARINA TOUR · KEEP AN EYE OUT ON THE LEFT...', 2.4);
+        Audio.sfx('check'); break;
+      }
+    }
+  } else if (track.branch && P.s >= track.length - 3) {
+    const b = track; track = main; P.s = b.s1 + (P.s - b.length);
+    if (b === MARINA) { score += 10000; showMsg('MARINA TOUR', '+10,000', 1.6); }
+  }
+  const mPrev = mainS(prevTrack, prevS), mNow = mainS(track, P.s);
+  // checkpoints (measured along the main road, whichever road you are on)
+  if (!onBoat) {
+    for (let k = stageIdx + 1; k < STAGES.length; k++) if (mPrev < stageStart[k] && mNow >= stageStart[k]) reachStage(k);
+    if (mPrev < FINISH_S && mNow >= FINISH_S && mode === 'race') endGame(true);
+    // the fork hints
+    if (track === main) {
+      if (mPrev < AP7.s0 - 520 && mNow >= AP7.s0 - 520) showMsg('AP-7 TOLL ROAD AHEAD', 'KEEP RIGHT FOR THE FAST LANE', 2.4);
+      if (mPrev < MARINA.s0 - 450 && mNow >= MARINA.s0 - 450) showMsg('PUERTO SOTOGRANDE', 'KEEP LEFT FOR THE MARINA ROAD', 2.4);
+    }
+  }
+}
 function updatePlayer(dt, inp) {
   const onBoat = mode === 'boat';
   if (P.fall) { updateFall(dt); return; }
   if (P.crash > 0) {
+    const ps = P.s, pt = track;
     P.crash -= dt; P.v = Math.max(0, P.v - 40 * dt); P.s += P.v * dt; P.spinYaw += dt * 11;
+    progress(pt, ps, mode === 'boat');
     if (P.crash <= 0) { P.spinYaw = 0; P.v = 0; P.invuln = 1.6; P.x = clamp(P.x, -H + 2, H - 2); }
     return;
   }
@@ -2282,7 +2762,7 @@ function updatePlayer(dt, inp) {
   // steering + centrifugal drift
   const grip = Math.min(P.v, 38) * 0.42 * ST.grip;
   P.x += inp.steer * grip * dt;
-  P.x -= tr.curve * P.v * P.v * 0.22 * (track.centri || 1) * dt;
+  P.x -= tr.curve * P.v * P.v * 0.22 * (track.centri || 1) / ST.grip * dt;
   P.steerVis = lerp(P.steerVis, inp.steer, 1 - Math.exp(-dt * 10));
   if (special) P.x = clamp(P.x, -halfW + 1.2, halfW - 1.2);
   else if (track.walls) { // crash barriers / quay bollards: scrape along them
@@ -2305,31 +2785,8 @@ function updatePlayer(dt, inp) {
   const rg = track.region(prevS);
   if (rg && prevS < rg.s1 && P.s >= rg.s1) { loopsDone++; score += 15000; Audio.sfx('loop'); showMsg(rg.type === 'loop' ? 'LOOP!' : 'CORKSCREW!', '+15,000', 1.6); }
   if (racing) score += Math.round(P.v * dt * (P.boosting ? 22 : 12));
-  // forks: take a branch by being on its side when the two surfaces separate; rejoin at its end
-  if (track === main && mode === 'race') {
-    for (const b of BRANCHES) {
-      const dec = b.s0 + b.decide;
-      if (prevS < dec && P.s >= dec && (b.side > 0 ? P.x > b.decideOff / 2 : P.x < b.decideOff / 2)) {
-        track = b; P.s = b.decideIdx * DS + (P.s - dec); P.x -= b.decideOff;
-        if (b === AP7) showMsg('AP-7 AUTOPISTA', 'TOLL ROAD · NO TRAFFIC · TOP SPEED +38%', 2.4);
-        else showMsg('PUERTO SOTOGRANDE', 'MARINA TOUR · KEEP AN EYE OUT ON THE LEFT...', 2.4);
-        Audio.sfx('check'); break;
-      }
-    }
-  } else if (track.branch && P.s >= track.length - 3) {
-    const b = track; track = main; P.s = b.s1 + (P.s - b.length);
-    if (b === MARINA) { score += 10000; showMsg('MARINA TOUR', '+10,000', 1.6); }
-  }
-  const mPrev = mainS(prevTrack, prevS), mNow = mainS(track, P.s);
-  // checkpoints (measured along the main road, whichever road you are on)
+  progress(prevTrack, prevS, onBoat);
   if (!onBoat) {
-    for (let k = stageIdx + 1; k < STAGES.length; k++) if (mPrev < stageStart[k] && mNow >= stageStart[k]) reachStage(k);
-    if (mPrev < FINISH_S && mNow >= FINISH_S && mode === 'race') endGame(true);
-    // the fork hints
-    if (track === main) {
-      if (mPrev < AP7.s0 - 520 && mNow >= AP7.s0 - 520) showMsg('AP-7 TOLL ROAD AHEAD', 'KEEP RIGHT FOR THE FAST LANE', 2.4);
-      if (mPrev < MARINA.s0 - 450 && mNow >= MARINA.s0 - 450) showMsg('PUERTO SOTOGRANDE', 'KEEP LEFT FOR THE MARINA ROAD', 2.4);
-    }
     // secret slipway on the marina road
     if (!secretFound && track === MARINA && Math.abs(P.s - MARINA.secretS) < 45 && P.x < -(W + 2.5) && P.v > 25 && mode === 'race') enterBoat();
   } else {
@@ -2360,6 +2817,10 @@ function updatePlayer(dt, inp) {
     const pp = carWorld(tmpV2).addScaledVector(fr.F, -2);
     emit(pp, new V3((Math.random() - .5) * 3, 2 + Math.random() * 2, 0).addScaledVector(fr.F, -P.v * 0.1), 0xe8d29a, 0.8, 0.4, 1.6, 4);
   }
+  if (!onBoat && P.h < 0.1 && P.v > 45 && Math.abs(inp.steer) > 0.6 && Math.abs(tr.curve) > 0.0015 && Math.random() < 0.7) {
+    const pp = carWorld(tmpV2).addScaledVector(fr.F, -1.6).addScaledVector(fr.R, (Math.random() < .5 ? -1 : 1) * 0.9).addScaledVector(fr.U, 0.3);
+    emit(pp, new V3((Math.random() - .5) * 2, 1 + Math.random(), (Math.random() - .5) * 2).addScaledVector(fr.F, P.v * 0.55), 0xd8d8dc, 0.9, 0.4, 1.8, -0.5);
+  }
   if (P.boosting && Math.random() < 0.8) {
     const pp = carWorld(tmpV2).addScaledVector(fr.F, -3.4).addScaledVector(fr.U, 0.4);
     emit(pp, tmpV.copy(fr.F).multiplyScalar(-8 + P.v * 0.6), Math.random() < .5 ? 0xffa030 : 0xfff0a0, 0.25, 0.35, 0.1, 0, true);
@@ -2372,9 +2833,9 @@ function splashTrail() {
   const side = Math.random() < .5 ? -1 : 1;
   emit(p.addScaledVector(tr.R, side * 1.1), new V3().addScaledVector(tr.R, side * 3).add(new V3(0, 3 + Math.random() * 2, 0)), 0xffffff, 0.6, 0.18, 0.55, 10);
 }
-function bump(f) { P.v *= f; P.invuln = 0.6; Audio.sfx('bump'); shake = 0.4; }
+function bump(f) { P.v *= f; P.invuln = 0.6; Audio.sfx('bump'); shake = 0.4; buzz(30); }
 function crash() {
-  P.crash = 1.5; P.hv = 9; P.h = 0.01; Audio.sfx('crash'); shake = 1; P.invuln = 1;
+  P.crash = 1.5; P.hv = 9; P.h = 0.01; Audio.sfx('crash'); shake = 1; P.invuln = 1; buzz(120);
   const p = carWorld(tmpV2); for (let k = 0; k < 14; k++) emit(p, new V3((Math.random() - .5) * 10, 2 + Math.random() * 6, (Math.random() - .5) * 10), 0x777777, 1.2, 0.8, 2.6, 2);
   showMsg('CRASH!', 'WATCH THE TRAFFIC', 1.2);
 }
@@ -2389,11 +2850,21 @@ function updateFall(dt) {
   if (F.pos.y < F.groundY + 0.5) { F.pos.y = F.groundY + 0.5; if (F.vel.y < -4) { Audio.sfx('crash'); shake = 0.8; for (let k = 0; k < 10; k++) emit(F.pos, new V3((Math.random() - .5) * 10, 3 + Math.random() * 4, (Math.random() - .5) * 10), 0xd8c8a0, 1, 1, 3, 3); } F.vel.multiplyScalar(0.3); F.vel.y = 0; }
   R.car.position.copy(F.pos);
   R.car.quaternion.multiply(tmpQ.setFromEuler(new THREE.Euler(dt * 3, dt * 1.5, dt * 2)));
-  if (F.t > 1.8) { P.s = F.rg.s1 + 6; P.v = 18; P.x = 0; P.h = 0; P.fall = null; P.invuln = 1.5; }
+  if (F.t > 1.8) {
+    let s1 = F.rg.s1; for (const r of track.regions) if (r.s0 > s1 && r.s0 - s1 < 120) s1 = r.s1;
+    const ps = P.s, pt = track;
+    P.s = s1 + 6; P.v = 18; P.x = 0; P.h = 0; P.fall = null; P.invuln = 1.5; P.fuel = 1;
+    progress(pt, ps, mode === 'boat');
+  }
+}
+function stageCard(k) {
+  $('scNum').textContent = `STAGE ${k + 1} / ${STAGES.length}`; $('scName').textContent = STAGES[k].name; $('scSub').textContent = STAGES[k].sub;
+  const c = $('stageCard'); c.hidden = false; c.classList.remove('show'); void c.offsetWidth; c.classList.add('show');
 }
 function reachStage(k) {
   stageIdx = k; timeLeft += STAGES[k].ext; P.fuel = 1;
-  Audio.sfx('check'); showMsg('EXTENDED PLAY!', `+${STAGES[k].ext} SEC · ${STAGES[k].name} · ${STAGES[k].sub}`, 2.6);
+  Audio.sfx('check'); buzz(40); showMsg('EXTENDED PLAY!', '', 1.8); stageCard(k);
+  const tb = $('timeBonus'); tb.textContent = '+' + STAGES[k].ext; tb.classList.remove('show'); void tb.offsetWidth; tb.classList.add('show');
   $('stageNum').textContent = 'STAGE ' + (k + 1) + '/' + STAGES.length; $('stageName').textContent = STAGES[k].name;
 }
 function enterBoat() {
@@ -2473,14 +2944,14 @@ function poseCar(dt) {
 function snapCamera() { updateCamera(1, true); }
 function updateCamera(dt, snap) {
   const tr = track.frame(P.s, tmpA);
-  const back = track.frame(P.s - 6.6, camFrame);
+  const far = SET.camera === 'far', back = track.frame(P.s - (far ? 8.6 : 6.6), camFrame);
   const ahead = track.frame(P.s + 14, lookFrame);
   let target, look, up;
   if (P.fall) {
     target = tmpV.copy(back.P).addScaledVector(back.U, 4).addScaledVector(back.R, P.x * 0.8);
     look = tmpV2.copy(P.fall.pos); up = tr.U;
   } else {
-    target = tmpV.copy(back.P).addScaledVector(back.R, P.x * 0.85).addScaledVector(back.U, 2.35 + P.h * 0.5);
+    target = tmpV.copy(back.P).addScaledVector(back.R, P.x * 0.85).addScaledVector(back.U, (far ? 3.1 : 2.35) + P.h * 0.5);
     look = tmpV2.copy(ahead.P).addScaledVector(ahead.R, P.x * 0.6).addScaledVector(ahead.U, 1.1 + P.h * 0.3);
     up = back.U.clone().lerp(tr.U, 0.5);
     if (tr.special === 2) { // corkscrew: camera rides rigidly with the car so the world spins around you
@@ -2502,11 +2973,9 @@ function updateCamera(dt, snap) {
   const fov = (camera.aspect < 1 ? 80 : 60) + clamp(P.v / BOOSTV, 0, 1) * 12 + P.boosting * 6;
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = lerp(camera.fov, fov, 1 - Math.exp(-dt * 4)); camera.updateProjectionMatrix(); }
   sky.position.copy(camera.position);
-  sea.position.x = Math.round(camera.position.x / 20) * 20; sea.position.z = Math.round(camera.position.z / 20) * 20;
-  seaTex.offset.set(sea.position.x / 20 + clock * 0.01, -sea.position.z / 20);
-  glitterPivot.position.set(camera.position.x, SEA_Y + 0.06, camera.position.z); glitterPivot.rotation.y = Math.atan2(SUN_DIR.x, SUN_DIR.z);
-  glitterTex.offset.y = (clock * 0.03) % 1; glitterTex.offset.x = Math.sin(clock * 0.7) * 0.01;
-  glitter.material.opacity = clamp(1.1 - SUN_DIR.y * 1.6, 0.2, 1) * (1 - NIGHT * 0.7) * (1 - main.inland[clamp(Math.round(mainS(track, P.s) / DS), 0, main.n - 1)]);
+  sea.position.x = camera.position.x; sea.position.z = camera.position.z;
+  seaMat.uniforms.time.value = clock; seaMat.uniforms.camPos.value.copy(camera.position);
+  seaMat.uniforms.sunDir.value.copy(SUN_DIR); seaMat.uniforms.night.value = NIGHT;
   const sc = R.car.position; sunLight.position.copy(sc).addScaledVector(SUN_DIR, 160); sunLight.target.position.copy(sc);
 }
 const visState = new Map();
@@ -2527,23 +2996,44 @@ function updateVisibility() {
 
 /* ---------------- HUD update ---------------- */
 let hudAcc = 0;
+const dialCx = $('dialCv').getContext('2d');
+function drawDial(v) {
+  const g = dialCx, W2 = 300, c = 150, R0 = 128, a0 = Math.PI * 0.75, span = Math.PI * 1.5;
+  g.clearRect(0, 0, W2, W2);
+  g.beginPath(); g.arc(c, c, R0 + 10, 0, TAU); g.fillStyle = 'rgba(20,6,40,.55)'; g.fill();
+  g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.35)'; g.stroke();
+  const maxV = 120, segs = 40, lit = clamp(v / maxV, 0, 1) * segs, red = CARSTATS.top * (track.speed || 1) / maxV * segs;
+  for (let k = 0; k < segs; k++) {
+    const a = a0 + span * (k + 0.1) / segs, b = a0 + span * (k + 0.9) / segs;
+    g.beginPath(); g.arc(c, c, R0 - 8, a, b); g.lineWidth = 16;
+    g.strokeStyle = k < lit ? (k >= red ? '#ff7a1a' : k > segs * 0.55 ? '#ff4fb8' : '#3ef0ff') : 'rgba(255,255,255,.12)';
+    g.stroke();
+  }
+  // tick marks every 20 km/h (or 20 mph), long ones every 100
+  const stepU = 20, toMs = SET.units === 'mph' ? 1 / 2.23694 : 1 / KMH;
+  for (let u = 0; u * toMs <= maxV + 0.1; u += stepU) {
+    const a = a0 + span * (u * toMs / maxV), big = u % 100 === 0, r1 = R0 - 22, r2 = r1 - (big ? 14 : 7);
+    g.beginPath(); g.moveTo(c + Math.cos(a) * r1, c + Math.sin(a) * r1); g.lineTo(c + Math.cos(a) * r2, c + Math.sin(a) * r2);
+    g.lineWidth = big ? 4 : 2; g.strokeStyle = big ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.4)'; g.stroke();
+  }
+}
+let lastDial = -1;
 function updateHud(dt) {
   hudAcc += dt; if (hudAcc < 0.05) return; hudAcc = 0;
-  const kmh = Math.round(P.v * KMH);
-  $('speed').textContent = kmh;
+  $('speed').textContent = fmtSpeed(P.v);
+  if (Math.abs(P.v - lastDial) > 0.3) { drawDial(P.v); lastDial = P.v; }
   $('time').textContent = Math.ceil(Math.max(0, timeLeft));
   $('time').classList.toggle('low', timeLeft < 10);
   $('score').textContent = score.toLocaleString();
   $('lap').textContent = fmtLap(lapTime);
-  const bars = tach.children, lit = Math.round(clamp(P.v / BOOSTV, 0, 1) * bars.length);
-  for (let k = 0; k < bars.length; k++) bars[k].className = k < lit ? 'on' + (k > 10 ? ' hi' : '') + (k > 12 ? ' max' : '') : '';
   $('thrustFill').style.width = (P.fuel * 100) + '%';
   $('thrust').classList.toggle('full', P.fuel > 0.99);
   const prog = mainS(track, P.s);
   const pct = clamp(prog / TOTAL, 0, 1) * 100;
   routeCar.style.left = pct + '%'; $('routeFill').style.width = pct + '%';
   if (msgTimer > 0) { msgTimer -= 0.05; if (msgTimer <= 0) $('msg').innerHTML = ''; }
-  $('speedlines').style.opacity = P.boosting ? 0.9 : clamp((P.v - 60) / 40, 0, 0.5);
+  $('speedlines').style.opacity = gradePass ? 0 : P.boosting ? 0.9 : clamp((P.v - 60) / 40, 0, 0.5);
+  if (QUALITY >= 2) $('vignette').style.opacity = 0;
 }
 
 /* ---------------- main loop ---------------- */
@@ -2552,9 +3042,9 @@ let countBeep = 4;
 function frame(now) {
   requestAnimationFrame(frame);
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const inp = readInput();
   if (paused) { render(); return; }
   clock += dt;
-  const inp = readInput();
   if (mode === 'count') {
     countdown -= dt;
     const n = Math.ceil(countdown - 0.6);
@@ -2579,6 +3069,8 @@ function frame(now) {
   updateTraffic(dt);
   poseCar(dt);
   if (!window.__game || !window.__game.freeze) updateCamera(dt);
+  if (gradePass) { const u = gradePass.uniforms.blur; u.value = lerp(u.value, P.boosting ? 1 : clamp((P.v - 74) / 40, 0, 0.45), 1 - Math.exp(-dt * 4)); }
+  updateNightLights();
   updateParticles(dt);
   updateVisibility();
   for (const s of spinners) s.rotation.z += s.userData.spd * dt;
@@ -2611,11 +3103,24 @@ traffic.forEach((t, k) => respawnTraffic(t, 140 + k * 170));
 { let saved = 0; try { saved = +localStorage.getItem('marbellarun-car') || 0; } catch (e) { } setCar(saved); }
 P.s = 30; P.x = 2.5;
 poseCar(0); snapCamera();
+applySet(); startMenu();
 setupPost();
+if (gradePass) gradePass.uniforms.aspect.value = innerWidth / innerHeight;
 requestAnimationFrame(frame);
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
-window.__renderInfo = () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles });
-window.__game = { get R() { return R; }, setCar, CARS, get track() { return track; }, set track(v) { track = v; }, AP7, MARINA, BRANCHES, mainS, P, main, boat, farLandmarks, snapCamera, scene, camera, carMats, bakeEnv, renderer, get mode() { return mode; }, set mode(v) { mode = v; }, resetRace, enterBoat, STAGES, stageStart, SECRET_S };
+// inside the iOS/Android app the files ship with the app, so only the website uses the offline cache
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if (!NATIVE && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+// keep the screen awake while racing (web; the native apps do this themselves)
+var wakeLock = null; // var: startMenu() can run before this line
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+}
+const DEBUG = !NATIVE && (/[?&]debug\b/.test(location.search) || location.port === '8123');
+if (DEBUG) window.__renderInfo = () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles });
+if (DEBUG) window.__game = { get R() { return R; }, setCar, CARS, get track() { return track; }, set track(v) { track = v; }, AP7, MARINA, BRANCHES, mainS, P, main, boat, farLandmarks, snapCamera, scene, camera, carMats, bakeEnv, renderer, get mode() { return mode; }, set mode(v) { mode = v; }, resetRace, enterBoat, STAGES, stageStart, SECRET_S };
 </script>
 </body>
 </html>

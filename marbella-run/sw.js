@@ -1,6 +1,6 @@
 // Offline support: cache the whole game on first visit, then serve it from the cache.
 // Bump VERSION whenever any file changes so players get the update.
-const VERSION = 'marbella-run-v3';
+const VERSION = 'marbella-run-v4';
 const FILES = ['./', 'index.html', 'three.min.js', 'postfx.js', 'manifest.webmanifest', 'fonts/bungee.woff2', 'fonts/press-start-2p.woff2',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
