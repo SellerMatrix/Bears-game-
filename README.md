@@ -53,22 +53,23 @@ Ten worlds, each about 17x11 tiles: Picnic Meadow, Bee Valley, Crate Canal, Swit
 
 # Marbella Run
 
-`marbella-run/` is an arcade racer starring a red rocket-thruster roadster (a wedge-shaped supercar with a glass canopy), driving the coast from **Marbella to Tarifa**.
+`marbella-run/` is an arcade racer: a rocket-thruster supercar on a 41 km grand tour from **Marbella** along the Costa del Sol to **Tarifa**, up the Algarve to **Lisbon**, and back inland via Seville and Ronda to **Marbella**.
 
-It is a self-contained folder: the 3D engine (three.js r128) and fonts are bundled, so it works offline. Served over the web it is also an installable app (Add to Home Screen / Install). To publish on itch.io, zip the *contents* of `marbella-run/` (so `index.html` is at the top of the zip) and upload it as an HTML game.
+It is a self-contained folder: the 3D engine (three.js r128), its bloom post-processing and the fonts are bundled, so it works offline. Served over the web it is also an installable app (Add to Home Screen / Install). To publish on itch.io, upload `downloads/marbella-run.zip` as an HTML game (it is the folder's contents, with `index.html` at the top).
 
-- 5 stages with checkpoints and a countdown timer: Marbella (Golden Mile) → Puerto Banús → Estepona → Sotogrande → Tarifa. The sky drifts from morning to sunset as you go.
-- **Loops and corkscrews**: the roadster can only stay on the road upside down above 270 km/h, which is faster than it goes on wheels alone. Use the rocket boost to get there. Too slow and you fall off.
-- **Thruster hop** uses the underside jets to jump over traffic.
-- **Secret boat level**: at Sotogrande, look for the MARINA sign and drive off the left side onto the slipway. The roadster switches to boat mode for a run across the Bay of Gibraltar (buoys, yachts, golden rings, dolphins, wave jumps), then rejoins the road for Tarifa.
-- Scenery: palms, white villages, holiday blocks, umbrella pines, beach bars, Osborne bulls, Puerto Banús yachts, the Sotogrande polo field, the Rock of Gibraltar, Tarifa wind farm and kitesurfers, Africa across the Strait, and Tarifa castle at the finish.
-- Pick from three synth radio stations before the race (all music is generated live).
+- **8 stages**: Marbella · Puerto Banús · Estepona · Sotogrande · Tarifa · Algarve · Lisboa · Home Run. The time of day runs from morning through sunset and a starry night over the Algarve to sunrise on the way home.
+- **3 cars** in the garage: *Rocket Roadster* (all-rounder), *Sol Spider* (80s open-top with two passengers, best grip, biggest rocket tank) and *Aero-X* (long-tail hypercar, fastest but twitchy and thirsty).
+- **Forks**: keep right after Puerto Banús to take the **AP-7 toll motorway** (a viaduct inland with no traffic and a 38% higher top speed), or keep left at Sotogrande for the **marina road** round the quay.
+- **Loops and corkscrews** need 270 km/h: use the rockets.
+- **Secret boat level**: on the Sotogrande marina road, drive off the left side onto the slipway.
+- Landmarks: La Concha, the Rock of Gibraltar, Africa across the Strait, Tarifa castle, a Guadiana-style cable-stayed bridge into Portugal, Algarve sea stacks, Cabo de São Vicente, windmills, Sintra's Pena Palace, Lisbon's red suspension bridge and Cristo Rei, the Giralda in Seville, Ronda.
+- **Graphics setting** on the title screen: LOW (older phones), MEDIUM (real shadows) or HIGH (shadows + glow).
 
 | Key | Action |
 | --- | --- |
 | ↑ / W | Accelerate |
 | ↓ / S | Brake |
-| ← → / A D | Steer |
+| ← → / A D | Steer (and choose a car in the garage) |
 | Space / X | Rocket boost |
 | Shift / C | Thruster hop |
 | P / Esc | Pause |
