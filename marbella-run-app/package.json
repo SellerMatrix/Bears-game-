@@ -1,0 +1,22 @@
+{
+  "name": "marbella-run-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native iOS and Android shell for Marbella Run (Capacitor).",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.mjs",
+    "sync": "npm run copy-web && npx cap sync",
+    "ios": "npm run sync && npx cap open ios",
+    "android": "npm run sync && npx cap open android",
+    "assets": "npx capacitor-assets generate --iconBackgroundColor '#12081f' --splashBackgroundColor '#12081f' --iconBackgroundColorDark '#12081f' --splashBackgroundColorDark '#12081f'"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "4.0.0",
+    "@capacitor/cli": "8.6.0"
+  }
+}

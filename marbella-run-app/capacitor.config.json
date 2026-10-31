@@ -1,0 +1,15 @@
+{
+  "appId": "com.sellermatrix.marbellarun",
+  "appName": "Marbella Run",
+  "webDir": "www",
+  "backgroundColor": "#12081f",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#12081f"
+  },
+  "android": {
+    "backgroundColor": "#12081f",
+    "allowMixedContent": false
+  }
+}
