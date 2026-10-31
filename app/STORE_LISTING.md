@@ -13,7 +13,8 @@ Copy these into App Store Connect.
 | Privacy | "Data Not Collected" |
 | Privacy Policy URL | https://captain-bear.netlify.app/privacy.html |
 | Support URL | https://captain-bear.netlify.app/support.html |
-| Copyright | © 2026 Hamish Pritchard (change if you publish as a company) |
+| Copyright | © 2026 No8 Wire Labs |
+| Support email | support@no8wirelabs.com |
 
 ## Promotional text (170 max)
 Winter is coming and Bear is hungry! Spin 12 hand-built 3D worlds, slide across ice, bounce off mushrooms and find every golden acorn before he hibernates.

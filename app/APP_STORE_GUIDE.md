@@ -6,7 +6,7 @@ Everything in this folder is ready. The last steps need a Mac and an Apple accou
 - A Mac with **Xcode 16 or newer** (free from the Mac App Store)
 - **Node.js 20+** on the Mac (https://nodejs.org)
 - An **Apple Developer Program** membership (£79/year in the UK) — https://developer.apple.com/programs/
-- Your **support email** (put it in `support.html`, replacing `SUPPORT_EMAIL_HERE`)
+- The **support@no8wirelabs.com** mailbox working (a free forward to your Gmail is fine)
 
 ## 1. Get the project onto the Mac
 ```bash
@@ -22,7 +22,7 @@ npm run open      # opens Xcode
 ## 2. Set your identity in Xcode
 1. Click **App** in the left sidebar → **Signing & Capabilities**.
 2. Tick **Automatically manage signing** and choose your **Team**.
-3. The bundle identifier is `com.sellermatrix.captainbear2`. Change it if you want; it must be unique and match App Store Connect. (If you change it, also change `appId` in `capacitor.config.json`.)
+3. The bundle identifier is `com.no8wirelabs.captainbear2`. Change it if you want; it must be unique and match App Store Connect. (If you change it, also change `appId` in `capacitor.config.json`.)
 4. **General** tab: Version `1.0.0`, Build `1`.
 
 ## 3. Try it on your phone first
