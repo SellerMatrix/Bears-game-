@@ -1662,52 +1662,91 @@ function sweep(T, s0, s1, section, colors, frameOf) {
   g.setIndex(idx); g.computeVertexNormals();
   return g;
 }
+// AP-7 tunnels: the viaduct cuts into a ridge that rises around it, then dives through it
+function addAP7Tunnels() {
+  const L = AP7.length;
+  for (const [f0, len] of AP7_TUN) TUNNELS.push({ T: AP7, s0: Math.round(L * f0 / DS) * DS, s1: Math.round((L * f0 + len) / DS) * DS, kind: 'ridge' });
+  TUNNELS.forEach(t => { t.T = t.T || main; t.kind = t.kind || 'coast'; });
+}
+const AP7_NAMES = ['TÚNEL DE CASARES', 'TÚNEL DE MANILVA'];
+const AP7_TUN = [[0.24, 460], [0.56, 400]];   // [start as a fraction of the AP-7, length m]
+function ap7Lift(s) { const ms = AP7.mainS[clamp(Math.round(s / DS), 0, AP7.n - 1)]; return AP7.offs[clamp(Math.round((ms - AP7.s0) / DS), 0, AP7.offs.length - 1)]; }
 function buildTunnels() {
   const tubeMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex, side: THREE.DoubleSide });
   const capMat2 = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex, map: groundTex, side: THREE.DoubleSide });
   const stone = toon(0xb9ab8c), lampM = basic(0xffe2a0);
-  const roadFrame = s => { const f = main.frame(s, tmpA); return { o: f.P.clone(), r: f.R.clone(), u: f.U.clone() }; };
-  const flatFrame = s => { const f = main.frame(s, tmpA); return { o: f.G.clone(), r: f.GR.clone(), u: new V3(0, 1, 0) }; };
-  TUNNELS.forEach((t, ti) => {
-    const theme = STAGES[main.stage[Math.round(t.s0 / DS)]].theme;
+  const worldUV = g => g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2).map((_, k) => { const p = g.attributes.position.array; return (k % 2 ? p[(k >> 1) * 3 + 2] : p[(k >> 1) * 3]) / 9; }), 2));
+  let coastN = 0, ridgeN = 0;
+  TUNNELS.forEach(t => {
+    const T = t.T;
+    const roadFrame = s => { const f = T.frame(s, tmpA); return { o: f.P.clone(), r: f.R.clone(), u: f.U.clone() }; };
+    const flatFrame = s => { const f = T.frame(s, tmpA); return { o: f.G.clone(), r: f.GR.clone(), u: new V3(0, 1, 0) }; };
+    const theme = STAGES[T.stage[clamp(Math.round(t.s0 / DS), 0, T.n - 1)]].theme;
     // the tube
-    const tube = new THREE.Mesh(sweep(main, t.s0, t.s1, () => TUBE, TUBE_COL, roadFrame), tubeMat);
-    tube.receiveShadow = false; scene.add(tube);
-    // rock over the top, meeting the raised hillside either side
-    const capSec = s => { const m1 = vnoise(s * 0.01 + 7) * 6; return [[-(H + 15), 15 + m1], [-(W + 2), 11.5], [-(W - 3), 12.5 + m1 * 0.3], [0, 13 + m1 * 0.5], [W - 3, 12.5 + m1 * 0.3], [W + 2, 11.5], [H + 15, 16 + m1]]; };
-    const cap = new THREE.Mesh(sweep(main, t.s0 - 1.5, t.s1 + 1.5, capSec, [theme.hill, 0x9a8e74, theme.scrub, theme.grass, theme.scrub, 0x9a8e74, theme.hill], flatFrame), capMat2);
-    cap.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(cap.geometry.attributes.position.count * 2).map((_, k) => { const p = cap.geometry.attributes.position.array; return (k % 2 ? p[(k >> 1) * 3 + 2] : p[(k >> 1) * 3]) / 9; }), 2));
-    cap.castShadow = false; scene.add(cap);
+    scene.add(new THREE.Mesh(sweep(T, t.s0, t.s1, () => TUBE, TUBE_COL, roadFrame), tubeMat));
+    if (t.kind === 'coast') {
+      // rock over the top, meeting the raised hillside either side
+      const capSec = s => { const m1 = vnoise(s * 0.01 + 7) * 6; return [[-(H + 15), 15 + m1], [-(W + 2), 11.5], [-(W - 3), 12.5 + m1 * 0.3], [0, 13 + m1 * 0.5], [W - 3, 12.5 + m1 * 0.3], [W + 2, 11.5], [H + 15, 16 + m1]]; };
+      const g = sweep(T, t.s0 - 1.5, t.s1 + 1.5, capSec, [theme.hill, 0x9a8e74, theme.scrub, theme.grass, theme.scrub, 0x9a8e74, theme.hill], flatFrame); worldUV(g);
+      scene.add(new THREE.Mesh(g, capMat2));
+    } else {
+      // a whole ridge: rock over the road inside, and slopes either side that rise out of the valley
+      // around the approach (a cutting) and fall back to the valley floor beyond each portal
+      const ramp = 110, roof = 8.8;
+      const fOf = s => s >= t.s0 && s <= t.s1 ? 1 : smooth(1 - clamp((s < t.s0 ? t.s0 - s : s - t.s1) / ramp, 0, 1));
+      const capSec = s => { const n = vnoise(s * 0.012 + 3) * 4; return [[-(W + 3), roof + 3], [-(W - 3), roof + 4.5], [0, roof + 5 + n], [W - 3, roof + 4.5], [W + 3, roof + 3]]; };
+      const gCap = sweep(T, t.s0 - 1.5, t.s1 + 1.5, capSec, [0x9a8e74, theme.scrub, theme.grass, theme.scrub, 0x9a8e74], flatFrame); worldUV(gCap);
+      scene.add(new THREE.Mesh(gCap, capMat2));
+      for (const side of [1, -1]) {
+        const sideSec = s => {
+          const q = ap7Lift(s), g = -(q.lift + 2), f = fOf(s), n = vnoise(s * 0.008 + (side > 0 ? 11 : 23)) * 10;
+          // never reach back across to the coast road on the inland side's opposite flank
+          const reach = side < 0 ? clamp((Math.abs(q.off) - 40) / 170, 0.25, 1) : 1;
+          const pts = [[W + 0.8, lerp(g, 0, smooth(Math.min(1, f * 3)))], [W + 3, lerp(g, roof + 3, f)], [W + 3 + 32 * reach, lerp(g, 28 + n, f)], [W + 3 + 95 * reach, lerp(g, 20 + n * 0.6, f)], [W + 3 + 170 * reach, g]];
+          return pts.map(([x, y]) => [x * side, y]);
+        };
+        const gS = sweep(T, t.s0 - ramp, t.s1 + ramp, sideSec, [0x9a8e74, 0x9a8e74, theme.hill, theme.scrub, theme.grass], flatFrame); worldUV(gS);
+        scene.add(new THREE.Mesh(gS, capMat2));
+      }
+    }
     // ceiling lamps every 10 m, two rows
     const lamps = [];
     for (let s = t.s0 + 6; s < t.s1 - 4; s += 10) for (const x of [-4.5, 4.5]) {
-      const f = main.frame(s, tmpA), p = f.P.clone().addScaledVector(f.R, x).addScaledVector(f.U, 8.6);
+      const f = T.frame(s, tmpA), p = f.P.clone().addScaledVector(f.R, x).addScaledVector(f.U, 8.6);
       const m = new THREE.Matrix4().makeBasis(new V3().crossVectors(f.U, f.F), f.U, f.F).setPosition(p);
       lamps.push([new THREE.BoxGeometry(0.32, 0.1, 1.6), m]);
     }
     scene.add(new THREE.Mesh(merge(lamps), lampM));
     // stone portals with the tunnel's name
-    const outer = new THREE.Shape(); outer.moveTo(-(H + 15), -1.5); outer.lineTo(H + 15, -1.5); outer.lineTo(H + 15, 17); outer.lineTo(-(H + 15), 17); outer.lineTo(-(H + 15), -1.5);
+    const half = t.kind === 'coast' ? H + 15 : W + 12, top = t.kind === 'coast' ? 17 : 15.5;
+    const outer = new THREE.Shape(); outer.moveTo(-half, -1.5); outer.lineTo(half, -1.5); outer.lineTo(half, top); outer.lineTo(-half, top); outer.lineTo(-half, -1.5);
     const hole = new THREE.Path(); TUBE.forEach(([x, y], k) => k ? hole.lineTo(x, y) : hole.moveTo(x, y)); hole.lineTo(TUBE[0][0], TUBE[0][1]);
     outer.holes.push(hole);
     const portalG = new THREE.ExtrudeGeometry(outer, { depth: 1.6, bevelEnabled: false });
-    const sign = signTex([{ t: TUNNEL_NAMES[ti % TUNNEL_NAMES.length], size: 64 }], '#1557b0', '#fff', 1024, 128);
+    const name = t.kind === 'coast' ? TUNNEL_NAMES[coastN++ % TUNNEL_NAMES.length] : AP7_NAMES[ridgeN++ % AP7_NAMES.length];
+    const sign = signTex([{ t: name, size: 64 }], '#1557b0', '#fff', 1024, 128);
+    const glareS = new THREE.Shape(); TUBE.forEach(([x, y], k) => k ? glareS.lineTo(x * 0.98, y * 0.98) : glareS.moveTo(x * 0.98, y * 0.98));
+    const glareG = new THREE.ShapeGeometry(glareS);
+    const glareM = new THREE.MeshBasicMaterial({ color: 0xfff4dc, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, fog: false, side: THREE.DoubleSide });
     for (const [s, dir] of [[t.s0, -1], [t.s1, 1]]) {
       const g = new THREE.Group();
       const portal = new THREE.Mesh(portalG, stone); portal.position.z = dir > 0 ? 0 : -1.6; g.add(portal); addOutline(portal, 0.1);
       const band = new THREE.Mesh(new THREE.BoxGeometry(2 * W + 4, 1.4, 1.8), toon(0x8a7d64)); band.position.set(0, 9.6, dir > 0 ? 0.8 : -0.8); g.add(band);
       const board = new THREE.Mesh(new THREE.PlaneGeometry(14, 1.75), basic(0xffffff, { map: sign }));
       board.position.set(0, 11.6, dir > 0 ? 1.65 : -1.65); if (dir < 0) board.rotation.y = Math.PI; g.add(board);
-      const f = main.frame(s, tmpA);
+      // daylight glare filling the tunnel mouth, one-sided so it only shows from inside
+      if (dir > 0) { const glare = new THREE.Mesh(glareG, glareM); glare.position.z = -0.4; glare.renderOrder = 10; glare.visible = false; g.add(glare); t.glare = glare; }
+      const f = T.frame(s, tmpA);
       g.matrixAutoUpdate = false; g.matrix.makeBasis(new V3().crossVectors(f.U, f.F), f.U, f.F).setPosition(f.P); g.matrixWorldNeedsUpdate = true;
       scene.add(g);
     }
-    roadSign(main, t.s0 - 280, W + 4, ['TÚNEL', 'LIGHTS ON'], '#1557b0', '#fff', 8, 4.2);
+    if (t.kind === 'coast') roadSign(T, t.s0 - 280, W + 4, ['TÚNEL', 'LIGHTS ON'], '#1557b0', '#fff', 8, 4.2);
   });
+  if (AP7.length > 1400) gantry(AP7, TUNNELS.find(t => t.T === AP7).s0 - 260, [[0, ['TÚNEL', 'ENCIENDA LUCES · LIGHTS ON'], '#1557b0']]);
 }
 // 0 outside, 1 deep inside a tunnel (for lighting and sound)
-function tunnelDepth(ms) {
-  for (const t of TUNNELS) if (ms > t.s0 - 20 && ms < t.s1 + 20) return smooth(clamp(Math.min(ms - t.s0 + 20, t.s1 + 20 - ms) / 50, 0, 1));
+function tunnelDepth(T, ms) {
+  for (const t of TUNNELS) if (t.T === T && ms > t.s0 - 20 && ms < t.s1 + 20) return smooth(clamp(Math.min(ms - t.s0 + 20, t.s1 + 20 - ms) / 50, 0, 1));
   return 0;
 }
 
@@ -1808,12 +1847,13 @@ function populateBranches() {
     const k = clamp(Math.round(AP7.mainS[Math.round(s / DS)] - AP7.s0) / DS | 0, 0, AP7.offs.length - 1), lift = AP7.offs[k].lift;
     const i = Math.round(s / DS), y = AP7.P[i * 3 + 1];
     if (lift > 4) addItem(AP7, st, 'pillar', s, 0, { y: y - lift - 10, scale: [1, lift + 10 - 1.2, 1] });
-    if ((s / 32 | 0) % 2 === 0) addItem(AP7, st, 'lamp', s, W + 0.9, { y, yaw: Math.PI });
+    const inTun = AP7_TUN.some(([f0, len]) => s > AP7.length * f0 - 140 && s < AP7.length * f0 + len + 140);
+    if ((s / 32 | 0) % 2 === 0 && !inTun) addItem(AP7, st, 'lamp', s, W + 0.9, { y, yaw: Math.PI });
   }
   buildInstances(AP7, st);
   tollPlaza(AP7, 360);
   gantry(AP7, 1100, [[-4.5, ['AP-7', 'ESTEPONA 18'], '#1557b0'], [4.5, ['MAX', '360 KM/H'], '#d8102a']]);
-  gantry(AP7, AP7.length * 0.55, [[0, ['AUTOPISTA DEL SOL', 'GUADIARO 9 km'], '#1557b0']]);
+  gantry(AP7, AP7.length * 0.46, [[0, ['AUTOPISTA DEL SOL', 'GUADIARO 9 km'], '#1557b0']]);  // between the two tunnels
   gantry(AP7, AP7.length - 600, [[0, ['FIN AP-7', '→ A-7 SOTOGRANDE'], '#1557b0']]);
   // signs on the main road before the fork
   gantry(main, AP7.s0 - 260, [[-4.5, ['A-7  ↑', 'ESTEPONA · COSTA'], '#1557b0'], [4.5, ['AP-7  ↗', 'PEAJE · TOLL'], '#0a3a8a']]);
@@ -3174,9 +3214,10 @@ function frame(now) {
   const prog = mainS(track, P.s);
   let stageF = 0; for (let k = 0; k < STAGES.length; k++) if (prog >= stageStart[k]) stageF = k + clamp((prog - stageStart[k]) / ((stageStart[k + 1] || main.length) - stageStart[k]), 0, 1) * 0.999;
   applyPalette(stageF - 0.5 < 0 ? 0 : stageF - 0.5);
-  const tk = mode === 'boat' ? 0 : tunnelDepth(prog);
-  if (tk > 0) { hemi.intensity *= 1 - 0.55 * tk; sunLight.intensity *= 1 - 0.85 * tk; stageGlow = Math.max(stageGlow, tk); }
+  const tk = mode === 'boat' ? 0 : tunnelDepth(track, P.s);
+  if (tk > 0) { hemi.intensity *= 1 - 0.4 * tk; sunLight.intensity *= 1 - 0.7 * tk; stageGlow = Math.max(stageGlow, tk); }
   TUNNEL_K = tk;
+  for (const t of TUNNELS) if (t.glare) t.glare.visible = mode !== 'boat' && t.T === track && P.s > t.s0 + 20 && P.s < t.s1 - 15;
   const tr = track.frame(P.s, tmpC);
   const screech = Math.min(1, Math.abs(tr.curve) * P.v * 4 * (Math.abs(P.steerVis) > 0.5 ? 1 : 0.3)) * (P.v > 40 ? 1 : 0);
   const load = inp.gas && P.v < CARSTATS.top * (track.speed || 1) * 0.97 ? 1 : 0;
@@ -3194,6 +3235,7 @@ makeChunks(boat, false, false);
 makeChunks(AP7, true, false);
 makeChunks(MARINA, true, true);
 buildSetPieces();
+addAP7Tunnels();
 buildTunnels();
 populateMain();
 populateBoat();
