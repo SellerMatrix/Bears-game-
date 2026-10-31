@@ -268,6 +268,18 @@ body.touch.playing #thrustBox { margin-right: 0; }
   .pad.r { width: 168px; }
   .pad button.boost, .pad button.gas { width: 78px; height: 78px; }
 }
+/* portrait phones: TIME gets its own row under the score and stage cards */
+@media (orientation: portrait) and (max-width: 700px) {
+  #hud .top { grid-template-columns: 1fr 1fr; grid-template-areas: "score right" "time time"; row-gap: 0; }
+  #hud .top .hudcard.left { grid-area: score; }
+  #hud .top .hudright { grid-area: right; }
+  #timeBox { grid-area: time; margin-top: -6px; }
+  #time { font-size: 46px; }
+  .hudcard.right .val { max-width: 36vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+  #route { top: calc(150px + env(safe-area-inset-top, 0px)); }
+  #msg { top: 38%; }
+  body.touch.playing #hud .bottom { bottom: calc(176px + env(safe-area-inset-bottom, 0px)); }
+}
 @media (orientation: landscape) {
   body.touch.playing #thrustBox { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); text-align: center; }
   body.touch.playing #thrust { width: min(220px, 26vw); }
@@ -603,27 +615,27 @@ const STAGES = [
       [300, -0.003, 0], [280, 0.003, 10], [340, 0, 0, 'polo'], [250, 0.002, 0], [260, 0, 0], [760, 0, 0, 'marA'], [260, 0, 0, 'marB'], [220, 0, 0]] },
   { name: 'SOTOGRANDE', sub: 'BAY OF GIBRALTAR', town: 'SOTOGRANDE', turn: 0,
     theme: { sand: 0xe9cc8a, grass: 0xa3ad58, scrub: 0xc0a055, hill: 0x94874a, top: 0x6f7340 },
-    segs: [[220, 0, 0], [300, -0.003, 10], [220, 0, 0], { loop: 200 }, [250, 0, 0], [300, 0.003, 0], [300, 0, 18], [300, -0.0025, 0], [220, 0, 0], { loop: 220 },
+    segs: [[220, 0, 0], [300, -0.003, 10], [220, 0, 0], { loop: 200 }, [250, 0, 0], [300, 0.003, 0, 'tunnel'], [300, 0, 18], [300, -0.0025, 0], [220, 0, 0], { loop: 220 },
       [250, 0, 0], [300, 0.002, 8], [300, -0.003, 0], [280, 0, 14], [300, 0.0025, 0], [240, 0, 0]] },
   { name: 'TARIFA', sub: 'THE WIND CAPITAL', town: 'TARIFA', turn: 0,
     theme: { sand: 0xf4e2b0, grass: 0x88b85a, scrub: 0xa6b868, hill: 0x79a050, top: 0x5f8a45 },
-    segs: [[220, 0, 0], [300, 0.004, 10], [300, -0.004, 0], [250, 0, 14], { roll: 180 }, [250, 0, 0], [300, 0.0035, 0], [240, 0, 0], { loop: 200 }, [60, 0, 0], { loop: 200 },
+    segs: [[220, 0, 0], [300, 0.004, 10], [300, -0.004, 0], [250, 0, 14], { roll: 180 }, [250, 0, 0], [300, 0.0035, 0, 'tunnel'], [240, 0, 0], { loop: 200 }, [60, 0, 0], { loop: 200 },
       [250, 0, 0], [300, -0.003, 0], [300, 0.003, 10], [260, -0.002, 0], [300, 0, 0, 'tarifa'], [240, 0, 0]] },
   { name: 'ALGARVE', sub: 'COSTA DE LA LUZ · INTO PORTUGAL', town: 'ALGARVE', turn: 0,
     theme: { sand: 0xf3cf86, grass: 0x9cb35c, scrub: 0xc29a5a, hill: 0xb07a48, top: 0x7d8a48 },
     segs: [[220, 0, 0], [300, -0.003, 0, 'dunes'], [300, 0.003, 8], [260, 0, 0], { loop: 200 }, [240, 0, 0], [300, 0.0035, 12], [300, -0.003, 0], [200, 0, 0],
-      [640, 0, 22, 'bridge'], [200, 0, 0, 'portugal'], [300, -0.0035, 10], [280, 0.003, 0], [260, 0, 0], { roll: 180 }, [240, 0, 0], [300, 0.003, 14, 'cliffs'],
+      [640, 0, 22, 'bridge'], [200, 0, 0, 'portugal'], [300, -0.0035, 10], [280, 0.003, 0, 'tunnel'], [260, 0, 0], { roll: 180 }, [240, 0, 0], [300, 0.003, 14, 'cliffs'],
       [300, -0.003, 0], [280, 0.0025, 8], [240, 0, 0]] },
   { name: 'LISBOA', sub: 'CABO DE SÃO VICENTE · SINTRA', town: 'LISBOA', turn: Math.PI / 2,
     theme: { sand: 0xf0dcae, grass: 0x86ad55, scrub: 0xa7a860, hill: 0x6f9446, top: 0x557d3e },
-    segs: [[220, 0, 0, 'vicente'], [500, 0.0026, 10], [260, 0, 0], { loop: 200 }, [240, 0, 0], [300, -0.003, 12, 'windmills'], [320, 0.003, 0], [400, 0.002, 16],
+    segs: [[220, 0, 0, 'vicente'], [500, 0.0026, 10], [260, 0, 0], { loop: 200 }, [240, 0, 0], [300, -0.003, 12, 'windmills'], [320, 0.003, 0, 'tunnel'], [400, 0.002, 16],
       [260, 0, 0], { loop: 220 }, [240, 0, 0], [300, -0.0025, 10, 'sintra'], [300, 0.003, 0], [240, 0, 0], [900, 0, 30, 'bridge'], [260, 0, 0, 'lisboa'], [240, 0, 0]] },
   { name: 'MARBELLA', sub: 'ALENTEJO · SEVILLA · RONDA · HOME', town: 'HOME RUN', turn: Math.PI / 2 + Math.PI * 0.72, inland: true,
     theme: { sand: 0xe8d39a, grass: 0xcdb45c, scrub: 0xb79a52, hill: 0x8f9a4e, top: 0x6f7f45 },
-    segs: [[220, 0, 0], [600, 0.0022, 8], [300, -0.003, 0], [260, 0, 0], { roll: 180 }, [240, 0, 0, 'sevilla'], [500, 0.0024, 16], [300, -0.003, 0], [300, 0.003, 20, 'ronda'],
+    segs: [[220, 0, 0], [600, 0.0022, 8], [300, -0.003, 0], [260, 0, 0], { roll: 180 }, [240, 0, 0, 'sevilla'], [500, 0.0024, 16], [300, -0.003, 0, 'tunnel'], [300, 0.003, 20, 'ronda'],
       [260, 0, 0], { loop: 200 }, [60, 0, 0], { loop: 200 }, [260, 0, 0], [300, -0.0025, 8], [300, 0.003, 0], [260, 0, 0, 'coast'], [700, 0, 0]] },
 ];
-const MARKS = {};
+const MARKS = {}, TUNNELS = [];
 
 class Track {
   constructor(n) {
@@ -631,7 +643,7 @@ class Track {
     for (const k of ['P', 'F', 'U', 'R', 'G', 'GR']) this[k] = new Float32Array(n * 3);
     this.curve = new Float32Array(n); this.phase = new Float32Array(n);
     this.special = new Uint8Array(n); this.stage = new Uint8Array(n);
-    this.bridge = new Float32Array(n); this.inland = new Float32Array(n);
+    this.bridge = new Float32Array(n); this.inland = new Float32Array(n); this.tunnel = new Float32Array(n);
     this.regions = []; this.chunks = [];
   }
   frame(s, o) {
@@ -657,7 +669,8 @@ function buildMainTrack() {
     const isLoop = !Array.isArray(seg) && seg.loop, isRoll = !Array.isArray(seg) && seg.roll;
     const len = Array.isArray(seg) ? seg[0] : (seg.loop || seg.roll);
     const curve = Array.isArray(seg) ? seg[1] : 0, hill = Array.isArray(seg) ? seg[2] : 0, flag = Array.isArray(seg) ? seg[3] : null;
-    if (flag && flag !== 'bridge') MARKS[flag] = pts.length * DS;
+    if (flag === 'tunnel') TUNNELS.push({ s0: pts.length * DS, s1: (pts.length + Math.round(len / DS)) * DS });
+    else if (flag && flag !== 'bridge') MARKS[flag] = pts.length * DS;
     const n = Math.round(len / DS);
     const startIdx = pts.length, startPos = pos.clone();
     const drift = isLoop ? 26 / n : 0;
@@ -708,6 +721,10 @@ function buildMainTrack() {
   pts.push(Object.assign({}, last, { p: pos.clone(), g: pos.clone() }));
   const T = fillTrack(pts);
   // how "inland" each sample is: the last stage leaves the sea behind, then returns to it at Marbella
+  for (const t of TUNNELS) for (let i = Math.max(0, Math.floor((t.s0 - 90) / DS)); i < Math.min(T.n, (t.s1 + 90) / DS); i++) {
+    const s = i * DS, d = s < t.s0 ? t.s0 - s : s > t.s1 ? s - t.s1 : 0;
+    T.tunnel[i] = Math.max(T.tunnel[i], 1 - smooth(clamp((d - 10) / 70, 0, 1)));
+  }
   const coastS = MARKS.coast, inlandStart = STAGES[7].s0;
   for (let i = 0; i < T.n; i++) {
     const s = i * DS;
@@ -881,6 +898,13 @@ function profile(T, i, out) {
     base + 0.4 + n1 * 1.5, base + 3 + n2 * 9, base + 12 + n3 * 18, base + 24 + n4 * 22];
   // bridges: everything but the road drops under the water
   if (brg > 0) for (let k = 0; k < ys.length; k++) ys[k] = lerp(ys[k], SEA_Y - 8, brg);
+  const tun = T.tunnel ? T.tunnel[i] : 0;
+  if (tun > 0) {
+    const m1 = vnoise(s * 0.01 + 7) * 6;
+    const hill = [null, null, base + 14 + m1, base + 15 + m1, null, null, null, base + 16 + m1, base + 26 + m1, base + 34, base + 40];
+    for (let k = 0; k < ys.length; k++) if (hill[k] !== null) ys[k] = lerp(ys[k], Math.max(ys[k], hill[k]), tun);
+    out.tun = tun;
+  } else out.tun = 0;
   out.offs = offs; out.ys = ys; out.gx = gx; out.gz = gz; out.rx = rx; out.rz = rz; out.cliff = cliff; out.inl = inl; out.brg = brg;
   return out;
 }
@@ -1062,7 +1086,7 @@ const PALETTES = [ // per stage: sky top, horizon, sun colour, sea tint, light, 
 const _c1 = new THREE.Color(), _c2 = new THREE.Color();
 function lerpHex(a, b, t, out) { return out.set(a).lerp(_c2.set(b), t); }
 const SUN_DIR = new V3();
-let envStage = -1, stageGlow = 0, NIGHT = 0;
+let envStage = -1, stageGlow = 0, NIGHT = 0, TUNNEL_K = 0;
 function applyPalette(stageF) {
   const LAST = PALETTES.length - 1, i = clamp(Math.floor(stageF), 0, LAST), j = Math.min(LAST, i + 1), t = smooth(clamp(stageF - i, 0, 1));
   const A = PALETTES[i], B = PALETTES[j];
@@ -1616,6 +1640,77 @@ function buildSetPieces() {
   hillTown(stageStart[7] + 1500, -(H + 160), 26, 70, 38, 31);               // a pueblo blanco
 }
 
+/* ---------------- tunnels through the headlands ---------------- */
+const TUNNEL_NAMES = ['TÚNEL DE GUADIARO', 'TÚNEL DEL ESTRECHO', 'TÚNEL DE SAGRES', 'TÚNEL DA SERRA', 'TÚNEL DE RONDA'];
+// tube cross-section in the road's frame: [lateral, up]; tiled lower walls, dark upper vault
+const TUBE = [[-(W + 0.6), -0.3], [-(W + 0.6), 2.2], [-(W + 0.6), 5.4], [-(W - 2.6), 8.8], [W - 2.6, 8.8], [W + 0.6, 5.4], [W + 0.6, 2.2], [W + 0.6, -0.3]];
+const TUBE_COL = [0xe8dfc8, 0xe8dfc8, 0x6a6478, 0x5a5468, 0x5a5468, 0x6a6478, 0xe8dfc8, 0xe8dfc8];
+function sweep(T, s0, s1, section, colors, frameOf) {
+  const n = Math.round((s1 - s0) / DS) + 1, P = section(s0).length;
+  const pos = new Float32Array(n * P * 3), col = new Float32Array(n * P * 3), idx = [], c = new THREE.Color(), pt = new V3();
+  for (let k = 0; k < n; k++) {
+    const s = Math.min(s1, s0 + k * DS), fr = frameOf(s);
+    section(s).forEach(([x, y], j) => {
+      pt.copy(fr.o).addScaledVector(fr.r, x).addScaledVector(fr.u, y);
+      pos.set([pt.x, pt.y, pt.z], (k * P + j) * 3);
+      c.set(colors[j]); const v = 0.92 + 0.1 * hash1(k * 7 + j); col.set([c.r * v, c.g * v, c.b * v], (k * P + j) * 3);
+    });
+  }
+  for (let k = 0; k < n - 1; k++) for (let j = 0; j < P - 1; j++) { const a = k * P + j, b = a + P; idx.push(a, a + 1, b, a + 1, b + 1, b); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+function buildTunnels() {
+  const tubeMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex, side: THREE.DoubleSide });
+  const capMat2 = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradTex, map: groundTex, side: THREE.DoubleSide });
+  const stone = toon(0xb9ab8c), lampM = basic(0xffe2a0);
+  const roadFrame = s => { const f = main.frame(s, tmpA); return { o: f.P.clone(), r: f.R.clone(), u: f.U.clone() }; };
+  const flatFrame = s => { const f = main.frame(s, tmpA); return { o: f.G.clone(), r: f.GR.clone(), u: new V3(0, 1, 0) }; };
+  TUNNELS.forEach((t, ti) => {
+    const theme = STAGES[main.stage[Math.round(t.s0 / DS)]].theme;
+    // the tube
+    const tube = new THREE.Mesh(sweep(main, t.s0, t.s1, () => TUBE, TUBE_COL, roadFrame), tubeMat);
+    tube.receiveShadow = false; scene.add(tube);
+    // rock over the top, meeting the raised hillside either side
+    const capSec = s => { const m1 = vnoise(s * 0.01 + 7) * 6; return [[-(H + 15), 15 + m1], [-(W + 2), 11.5], [-(W - 3), 12.5 + m1 * 0.3], [0, 13 + m1 * 0.5], [W - 3, 12.5 + m1 * 0.3], [W + 2, 11.5], [H + 15, 16 + m1]]; };
+    const cap = new THREE.Mesh(sweep(main, t.s0 - 1.5, t.s1 + 1.5, capSec, [theme.hill, 0x9a8e74, theme.scrub, theme.grass, theme.scrub, 0x9a8e74, theme.hill], flatFrame), capMat2);
+    cap.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(cap.geometry.attributes.position.count * 2).map((_, k) => { const p = cap.geometry.attributes.position.array; return (k % 2 ? p[(k >> 1) * 3 + 2] : p[(k >> 1) * 3]) / 9; }), 2));
+    cap.castShadow = false; scene.add(cap);
+    // ceiling lamps every 10 m, two rows
+    const lamps = [];
+    for (let s = t.s0 + 6; s < t.s1 - 4; s += 10) for (const x of [-4.5, 4.5]) {
+      const f = main.frame(s, tmpA), p = f.P.clone().addScaledVector(f.R, x).addScaledVector(f.U, 8.6);
+      const m = new THREE.Matrix4().makeBasis(new V3().crossVectors(f.U, f.F), f.U, f.F).setPosition(p);
+      lamps.push([new THREE.BoxGeometry(0.32, 0.1, 1.6), m]);
+    }
+    scene.add(new THREE.Mesh(merge(lamps), lampM));
+    // stone portals with the tunnel's name
+    const outer = new THREE.Shape(); outer.moveTo(-(H + 15), -1.5); outer.lineTo(H + 15, -1.5); outer.lineTo(H + 15, 17); outer.lineTo(-(H + 15), 17); outer.lineTo(-(H + 15), -1.5);
+    const hole = new THREE.Path(); TUBE.forEach(([x, y], k) => k ? hole.lineTo(x, y) : hole.moveTo(x, y)); hole.lineTo(TUBE[0][0], TUBE[0][1]);
+    outer.holes.push(hole);
+    const portalG = new THREE.ExtrudeGeometry(outer, { depth: 1.6, bevelEnabled: false });
+    const sign = signTex([{ t: TUNNEL_NAMES[ti % TUNNEL_NAMES.length], size: 64 }], '#1557b0', '#fff', 1024, 128);
+    for (const [s, dir] of [[t.s0, -1], [t.s1, 1]]) {
+      const g = new THREE.Group();
+      const portal = new THREE.Mesh(portalG, stone); portal.position.z = dir > 0 ? 0 : -1.6; g.add(portal); addOutline(portal, 0.1);
+      const band = new THREE.Mesh(new THREE.BoxGeometry(2 * W + 4, 1.4, 1.8), toon(0x8a7d64)); band.position.set(0, 9.6, dir > 0 ? 0.8 : -0.8); g.add(band);
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(14, 1.75), basic(0xffffff, { map: sign }));
+      board.position.set(0, 11.6, dir > 0 ? 1.65 : -1.65); if (dir < 0) board.rotation.y = Math.PI; g.add(board);
+      const f = main.frame(s, tmpA);
+      g.matrixAutoUpdate = false; g.matrix.makeBasis(new V3().crossVectors(f.U, f.F), f.U, f.F).setPosition(f.P); g.matrixWorldNeedsUpdate = true;
+      scene.add(g);
+    }
+    roadSign(main, t.s0 - 280, W + 4, ['TÚNEL', 'LIGHTS ON'], '#1557b0', '#fff', 8, 4.2);
+  });
+}
+// 0 outside, 1 deep inside a tunnel (for lighting and sound)
+function tunnelDepth(ms) {
+  for (const t of TUNNELS) if (ms > t.s0 - 20 && ms < t.s1 + 20) return smooth(clamp(Math.min(ms - t.s0 + 20, t.s1 + 20 - ms) / 50, 0, 1));
+  return 0;
+}
+
 /* ---------------- populate main track scenery ---------------- */
 function populateMain() {
   const store = {};
@@ -1629,7 +1724,8 @@ function populateMain() {
     const banus = s > stageStart[1] - 600 && s < stageStart[1] + 500;
     const town = st <= 1 || s > MARKS.coast || (st === 6 && s > MARKS.lisboa);
     const minOff = sp ? 50 : 0;
-    const add = (type, off, opt) => { if (Math.abs(off) > minOff && !branchBlocks(s, off)) addItem(main, store, type, s + (r() - .5) * 6, off, opt); };
+    const tun = main.tunnel[i];
+    const add = (type, off, opt) => { if (Math.abs(off) > minOff && !branchBlocks(s, off) && !(tun > 0.02 && Math.abs(off) < H + 22)) addItem(main, store, type, s + (r() - .5) * 6, off, opt); };
     const sides = inl ? [1, -1] : [1];
     // roadside rows
     if (town) {
@@ -2351,7 +2447,7 @@ const Audio = (() => {
       eng.o1.frequency.setTargetAtTime(48 + k * 150, t, 0.08);
       eng.o2.frequency.setTargetAtTime(170 + k * 420, t, 0.08); eng.o3.frequency.setTargetAtTime((170 + k * 420) * 1.012, t, 0.08);
       // loudest while accelerating, backing off at a steady cruise so top speed does not drone
-      const vol = (0.03 + 0.055 * load) * (1 - 0.55 * Math.min(1, k) ** 2) + 0.012;
+      const vol = ((0.03 + 0.055 * load) * (1 - 0.55 * Math.min(1, k) ** 2) + 0.012) * (1 + TUNNEL_K * 0.6);
       eng.og.gain.setTargetAtTime(on ? vol : 0, t, 0.15); eng.lp.frequency.setTargetAtTime(380 + k * 700 + load * 500, t, 0.15);
       eng.wg.gain.setTargetAtTime(on ? 0.02 + k * k * 0.11 : 0, t, 0.3); eng.wf.frequency.setTargetAtTime(500 + k * 1300, t, 0.3);
       eng.rg.gain.setTargetAtTime(on ? boost * 0.3 : 0, t, 0.05); eng.rf.frequency.setTargetAtTime(300 + boost * 500, t, 0.1);
@@ -2951,8 +3047,8 @@ function updateCamera(dt, snap) {
     target = tmpV.copy(back.P).addScaledVector(back.U, 4).addScaledVector(back.R, P.x * 0.8);
     look = tmpV2.copy(P.fall.pos); up = tr.U;
   } else {
-    target = tmpV.copy(back.P).addScaledVector(back.R, P.x * 0.85).addScaledVector(back.U, (far ? 3.1 : 2.35) + P.h * 0.5);
-    look = tmpV2.copy(ahead.P).addScaledVector(ahead.R, P.x * 0.6).addScaledVector(ahead.U, 1.1 + P.h * 0.3);
+    target = tmpV.copy(back.P).addScaledVector(back.R, P.x * 0.85).addScaledVector(back.U, (far ? 3.1 : 2.35) + (camera.aspect < 1 ? 0.9 : 0) + P.h * 0.5);
+    look = tmpV2.copy(ahead.P).addScaledVector(ahead.R, P.x * 0.6).addScaledVector(ahead.U, (camera.aspect < 1 ? -1.2 : 1.1) + P.h * 0.3);
     up = back.U.clone().lerp(tr.U, 0.5);
     if (tr.special === 2) { // corkscrew: camera rides rigidly with the car so the world spins around you
       target = tmpV.copy(back.P).addScaledVector(tr.R, P.x * 0.85).addScaledVector(tr.U, 2.7);
@@ -3078,6 +3174,9 @@ function frame(now) {
   const prog = mainS(track, P.s);
   let stageF = 0; for (let k = 0; k < STAGES.length; k++) if (prog >= stageStart[k]) stageF = k + clamp((prog - stageStart[k]) / ((stageStart[k + 1] || main.length) - stageStart[k]), 0, 1) * 0.999;
   applyPalette(stageF - 0.5 < 0 ? 0 : stageF - 0.5);
+  const tk = mode === 'boat' ? 0 : tunnelDepth(prog);
+  if (tk > 0) { hemi.intensity *= 1 - 0.55 * tk; sunLight.intensity *= 1 - 0.85 * tk; stageGlow = Math.max(stageGlow, tk); }
+  TUNNEL_K = tk;
   const tr = track.frame(P.s, tmpC);
   const screech = Math.min(1, Math.abs(tr.curve) * P.v * 4 * (Math.abs(P.steerVis) > 0.5 ? 1 : 0.3)) * (P.v > 40 ? 1 : 0);
   const load = inp.gas && P.v < CARSTATS.top * (track.speed || 1) * 0.97 ? 1 : 0;
@@ -3095,6 +3194,7 @@ makeChunks(boat, false, false);
 makeChunks(AP7, true, false);
 makeChunks(MARINA, true, true);
 buildSetPieces();
+buildTunnels();
 populateMain();
 populateBoat();
 populateBranches();
