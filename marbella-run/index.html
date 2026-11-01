@@ -2049,12 +2049,13 @@ function bodyShell(keys, o, mat) {
     ? (dx, dy) => dy > 0 ? Math.max(dy / (R * 0.92), (Math.abs(dx) + dy * 0.5) / R) : Math.abs(dx) / R
     : (dx, dy) => dy > 0 ? Math.hypot(dx, dy) / R : Math.abs(dx) / R;
   const shellMat = mat.clone(); shellMat.vertexColors = true; shellMat.userData = mat.userData; carMats.push(shellMat);
-  return new THREE.Mesh(loft(keys, 220, 110, ([x, w, yb, yt, , dip], c, s) => {
+  return new THREE.Mesh(loft(keys, 220, 110, ([x, w, yb, yt, tuck, dip], c, s) => {
     const yc = (yb + yt) / 2, h = (yt - yb) / 2;
     let y = yc + h * se(s, s < 0 ? bottom : top);
     const yn = (y - yc) / h;
     let z = w * se(c, side);
     z *= 1 - tumble * Math.max(0, yn) ** 2;
+    if (yn < 0) z *= lerp(tuck, 1, smooth(clamp(yn + 1, 0, 1)));
     if (yn > 0) y -= dip * (1 - (z / w) ** 2) * yn;
     if (cockpit && yn > 0.15 && x < cockpit.x0 && x > cockpit.x1) {
       const tx = Math.min(cockpit.x0 - x, x - cockpit.x1) / 0.14, tz = (cockpit.inset - Math.abs(z) / w) / 0.1;
@@ -2079,6 +2080,17 @@ function canopy(keys, yb, mat, sideN = 3.4, tumble = 0.24) {
     return [y, w * se(c, sideN) * (1 - tumble * Math.max(0, yn) ** 1.4)];
   }), mat);
 }
+// Spanish-style number plate (white, blue EU band), facing backwards
+const plateTex = canvasTex(512, 112, (g, w, h) => {
+  g.fillStyle = '#f6f6f2'; g.fillRect(0, 0, w, h); g.strokeStyle = '#111'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+  g.fillStyle = '#1440a0'; g.fillRect(6, 6, 64, h - 12); g.fillStyle = '#ffd23a'; g.font = 'bold 22px Arial'; g.textAlign = 'center'; g.fillText('E', 38, h - 20);
+  g.fillStyle = '#111'; g.font = 'bold 70px "Arial Narrow", Arial, sans-serif'; g.fillText('2027 MRB', 292, 82);
+});
+const plateMat = new THREE.MeshBasicMaterial({ map: plateTex });
+function addPlate(C, x, y) {
+  C.add(new THREE.BoxGeometry(0.03, 0.14, 0.56), trimM, x + 0.01, y, 0);
+  C.add(new THREE.PlaneGeometry(0.52, 0.115), plateMat, x - 0.008, y, 0, 0, -Math.PI / 2, 0);
+}
 const ledW = new THREE.MeshBasicMaterial({ color: 0xeaf6ff }), ledR = new THREE.MeshBasicMaterial({ color: 0xff1a2e }), ledC = new THREE.MeshBasicMaterial({ color: 0x5ef0ff });
 const skinM = toon(0xe8b88a), hairDark = toon(0x3a2416), hairBlonde = toon(0xf2d27a);
 
@@ -2088,8 +2100,8 @@ function bodyRoadster(C) {
   const BODY = [
     [2.32, 0.25, 0.27, 0.37, 1, 0.0], [2.24, 0.82, 0.23, 0.44, 1, 0.02], [2.00, 0.96, 0.22, 0.56, 1, 0.08], [1.70, 1.00, 0.22, 0.80, 1, 0.14],
     [1.38, 1.02, 0.22, 0.90, 1, 0.16], [1.00, 1.00, 0.22, 0.87, 1, 0.1], [0.60, 0.99, 0.22, 0.83, 1, 0.04], [0.00, 0.99, 0.22, 0.84, 1, 0.0],
-    [-0.70, 1.03, 0.22, 0.87, 1, 0.02], [-1.35, 1.07, 0.23, 0.90, 1, 0.05], [-1.90, 1.05, 0.25, 0.88, 1, 0.03], [-2.20, 1.01, 0.27, 0.84, 1, 0.0],
-    [-2.28, 0.94, 0.29, 0.80, 1, 0.0], [-2.30, 0.30, 0.34, 0.72, 1, 0.0],
+    [-0.70, 1.03, 0.22, 0.87, 1, 0.02], [-1.35, 1.07, 0.23, 0.90, 1, 0.05], [-1.90, 1.05, 0.27, 0.88, 0.9, 0.03], [-2.20, 1.0, 0.37, 0.84, 0.78, 0.0],
+    [-2.28, 0.93, 0.41, 0.80, 0.76, 0.0], [-2.30, 0.30, 0.45, 0.72, 0.76, 0.0],
   ];
   const shell = bodyShell(BODY, { arches: 'hex' }, paint); body.add(shell); shellOutline(shell, 0.022);
   const cab = canopy([[1.02, 0.40, 0.73], [0.85, 0.66, 0.79], [0.45, 0.72, 0.92], [0.0, 0.73, 1.05], [-0.4, 0.71, 1.12], [-0.8, 0.69, 1.12], [-1.15, 0.66, 1.07], [-1.32, 0.4, 0.99]], 0.66, glassM);
@@ -2114,8 +2126,8 @@ function bodyRoadster(C) {
     add(new THREE.BoxGeometry(0.05, 0.03, 0.14), trimM, 0.58, 0.82, z * 0.84);
   }
   for (const z of [-0.22, 0, 0.22]) {
-    add(new THREE.CylinderGeometry(0.07, 0.1, 0.18, 14, 1, true), chromeM, -2.24, 0.4, z, 0, 0, Math.PI / 2);
-    add(new THREE.CircleGeometry(0.065, 14), new THREE.MeshBasicMaterial({ color: 0x220800 }), -2.33, 0.4, z, 0, -Math.PI / 2, 0);
+    add(new THREE.CylinderGeometry(0.07, 0.1, 0.18, 14, 1, true), chromeM, -2.24, 0.35, z, 0, 0, Math.PI / 2);
+    add(new THREE.CircleGeometry(0.065, 14), new THREE.MeshBasicMaterial({ color: 0x220800 }), -2.33, 0.35, z, 0, -Math.PI / 2, 0);
   }
   for (const z of [1, -1]) {
     add(new THREE.BoxGeometry(0.34, 0.03, 0.05), ledW, 2.06, 0.49, z * 0.62, 0, z * 0.55, -0.35);
@@ -2123,8 +2135,9 @@ function bodyRoadster(C) {
     C.headGlow(2.16, 0.48, z * 0.55);
   }
   const hexG = new THREE.CircleGeometry(0.095, 6), hexRim = new THREE.CircleGeometry(0.125, 6);
-  for (const z of [0.3, 0.52, 0.74, -0.3, -0.52, -0.74]) { add(hexRim, trimM, -2.312, 0.6, z, 0, -Math.PI / 2, 0); add(hexG, ledR, -2.318, 0.6, z, 0, -Math.PI / 2, 0); }
-  for (const z of [0.52, -0.52]) C.tailGlow(-2.36, 0.6, z, 1.1);
+  for (const z of [0.4, 0.6, 0.8, -0.4, -0.6, -0.8]) { add(hexRim, trimM, -2.29, 0.62, z, 0, -Math.PI / 2, 0, 0.88, 0.88, 0.88); add(hexG, ledR, -2.296, 0.62, z, 0, -Math.PI / 2, 0, 0.88, 0.88, 0.88); }
+  for (const z of [0.6, -0.6]) C.tailGlow(-2.34, 0.62, z, 1.0);
+  addPlate(C, -2.3, 0.5);
 }
 
 // ---- car 2: Sol Spider — an 80s open-top cruiser with two passengers ----
@@ -2133,7 +2146,7 @@ function bodySpider(C) {
   const BODY = [
     [2.36, 0.30, 0.32, 0.46, 1, 0], [2.26, 0.86, 0.27, 0.57, 1, 0.02], [2.00, 0.96, 0.25, 0.70, 1, 0.07], [1.40, 0.99, 0.25, 0.86, 1, 0.12],
     [0.80, 0.98, 0.25, 0.80, 1, 0.05], [0.00, 0.99, 0.25, 0.79, 1, 0.0], [-0.80, 1.03, 0.25, 0.84, 1, 0.02], [-1.40, 1.05, 0.26, 0.93, 1, 0.08],
-    [-2.00, 1.03, 0.28, 0.85, 1, 0], [-2.30, 0.97, 0.30, 0.83, 1, 0], [-2.38, 0.30, 0.38, 0.75, 1, 0],
+    [-2.00, 1.03, 0.34, 0.85, 0.85, 0], [-2.30, 0.97, 0.40, 0.83, 0.78, 0], [-2.38, 0.30, 0.45, 0.75, 0.76, 0],
   ];
   const shell = bodyShell(BODY, { side: 3.6, top: 2.4, tumble: 0.14, arches: 'round', cockpit: { x0: 0.45, x1: -1.0, floor: 0.42, inset: 0.8 } }, paint);
   body.add(shell); shellOutline(shell, 0.022);
@@ -2169,7 +2182,8 @@ function bodySpider(C) {
   for (let k = 0; k < 4; k++) add(new THREE.BoxGeometry(0.05, 0.015, 1.68), chromeM, -2.37, 0.48 + k * 0.05, 0);
   for (const z of [0.6, -0.6]) { add(new THREE.BoxGeometry(0.04, 0.08, 0.42), ledR, -2.37, 0.72, z); C.tailGlow(-2.42, 0.72, z, 0.9); }
   for (const z of [0.5, -0.5]) add(new THREE.CylinderGeometry(0.05, 0.05, 0.2, 10), chromeM, -2.36, 0.32, z, 0, 0, Math.PI / 2);
-  add(new THREE.CylinderGeometry(0.09, 0.12, 0.18, 14, 1, true), chromeM, -2.34, 0.38, 0, 0, 0, Math.PI / 2);
+  add(new THREE.CylinderGeometry(0.09, 0.12, 0.18, 14, 1, true), chromeM, -2.34, 0.33, 0, 0, 0, Math.PI / 2);
+  addPlate(C, -2.4, 0.56);
 }
 
 // ---- car 3: Aero-X — a long-tail hypercar with a fighter-jet canopy ----
@@ -2178,7 +2192,7 @@ function bodyAero(C) {
   const BODY = [
     [2.30, 0.45, 0.28, 0.40, 1, 0], [2.18, 0.78, 0.23, 0.50, 1, 0.04], [1.96, 0.94, 0.21, 0.62, 1, 0.12], [1.38, 1.03, 0.21, 0.88, 1, 0.22],
     [0.90, 0.98, 0.21, 0.70, 1, 0.12], [0.30, 0.95, 0.21, 0.72, 1, 0.04], [-0.50, 1.00, 0.21, 0.78, 1, 0.08], [-1.35, 1.08, 0.22, 0.95, 1, 0.2],
-    [-2.00, 1.00, 0.24, 0.80, 1, 0.06], [-2.50, 0.90, 0.28, 0.74, 1, 0.02], [-2.74, 0.70, 0.32, 0.68, 1, 0], [-2.80, 0.25, 0.38, 0.60, 1, 0],
+    [-2.00, 1.00, 0.30, 0.80, 0.9, 0.06], [-2.50, 0.90, 0.38, 0.74, 0.8, 0.02], [-2.74, 0.70, 0.42, 0.68, 0.78, 0], [-2.80, 0.25, 0.45, 0.60, 0.78, 0],
   ];
   const shell = bodyShell(BODY, { side: 4, top: 2.5, tumble: 0.18, arches: 'round' }, paint); body.add(shell); shellOutline(shell, 0.022);
   const cab = canopy([[0.95, 0.28, 0.66], [0.6, 0.52, 0.86], [0.1, 0.58, 1.02], [-0.5, 0.56, 1.06], [-1.0, 0.48, 0.98], [-1.5, 0.34, 0.86], [-1.85, 0.14, 0.76]], 0.62, glassM, 2.6, 0.1);
@@ -2200,9 +2214,10 @@ function bodyAero(C) {
   }
   add(new THREE.BoxGeometry(0.04, 0.05, 1.05), ledR, -2.76, 0.58, 0);
   for (const z of [0.55, -0.55]) C.tailGlow(-2.84, 0.58, z, 1.0);
+  addPlate(C, -2.79, 0.48);
   for (const z of [0.18, -0.18]) {
-    add(new THREE.CylinderGeometry(0.09, 0.12, 0.2, 14, 1, true), chromeM, -2.74, 0.4, z, 0, 0, Math.PI / 2);
-    add(new THREE.CircleGeometry(0.085, 14), new THREE.MeshBasicMaterial({ color: 0x220800 }), -2.84, 0.4, z, 0, -Math.PI / 2, 0);
+    add(new THREE.CylinderGeometry(0.09, 0.12, 0.2, 14, 1, true), chromeM, -2.74, 0.35, z, 0, 0, Math.PI / 2);
+    add(new THREE.CircleGeometry(0.085, 14), new THREE.MeshBasicMaterial({ color: 0x220800 }), -2.84, 0.35, z, 0, -Math.PI / 2, 0);
   }
 }
 
@@ -2239,9 +2254,10 @@ function buildCar(D) {
   const wellG = new THREE.ShapeGeometry(wellS), wellM = new THREE.MeshBasicMaterial({ color: 0x07070a });
   const faceM = D.wheel === 'aero' ? paint : physical({ color: 0x1c1e22, refl: 0.6 });
   const spokeM = D.wheel === 'star' ? capMat(0xd8b048, 1.1, true) : chromeM;
-  for (const [x, z, front] of [[1.38, 0.86, 1], [1.38, -0.86, 1], [-1.35, 0.89, 0], [-1.35, -0.89, 0]]) {
+  // wide rear tyres sit out at the body's edge so they read from the chase camera
+  for (const [x, z, front] of [[1.38, 0.86, 1], [1.38, -0.86, 1], [-1.35, 0.95, 0], [-1.35, -0.95, 0]]) {
     const side = Math.sign(z);
-    const steer = new THREE.Group(); steer.position.set(x, 0.36, z); body.add(steer);
+    const steer = new THREE.Group(); steer.position.set(x, 0.36, z); if (!front) steer.scale.set(1.04, 1.04, 1.3); body.add(steer);
     const spin = new THREE.Group(); steer.add(spin);
     spin.add(new THREE.Mesh(tyreG, rubberM));
     for (const e of [1, -1]) { const t = new THREE.Mesh(tyreEdge, rubberM); t.position.z = e * 0.12; spin.add(t); }
@@ -2261,7 +2277,7 @@ function buildCar(D) {
     wheels.push({ steer, spin, front });
   }
   // --- rocket flame (rear): textured cones + shock diamonds + glow
-  const flame = new THREE.Group(); flame.position.set(D.flameX, 0.42, 0); body.add(flame);
+  const flame = new THREE.Group(); flame.position.set(D.flameX, 0.35, 0); body.add(flame);
   const fMat = (op) => new THREE.MeshBasicMaterial({ map: flameTex, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   const fo = new THREE.Mesh(new THREE.ConeGeometry(0.36, 3.2, 16, 1, true).rotateZ(Math.PI / 2).translate(-1.6, 0, 0), fMat(0.9));
   const fi = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.8, 12, 1, true).rotateZ(Math.PI / 2).translate(-0.9, 0, 0), fMat(1));
