@@ -12,7 +12,8 @@
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
-    "dist": "electron-vite build && electron-builder"
+    "mac": "electron-vite build && electron-builder --mac dir && node scripts/install-mac.mjs",
+    "dist": "electron-vite build && electron-builder --mac dmg"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
@@ -41,7 +42,39 @@
   "build": {
     "appId": "com.sellermatrix.mymail",
     "productName": "My Mail",
-    "files": ["out/**/*"],
-    "mac": { "category": "public.app-category.productivity" }
-  }
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "npmRebuild": false,
+    "afterPack": "scripts/after-pack.cjs",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "My Mail"
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "icon": "build/icon.png"
+    }
+  },
+  "productName": "My Mail"
 }

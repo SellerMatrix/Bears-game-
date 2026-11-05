@@ -31,14 +31,27 @@ All your accounts in one window, sorted automatically, with Claude summaries on 
 | **Fast** | Local SQLite cache with full-text search (`/`) |
 | **Keyboard** | `j`/`k` move · `e` archive · `#` delete · `r` reply · `s` summarize · `c` compose · `⌘/Ctrl+Enter` send |
 
-## Run it
+## Install on your Mac
 
-Requires [Node.js 22+](https://nodejs.org).
+Requires [Node.js 22+](https://nodejs.org). In Terminal, from this folder:
 
 ```bash
 npm install
-npm run dev        # start the app with hot reload
-npm run dist       # build an installable app (.dmg / .exe) into dist/
+npm run mac
+```
+
+This builds **My Mail.app**, copies it to **/Applications** and opens it. After that, open it from
+Launchpad or Spotlight like any other app (right-click its Dock icon → Options → Keep in Dock).
+To update later: `git pull && npm run mac`.
+
+No Apple Developer account is needed: the app is "ad-hoc" signed on your own Mac, so macOS opens it without warnings.
+Want an installer to share? `npm run dist` makes a `.dmg` in `dist/`. Other Macs will show an
+"unidentified developer" warning (right-click → Open the first time) unless it's signed with a paid Apple Developer ID.
+
+### For development
+
+```bash
+npm run dev        # run from source with hot reload
 npm test           # unit tests
 ```
 

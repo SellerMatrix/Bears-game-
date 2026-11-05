@@ -60,6 +60,7 @@ kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-
 .sidebar { background: var(--sidebar); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 14px 10px; min-height: 0; -webkit-app-region: drag; }
 .sidebar > * { -webkit-app-region: no-drag; }
 .brand { font-weight: 700; font-size: 16px; padding: 18px 8px 14px; display: flex; gap: 8px; align-items: center; -webkit-app-region: drag; }
+body.mac .brand { padding-top: 40px; }
 .brand-mark { color: var(--accent); font-size: 18px; }
 .compose-btn { display: flex; align-items: center; gap: 8px; justify-content: center; background: var(--accent); color: #fff; border: none; font-weight: 600; padding: 9px; margin-bottom: 14px; }
 .nav, .accounts { display: flex; flex-direction: column; gap: 1px; }

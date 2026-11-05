@@ -47,6 +47,8 @@ function createWindow(): void {
     title: 'My Mail',
     backgroundColor: '#f7f6f3',
     show: false,
+    // Native-looking Mac window: traffic lights float over the sidebar.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 18, y: 18 } } : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
